@@ -1,6 +1,6 @@
 import React from 'react';
 import AccommodationBooking from '../components/AccommodationBooking';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 
 const AccommodationPage: React.FC = () => {
   return (

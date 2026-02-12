@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ExperienceForm from './ExperienceForm';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 import Header from '../ui/Header';
 import LoginPage from '../Login_Sign/LoginPage';
 import SignUpPage from '../Login_Sign/SignUpPage';

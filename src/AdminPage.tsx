@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import backgroundImage from './Login_Sign/photo.jpeg';
+import backgroundImage from './Login_Sign/photo.png';
 import TimerControl from './components/TimerControl';
 
 const AdminPage: React.FC = () => {

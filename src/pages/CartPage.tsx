@@ -5,7 +5,7 @@ import Header from "../ui/Header";
 import LoginPage from '../Login_Sign/LoginPage';
 import SignUpPage from '../Login_Sign/SignUpPage';
 import ForgotPassword from '../Login_Sign/Forgot_Pass';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 import WorkshopRegistrationForm from './WorkshopRegistrationForm';
 import ThemedModal from '../components/ThemedModal';
 import API_BASE_URL from '../Config'; // adjust path if needed

@@ -5,7 +5,7 @@ import Header from "./ui/Header";
 import { FaBullseye, FaEye, FaChevronDown } from "react-icons/fa";
 
 
-import backgroundImage from './Login_Sign/photo.jpeg';
+import backgroundImage from './Login_Sign/photo.png';
 import LoginPage from './Login_Sign/LoginPage';
 import SignUpPage from './Login_Sign/SignUpPage';
 import ForgotPassword from './Login_Sign/Forgot_Pass';
@@ -182,21 +182,6 @@ export default function HomePage() {
               </div>
             </section>
 
-            <section id="featured-alumni" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Featured Alumni Achievements</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    {featuredAlumni.map(alumnus => (
-                        <div key={alumnus.name} className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
-                            <img src={alumnus.imageUrl} alt={alumnus.name} className="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-gold-400"/>
-                            <h3 className="text-xl font-bold text-white text-center">{alumnus.name}</h3>
-                            <p className="text-gold-400 text-center text-sm mb-2">{alumnus.dept} ({alumnus.year})</p>
-                            <p className="text-gray-300 text-center font-semibold">{alumnus.role}</p>
-                            <p className="text-gray-400 text-center mt-2 text-sm">"{alumnus.achievement}"</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
             <section id="about" className="py-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
                   <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">About CSMIT</h2>
@@ -237,75 +222,10 @@ export default function HomePage() {
               </div>
             </section>
 
-            <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Faculty Advisors</h2>
-                <div className="flex flex-wrap justify-center gap-8 max-w-7xl mx-auto">
-                    {faculty.map(person => (
-                        <div key={person.name} className="w-full sm:w-80 bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-gold-400 gold-glow">
-                            <img src={person.imageUrl} alt={person.name} className="w-24 h-24 rounded-full mx-auto mb-4"/>
-                            <h3 className="text-xl font-bold text-white">{person.name}</h3>
-                            <p className="text-gold-400">{person.qualification}</p>
-                            <p className="text-gray-400 text-sm">{person.specialization}</p>
-                            <a href={`mailto:${person.email}`} className="text-sm text-gray-500 hover:text-gold-400 transition">{person.email}</a>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section id="members" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Office Bearers</h2>
-                <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto text-center">
-                  Meet our dedicated team of student leaders,
-                Leading CSMIT with vision and dedication.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-                    {(showAllMembers ? clubMembers : clubMembers.slice(0, 8)).map(member => (
-                        <div key={member.name} className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-gold-400 gold-glow">
-                            <img src={member.imageUrl} alt={member.name} className="w-24 h-24 rounded-full mx-auto mb-4"/>
-                            <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                            <p className="text-gold-400">{member.role}</p>
-                            <p className="text-gray-400 text-sm">{member.dept}</p>
-                            <a href={`mailto:${member.email}`} className="text-sm text-gray-500 hover:text-gold-400 transition">{member.email}</a>
-                        </div>
-                    ))}
-                </div>
-                {!showAllMembers && clubMembers.length > 8 && (
-                    <div className="flex justify-center mt-12">
-                        <button 
-                            onClick={() => setShowAllMembers(true)} 
-                            className="text-gold-400 hover:text-gold-300 transition-colors flex flex-col items-center"
-                            aria-label="Show all office bearers"
-                        >
-                            <span className="text-lg font-medium">View More</span>
-                            <FaChevronDown className="text-2xl mt-1 animate-bounce" />
-                        </button>
-                    </div>
-                )}
-            </section>
-                    
-            <section id="achievements" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-16 text-gold-gradient">Our Journey of Excellence</h2>
-                <div className="relative max-w-4xl mx-auto">
-                    <div className="absolute left-1/2 w-0.5 bg-gold-500/50 h-full -translate-x-1/2"></div>
-                    {achievements.map((a, i) => (
-                        <div key={i} className={`flex items-center w-full mb-8 ${i % 2 !== 0 ? 'flex-row-reverse' : ''}`}>
-                            <div className="w-1/2"></div>
-                            <div className="w-1/2 px-4">
-                                <div className="bg-black/70 backdrop-blur-md p-6 rounded-lg relative border border-gold-500/30 gold-glow">
-                                    <div className={`absolute top-1/2 w-4 h-4 bg-gold-500 rounded-full -translate-y-1/2 border-4 border-gray-900 ${i % 2 !== 0 ? '-right-2 translate-x-1/2' : '-left-2 -translate-x-1/2'}`}></div>
-                                    <p className="text-gold-400 font-bold text-lg">{a.year}</p>
-                                    <h3 className="text-xl font-semibold text-white mt-1">{a.title}</h3>
-                                    <p className="text-gray-300 mt-2 text-sm">{a.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            
                     <HomePageGallery />
                         <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Tech Fests</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Explore Events</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
                     <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
                         <h3 className="text-2xl font-bold text-white mb-3">SAMHITA</h3>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../ui/Header';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 import LoginPage from '../Login_Sign/LoginPage';
 import SignUpPage from '../Login_Sign/SignUpPage';
 import ForgotPassword from '../Login_Sign/Forgot_Pass';

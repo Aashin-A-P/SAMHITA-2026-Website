@@ -4,7 +4,7 @@ import Header from '../ui/Header';
 import LoginPage from '../Login_Sign/LoginPage';
 import SignUpPage from '../Login_Sign/SignUpPage';
 import ForgotPassword from '../Login_Sign/Forgot_Pass';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 import { useSearchParams } from 'react-router-dom';
 import GeneralRegistrationForm from './GeneralRegistrationForm';
 import WorkshopRegistrationForm from './WorkshopRegistrationForm';

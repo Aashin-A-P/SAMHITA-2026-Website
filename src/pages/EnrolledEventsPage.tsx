@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../ui/Header';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
-import backgroundImage from '../Login_Sign/photo.jpeg';
+import backgroundImage from '../Login_Sign/photo.png';
 import ThemedModal from '../components/ThemedModal';
 import API_BASE_URL from '../Config';
 
