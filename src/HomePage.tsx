@@ -147,7 +147,7 @@ export default function HomePage() {
   return (
     <>
       <div 
-        className="relative min-h-screen font-sans text-gray-200 overflow-x-hidden"
+        className="relative min-h-screen font-sans text-gray-200 overflow-x-hidden bg-black"
       >
         {/* Background Image Layer */}
         <div
@@ -157,8 +157,9 @@ export default function HomePage() {
           }}
         ></div>
 
-        {/* Overlay Layer */}
-        <div className="absolute inset-0 bg-black/70 z-0"></div>
+        {/* Overlay Layers */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/70 to-black/95 z-0"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,0.18)_0%,_rgba(0,0,0,0)_60%)] z-0"></div>
 
         <Header setIsLoginModalOpen={setIsLoginModalOpen} setIsSignUpModalOpen={setIsSignUpModalOpen}  />
 
@@ -170,23 +171,25 @@ export default function HomePage() {
 
 
             <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative pt-20">
-              <img src={CsmitLogo} alt="CSMIT Logo" className="w-58 h-48 mb-4" />
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">SAMHITA '26</h1>
-              <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl">Empowering Young Innovators Through Challenging Competitions, Insightful Workshops, and a Platform that Inspires Technological Excellence.</p>
+              <img src={CsmitLogo} alt="SAMHITA Logo" className="w-56 md:w-64 h-auto mb-6 drop-shadow-[0_0_35px_rgba(212,175,55,0.45)]" />
+              <h1 className="text-4xl md:text-6xl font-bold font-display mb-4 text-gold-gradient">SAMHITA '26</h1>
+              <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl">
+                Empowering young innovators through challenging competitions, insightful workshops, and a platform that inspires technological excellence.
+              </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                  <a href="#about" className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button">Explore More</a>
-                  <a href="#events" className="px-8 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg">Learn More</a>
+                  <a href="#about" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-button">Explore More</a>
+                  <a href="#events" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-outline">Learn More</a>
               </div>
             </section>
 
             <section id="featured-alumni" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-center mb-12 text-white">Featured Alumni Achievements</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Featured Alumni Achievements</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {featuredAlumni.map(alumnus => (
-                        <div key={alumnus.name} className="bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 hover:shadow-xl hover:shadow-purple-500/20">
-                            <img src={alumnus.imageUrl} alt={alumnus.name} className="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-purple-400"/>
+                        <div key={alumnus.name} className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
+                            <img src={alumnus.imageUrl} alt={alumnus.name} className="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-gold-400"/>
                             <h3 className="text-xl font-bold text-white text-center">{alumnus.name}</h3>
-                            <p className="text-purple-400 text-center text-sm mb-2">{alumnus.dept} ({alumnus.year})</p>
+                            <p className="text-gold-400 text-center text-sm mb-2">{alumnus.dept} ({alumnus.year})</p>
                             <p className="text-gray-300 text-center font-semibold">{alumnus.role}</p>
                             <p className="text-gray-400 text-center mt-2 text-sm">"{alumnus.achievement}"</p>
                         </div>
@@ -195,8 +198,8 @@ export default function HomePage() {
             </section>
 
             <section id="about" className="py-20 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-4xl mx-auto text-center bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-8 rounded-lg">
-                  <h2 className="text-3xl font-bold mb-6 text-white">About CSMIT</h2>
+                <div className="max-w-4xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
+                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">About CSMIT</h2>
                   <p className="text-lg text-gray-300 mb-8">
                     The Computer Society of MIT (CSMIT), founded in 1983 at Madras Institute
                     of Technology, Anna University, began as a computer club teaching basic
@@ -208,10 +211,10 @@ export default function HomePage() {
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                    <div className="bg-gray-800/80 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300">
-                      <FaBullseye className="text-purple-400 text-3xl flex-shrink-0 mt-1" />
+                    <div className="bg-black/60 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300 gold-glow">
+                      <FaBullseye className="text-gold-400 text-3xl flex-shrink-0 mt-1" />
                       <div>
-                        <h3 className="text-xl font-bold text-purple-400 mb-2">Our Mission</h3>
+                        <h3 className="text-xl font-bold text-gold-400 mb-2">Our Mission</h3>
                         <p className="text-gray-300">
                           To cultivate technical excellence, innovation, and collaborative
                           learning by empowering students with the skills and mindset to thrive
@@ -220,10 +223,10 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                  <div className="bg-gray-800/80 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300">
-                    <FaEye className="text-purple-400 text-3xl flex-shrink-0 mt-1" />
+                  <div className="bg-black/60 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300 gold-glow">
+                    <FaEye className="text-gold-400 text-3xl flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="text-xl font-bold text-purple-400 mb-2">Our Vision</h3>
+                      <h3 className="text-xl font-bold text-gold-400 mb-2">Our Vision</h3>
                       <p className="text-gray-300">
                         To be the leading society shaping the next generation of tech
                         innovators.
@@ -235,22 +238,22 @@ export default function HomePage() {
             </section>
 
             <section id="faculty" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-center mb-12 text-white">Faculty Advisors</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Faculty Advisors</h2>
                 <div className="flex flex-wrap justify-center gap-8 max-w-7xl mx-auto">
                     {faculty.map(person => (
-                        <div key={person.name} className="w-full sm:w-80 bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-purple-400">
+                        <div key={person.name} className="w-full sm:w-80 bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-gold-400 gold-glow">
                             <img src={person.imageUrl} alt={person.name} className="w-24 h-24 rounded-full mx-auto mb-4"/>
                             <h3 className="text-xl font-bold text-white">{person.name}</h3>
-                            <p className="text-purple-400">{person.qualification}</p>
+                            <p className="text-gold-400">{person.qualification}</p>
                             <p className="text-gray-400 text-sm">{person.specialization}</p>
-                            <a href={`mailto:${person.email}`} className="text-sm text-gray-500 hover:text-purple-400 transition">{person.email}</a>
+                            <a href={`mailto:${person.email}`} className="text-sm text-gray-500 hover:text-gold-400 transition">{person.email}</a>
                         </div>
                     ))}
                 </div>
             </section>
 
             <section id="members" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-center mb-12 text-white">Office Bearers</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Office Bearers</h2>
                 <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto text-center">
                   Meet our dedicated team of student leaders,
                 Leading CSMIT with vision and dedication.
@@ -258,12 +261,12 @@ export default function HomePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
                     {(showAllMembers ? clubMembers : clubMembers.slice(0, 8)).map(member => (
-                        <div key={member.name} className="bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-purple-400">
+                        <div key={member.name} className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg text-center transition-all duration-300 hover:border-gold-400 gold-glow">
                             <img src={member.imageUrl} alt={member.name} className="w-24 h-24 rounded-full mx-auto mb-4"/>
                             <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                            <p className="text-purple-400">{member.role}</p>
+                            <p className="text-gold-400">{member.role}</p>
                             <p className="text-gray-400 text-sm">{member.dept}</p>
-                            <a href={`mailto:${member.email}`} className="text-sm text-gray-500 hover:text-purple-400 transition">{member.email}</a>
+                            <a href={`mailto:${member.email}`} className="text-sm text-gray-500 hover:text-gold-400 transition">{member.email}</a>
                         </div>
                     ))}
                 </div>
@@ -271,7 +274,7 @@ export default function HomePage() {
                     <div className="flex justify-center mt-12">
                         <button 
                             onClick={() => setShowAllMembers(true)} 
-                            className="text-purple-400 hover:text-purple-300 transition-colors flex flex-col items-center"
+                            className="text-gold-400 hover:text-gold-300 transition-colors flex flex-col items-center"
                             aria-label="Show all office bearers"
                         >
                             <span className="text-lg font-medium">View More</span>
@@ -282,16 +285,16 @@ export default function HomePage() {
             </section>
                     
             <section id="achievements" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-center mb-16 text-white">Our Journey of Excellence</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-16 text-gold-gradient">Our Journey of Excellence</h2>
                 <div className="relative max-w-4xl mx-auto">
-                    <div className="absolute left-1/2 w-0.5 bg-purple-500/50 h-full -translate-x-1/2"></div>
+                    <div className="absolute left-1/2 w-0.5 bg-gold-500/50 h-full -translate-x-1/2"></div>
                     {achievements.map((a, i) => (
                         <div key={i} className={`flex items-center w-full mb-8 ${i % 2 !== 0 ? 'flex-row-reverse' : ''}`}>
                             <div className="w-1/2"></div>
                             <div className="w-1/2 px-4">
-                                <div className="bg-gray-900/70 backdrop-blur-md p-6 rounded-lg relative border border-purple-500/30">
-                                    <div className={`absolute top-1/2 w-4 h-4 bg-purple-500 rounded-full -translate-y-1/2 border-4 border-gray-900 ${i % 2 !== 0 ? '-right-2 translate-x-1/2' : '-left-2 -translate-x-1/2'}`}></div>
-                                    <p className="text-purple-400 font-bold text-lg">{a.year}</p>
+                                <div className="bg-black/70 backdrop-blur-md p-6 rounded-lg relative border border-gold-500/30 gold-glow">
+                                    <div className={`absolute top-1/2 w-4 h-4 bg-gold-500 rounded-full -translate-y-1/2 border-4 border-gray-900 ${i % 2 !== 0 ? '-right-2 translate-x-1/2' : '-left-2 -translate-x-1/2'}`}></div>
+                                    <p className="text-gold-400 font-bold text-lg">{a.year}</p>
                                     <h3 className="text-xl font-semibold text-white mt-1">{a.title}</h3>
                                     <p className="text-gray-300 mt-2 text-sm">{a.description}</p>
                                 </div>
@@ -302,32 +305,32 @@ export default function HomePage() {
             </section>
                     <HomePageGallery />
                         <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-center mb-12 text-white">Tech Fests</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Tech Fests</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
-                    <div className="bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 hover:shadow-xl hover:shadow-purple-500/20">
+                    <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
                         <h3 className="text-2xl font-bold text-white mb-3">SAMHITA</h3>
                         <div className="text-gray-300 mb-4 text-left">
-                            <p><span className="font-bold text-purple-400">Type:</span> Annual national-level inter-college technical event.</p>
-                            <p><span className="font-bold text-purple-400">Focus:</span> Open source software, technical competitions, and creative problem-solving.</p>
-                            <p className="font-bold text-purple-400 mt-2">Highlights:</p>
+                            <p><span className="font-bold text-gold-400">Type:</span> Annual national-level inter-college technical event.</p>
+                            <p><span className="font-bold text-gold-400">Focus:</span> Open source software, technical competitions, and creative problem-solving.</p>
+                            <p className="font-bold text-gold-400 mt-2">Highlights:</p>
                             <ul className="list-disc list-inside text-gray-400">
                                 <li>Encourages participants to create their own software or tweak existing ones.</li>
                                 <li>Large participation since its start in 2005.</li>
                                 <li>Huge impact on the free software community in India.</li>
                                 <li>Platform for showcasing budding software computing talent.</li>
                             </ul>
-                            <p className="mt-2"><span className="font-bold text-purple-400">Purpose:</span> Promote open-source knowledge, inspire innovation, and emphasize open-source importance.</p>
+                            <p className="mt-2"><span className="font-bold text-gold-400">Purpose:</span> Promote open-source knowledge, inspire innovation, and emphasize open-source importance.</p>
                         </div>
                         <div className="flex gap-4 mt-4">
-                            <Link to="/events?symposium=Carteblanche" className="px-5 py-2 border border-purple-400 text-purple-400 text-sm font-semibold rounded-lg hover:bg-purple-400 hover:text-black transition">View Events</Link>
+                            <Link to="/events?symposium=Carteblanche" className="px-5 py-2 rounded-lg text-sm font-semibold gold-outline hover:scale-105 transition-transform">View Events</Link>
                             
                         </div>
                     </div>
                 </div>
             </section>
             <section id="why-join" className="py-20 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-5xl mx-auto text-center bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-8 rounded-lg">
-                  <h2 className="text-3xl font-bold mb-6 text-white">Why Join CSMIT?</h2>
+                <div className="max-w-5xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
+                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">Why Join CSMIT?</h2>
                   <ul className="text-left text-lg text-gray-300 space-y-4 list-disc list-inside">
                     <li>
                       Students get to know more about FOSS and other recent technologies.
@@ -360,7 +363,7 @@ export default function HomePage() {
             <PassesDisplay />
 
             <section id="sponsors" className="py-20">
-              <h2 className="text-3xl font-bold text-center mb-12 text-white">Our Valued Sponsors</h2>
+              <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Our Valued Sponsors</h2>
               <div className="relative w-full overflow-hidden">
                 <div className="flex animate-marquee">
                   {[...sponsors, ...sponsors].map((sponsor, index) => (
@@ -379,7 +382,7 @@ export default function HomePage() {
 
         </main>
 
-        <footer className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-purple-500/20 text-gray-400">
+        <footer className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-7xl mx-auto text-center md:text-left">
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">CSMIT</h3>
@@ -388,19 +391,19 @@ export default function HomePage() {
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Quick Links</h3>
                     <ul className="space-y-2 text-sm">
-                        <li><a href="#about" className="hover:text-purple-400 transition">About</a></li>
-                        <li><a href="#alumni" className="hover:text-purple-400 transition">Alumni</a></li>
-                        <li><a href="#events" className="hover:text-purple-400 transition">Events</a></li>
+                        <li><a href="#about" className="hover:text-gold-400 transition">About</a></li>
+                        <li><a href="#alumni" className="hover:text-gold-400 transition">Alumni</a></li>
+                        <li><a href="#events" className="hover:text-gold-400 transition">Events</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
-                    <p className="text-sm">Email: <a href="mailto:chairmancsmit@mitindia.edu" className="hover:text-purple-400 transition">chairmancsmit@mitindia.edu</a></p>
-                    <p className='text-sm'>Phone: <a href="tel:+91 6374521646" className="hover:text-purple-400 transition">+91 63745 21646</a></p>
+                    <p className="text-sm">Email: <a href="mailto:chairmancsmit@mitindia.edu" className="hover:text-gold-400 transition">chairmancsmit@mitindia.edu</a></p>
+                    <p className='text-sm'>Phone: <a href="tel:+91 6374521646" className="hover:text-gold-400 transition">+91 63745 21646</a></p>
                     <p className="text-sm">Address: MIT Campus, Chromepet, Chennai</p>
                 </div>
             </div>
-            <p className="text-xs text-center border-t border-purple-500/20 pt-8 mt-8">© {new Date().getFullYear()} CSMIT - Computer Society of MIT. All Rights Reserved.</p>
+            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} CSMIT - Computer Society of MIT. All Rights Reserved.</p>
         </footer>
 
         <LoginPage 

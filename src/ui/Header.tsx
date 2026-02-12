@@ -132,16 +132,16 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
     <>
       {user?.role !== "admin" && (
         <>
-          <a href="#home" onClick={(e) => handleNavClick(e, "#home")} className="text-white hover:text-purple-400 transition block py-2 md:py-0">
+          <a href="#home" onClick={(e) => handleNavClick(e, "#home")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             Home
           </a>
-          <a href="#featured-alumni" onClick={(e) => handleNavClick(e, "#featured-alumni")} className="text-white hover:text-purple-400 transition block py-2 md:py-0">
+          <a href="#featured-alumni" onClick={(e) => handleNavClick(e, "#featured-alumni")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             Alumni
           </a>
-          <a href="#about" onClick={(e) => handleNavClick(e, "#about")} className="text-white hover:text-purple-400 transition block py-2 md:py-0">
+          <a href="#about" onClick={(e) => handleNavClick(e, "#about")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             About
           </a>
-          <a href="/gallery" onClick={(e) => { e.preventDefault(); navigate("/gallery"); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }} className="text-white hover:text-purple-400 transition block py-2 md:py-0">
+          <a href="/gallery" onClick={(e) => { e.preventDefault(); navigate("/gallery"); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             Gallery
           </a>
         </>
@@ -154,12 +154,12 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             navigate("/admin");
             if (isMobileMenuOpen) setIsMobileMenuOpen(false);
           }}
-          className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+          className="text-white hover:text-gold-400 transition block py-2 md:py-0"
         >
           Managements
         </a>
       ) : (
-        <a href="#events" onClick={(e) => handleNavClick(e, "#events")} className="text-white hover:text-purple-400 transition block py-2 md:py-0">
+        <a href="#events" onClick={(e) => handleNavClick(e, "#events")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
           Events
         </a>
       )}
@@ -170,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
           navigate("/placements");
           if (isMobileMenuOpen) setIsMobileMenuOpen(false);
         }}
-        className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+        className="text-white hover:text-gold-400 transition block py-2 md:py-0"
       >
         Placements
       </a>
@@ -182,14 +182,14 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             navigate("/admin/organizer");
             if (isMobileMenuOpen) setIsMobileMenuOpen(false);
           }}
-          className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+          className="text-white hover:text-gold-400 transition block py-2 md:py-0"
         >
           Organizer
         </a>
       )}
       {user?.role === "admin" && (
         <>
-          <button onClick={() => { setIsSymposiumModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }} className="text-white hover:text-purple-400 transition block py-2 md:py-0 text-left">
+          <button onClick={() => { setIsSymposiumModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }} className="text-white hover:text-gold-400 transition block py-2 md:py-0 text-left">
             Symposium Control
           </button>
         </>
@@ -202,7 +202,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             navigate("/enrolled-events");
             if (isMobileMenuOpen) setIsMobileMenuOpen(false);
           }}
-          className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+          className="text-white hover:text-gold-400 transition block py-2 md:py-0"
         >
           My Events
         </a>
@@ -215,7 +215,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             navigate("/cart");
             if (isMobileMenuOpen) setIsMobileMenuOpen(false);
           }}
-          className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+          className="text-white hover:text-gold-400 transition block py-2 md:py-0"
         >
           Cart
         </a>
@@ -228,7 +228,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             navigate("/accommodation");
             if (isMobileMenuOpen) setIsMobileMenuOpen(false);
           }}
-          className="text-white hover:text-purple-400 transition block py-2 md:py-0"
+          className="text-white hover:text-gold-400 transition block py-2 md:py-0"
         >
           Accommodation
         </a>
@@ -237,13 +237,13 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-gray-900 z-30 shadow-lg">
+    <header className="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md border-b border-gold-500/20 z-30">
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo + Title */}
         <div className="flex items-center space-x-3">
-          <img src={Logo} alt="CSMIT Logo" className="h-10 w-auto rounded-md" />
-          <span className="text-2xl font-bold text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
-            CSMIT
+          <img src={Logo} alt="SAMHITA Logo" className="h-10 w-auto rounded-md drop-shadow-[0_0_18px_rgba(212,175,55,0.35)]" />
+          <span className="text-2xl font-bold font-display text-gold-gradient">
+            SAMHITA '26
           </span>
         </div>
 
@@ -265,13 +265,13 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                   }
                   if (isMobileMenuOpen) setIsMobileMenuOpen(false);
                 }}
-                className="px-4 py-2 text-sm border border-purple-400 text-purple-400 rounded-md hover:bg-purple-400 hover:text-black transition"
+                className="px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform"
               >
                 {user.role === "admin" ? "Admin" : user.name || user.email}
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                className="flex items-center px-4 py-2 text-sm rounded-md bg-black/70 border border-gold-500/30 text-gold-100 hover:border-gold-400 transition"
               >
                 <FiLogOut className="mr-2" />
                 Logout
@@ -281,14 +281,14 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
             <>
               <button
                 onClick={() => { setIsLoginModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }}
-                className="flex items-center px-4 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                className="flex items-center px-4 py-2 text-sm rounded-md gold-button hover:scale-105 transition-transform"
               >
                 <FiLogIn className="mr-2" />
                 Login
               </button>
               <button
                 onClick={() => { setIsSignUpModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }}
-                className="flex items-center px-4 py-2 text-sm border border-purple-400 text-purple-400 rounded-md hover:bg-purple-400 hover:text-black transition"
+                className="flex items-center px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform"
               >
                 <FiUserPlus className="mr-2" />
                 Sign Up
@@ -307,10 +307,10 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-gray-900 px-6 pb-4">
+        <div className="md:hidden bg-black/90 px-6 pb-4">
           <div className="flex flex-col space-y-4">
             {navLinks}
-            <div className="border-t border-gray-700 pt-4 flex flex-col space-y-4">
+            <div className="border-t border-gold-500/20 pt-4 flex flex-col space-y-4">
               {user ? (
                 <>
                   <button
@@ -324,13 +324,13 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                       }
                       if (isMobileMenuOpen) setIsMobileMenuOpen(false);
                     }}
-                    className="px-4 py-2 text-sm border border-purple-400 text-purple-400 rounded-md hover:bg-purple-400 hover:text-black transition text-left"
+                    className="px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform text-left"
                   >
                     {user.role === "admin" ? "Admin" : user.name || user.email}
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center px-4 py-2 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                    className="flex items-center px-4 py-2 text-sm rounded-md bg-black/70 border border-gold-500/30 text-gold-100 hover:border-gold-400 transition"
                   >
                     <FiLogOut className="mr-2" />
                     Logout
@@ -340,14 +340,14 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                 <>
                   <button
                     onClick={() => { setIsLoginModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }}
-                    className="flex items-center px-4 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                    className="flex items-center px-4 py-2 text-sm rounded-md gold-button hover:scale-105 transition-transform"
                   >
                     <FiLogIn className="mr-2" />
                     Login
                   </button>
                   <button
                     onClick={() => { setIsSignUpModalOpen(true); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }}
-                    className="flex items-center px-4 py-2 text-sm border border-purple-400 text-purple-400 rounded-md hover:bg-purple-400 hover:text-black transition"
+                    className="flex items-center px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform"
                   >
                     <FiUserPlus className="mr-2" />
                     Sign Up
