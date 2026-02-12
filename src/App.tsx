@@ -46,7 +46,11 @@ export default function App() {
   const { user } = useAuth();
   const location = useLocation();
 
-  const lines = ["Welcome to CSMIT", "Empowering Future Technocrats..."];
+  const lines = [
+  "SAMHITA 2026",
+  "Innovate. Collaborate. Elevate."
+  ];
+
 
   useEffect(() => {
     if (showIntro && currentLine < lines.length) {

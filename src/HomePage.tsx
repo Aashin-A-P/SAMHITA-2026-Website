@@ -171,8 +171,8 @@ export default function HomePage() {
 
             <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative pt-20">
               <img src={CsmitLogo} alt="CSMIT Logo" className="w-58 h-48 mb-4" />
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">CSMIT – Computer Society of MIT</h1>
-              <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl">Fostering innovation and technical excellence through collaboration and hands-on learning.</p>
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">SAMHITA '26</h1>
+              <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl">Empowering Young Innovators Through Challenging Competitions, Insightful Workshops, and a Platform that Inspires Technological Excellence.</p>
               <div className="flex flex-col sm:flex-row gap-4">
                   <a href="#about" className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button">Explore More</a>
                   <a href="#events" className="px-8 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg">Learn More</a>
