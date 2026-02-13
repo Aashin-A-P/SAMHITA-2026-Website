@@ -174,7 +174,7 @@ export default function HomePage() {
               <img src={CsmitLogo} alt="SAMHITA Logo" className="w-56 md:w-64 h-auto mb-6 drop-shadow-[0_0_35px_rgba(212,175,55,0.45)]" />
               <h1 className="text-4xl md:text-6xl font-bold font-display mb-4 text-gold-gradient">SAMHITA '26</h1>
               <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl">
-                Empowering young innovators through challenging competitions, insightful workshops, and a platform that inspires technological excellence.
+                Forging the next generation of technocrats through trials of skill, arenas of competition, and a kingdom where innovation rules.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                   <a href="#about" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-button">Explore More</a>
@@ -219,7 +219,7 @@ export default function HomePage() {
             
                     <HomePageGallery />
                         <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Explore Events</h2>
+                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Discover the Battlefields</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
                     <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
                         <h3 className="text-2xl font-bold text-white mb-3">SAMHITA</h3>
@@ -273,7 +273,7 @@ export default function HomePage() {
             <PassesDisplay />
 
             <section id="sponsors" className="py-20">
-              <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Our Valued Sponsors</h2>
+              <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">The Esteemed Banners of Support</h2>
               <div className="relative w-full overflow-hidden">
                 <div className="flex animate-marquee">
                   {[...sponsors, ...sponsors].map((sponsor, index) => (
