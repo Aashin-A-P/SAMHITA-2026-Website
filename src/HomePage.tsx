@@ -218,7 +218,7 @@ export default function HomePage() {
 
             
                     <HomePageGallery />
-                        <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
+            <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
                 <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Discover the Battlefields</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
                     <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
@@ -238,6 +238,26 @@ export default function HomePage() {
                         <div className="flex gap-4 mt-4">
                             <Link to="/events?symposium=Carteblanche" className="px-5 py-2 rounded-lg text-sm font-semibold gold-outline hover:scale-105 transition-transform">View Events</Link>
                             
+                        </div>
+                    </div>
+                </div>
+
+                <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient">Event Passes</h2>
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
+                    <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
+                        <h3 className="text-2xl font-bold text-white mb-3">SAMHITA Passes</h3>
+                        <div className="text-gray-300 mb-4 text-left">
+                            <p><span className="font-bold text-gold-400">Access:</span> Unlock multiple events with a single pass.</p>
+                            <p><span className="font-bold text-gold-400">Flexibility:</span> Choose the pass that fits your track and interests.</p>
+                            <p className="font-bold text-gold-400 mt-2">Benefits:</p>
+                            <ul className="list-disc list-inside text-gray-400">
+                                <li>Save more compared to individual registrations.</li>
+                                <li>Seamless entry across eligible events.</li>
+                                <li>Perfect for teams and power participants.</li>
+                            </ul>
+                        </div>
+                        <div className="flex gap-4 mt-4">
+                            <a href="#passes-details" className="px-5 py-2 rounded-lg text-sm font-semibold gold-outline hover:scale-105 transition-transform">View Passes</a>
                         </div>
                     </div>
                 </div>
@@ -270,7 +290,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-            <section id="passes" className="py-20 px-4 sm:px-6 lg:px-8">
+            <section id="passes-details" className="py-20 px-4 sm:px-6 lg:px-8">
               <PassesDisplay />
             </section>
 
@@ -297,25 +317,24 @@ export default function HomePage() {
         <footer id="contact" className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-7xl mx-auto text-center md:text-left">
                 <div>
-                    <h3 className="text-lg font-bold mb-4 text-white">CSMIT</h3>
+                    <h3 className="text-lg font-bold mb-4 text-white">SAMHITA</h3>
                     <p className="text-sm">Fostering the next generation of technologists through innovation and collaboration.</p>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Quick Links</h3>
                     <ul className="space-y-2 text-sm">
                         <li><a href="#about" className="hover:text-gold-400 transition">About</a></li>
-                        <li><a href="#alumni" className="hover:text-gold-400 transition">Alumni</a></li>
                         <li><a href="#events" className="hover:text-gold-400 transition">Events</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
-                    <p className="text-sm">Email: <a href="mailto:chairmancsmit@mitindia.edu" className="hover:text-gold-400 transition">chairmancsmit@mitindia.edu</a></p>
-                    <p className='text-sm'>Phone: <a href="tel:+91 6374521646" className="hover:text-gold-400 transition">+91 63745 21646</a></p>
+                    <p className="text-sm">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
+                    <p className='text-sm'>Phone: <a href="tel:+91 8903402688" className="hover:text-gold-400 transition">+91 89034 02688</a></p>
                     <p className="text-sm">Address: MIT Campus, Chromepet, Chennai</p>
                 </div>
             </div>
-            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} CSMIT - Computer Society of MIT. All Rights Reserved.</p>
+            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - Nation Level Technical Symposium. All Rights Reserved.</p>
         </footer>
 
         <LoginPage 

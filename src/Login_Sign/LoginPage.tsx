@@ -86,7 +86,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
         </button>
 
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white">CSMIT</h2>
+          <h2 className="text-3xl font-bold text-white">SAMHITA'26</h2>
           <p className="text-gold-300">Member, Admin & Organizer Login</p>
         </div>
 

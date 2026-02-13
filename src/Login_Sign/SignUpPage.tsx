@@ -129,7 +129,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
 
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-white">Create an Account</h2>
-          <p className="text-gold-300">Join the CSMIT Community</p>
+          <p className="text-gold-300">Join SAMHITA'26</p>
         </div>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
