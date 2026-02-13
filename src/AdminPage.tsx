@@ -11,8 +11,8 @@ const AdminPage: React.FC = () => {
   const getButtonClass = (path: string) => {
     return `px-6 py-3 font-semibold rounded-lg transition-all duration-300 ${
       location.pathname.includes(path)
-        ? 'bg-purple-600 text-white scale-105 shadow-lg'
-        : 'bg-gray-800/60 text-gray-300 hover:bg-purple-500/50'
+        ? 'bg-samhita-600 text-white scale-105 shadow-lg'
+        : 'bg-gray-800/60 text-gray-300 hover:bg-gold-500/50'
     }`;
   };
 
@@ -28,17 +28,17 @@ const AdminPage: React.FC = () => {
 
       <main className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900/70 border border-purple-500/30 p-8 rounded-lg">
+          <div className="bg-gray-900/70 border border-gold-500/30 p-8 rounded-lg">
             <button 
               onClick={() => setShowTimer(!showTimer)}
-              className="px-6 py-3 font-semibold rounded-lg transition-all duration-300 bg-gray-800/60 text-gray-300 hover:bg-purple-500/50 mb-4"
+              className="px-6 py-3 font-semibold rounded-lg transition-all duration-300 bg-gray-800/60 text-gray-300 hover:bg-gold-500/50 mb-4"
             >
               {showTimer ? 'Hide Timer' : 'Show Timer'}
             </button>
             {showTimer && (
               <>
                 <TimerControl />
-                <hr className="my-8 border-purple-500/30" />
+                <hr className="my-8 border-gold-500/30" />
               </>
             )}
             <Outlet /> {/* ✅ admin nested routes */}

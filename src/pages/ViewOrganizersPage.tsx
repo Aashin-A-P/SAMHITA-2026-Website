@@ -72,11 +72,11 @@ const ViewOrganizersPage: React.FC = () => {
               <table className="min-w-full text-left">
                 <thead className="border-b border-gray-600">
                   <tr>
-                    <th className="p-4 text-sm font-semibold text-purple-300">Name</th>
-                    <th className="p-4 text-sm font-semibold text-purple-300">Email</th>
-                    <th className="p-4 text-sm font-semibold text-purple-300">Mobile</th>
-                    <th className="p-4 text-sm font-semibold text-purple-300">Password (Hashed)</th>
-                    <th className="p-4 text-sm font-semibold text-purple-300">Actions</th>
+                    <th className="p-4 text-sm font-semibold text-gold-300">Name</th>
+                    <th className="p-4 text-sm font-semibold text-gold-300">Email</th>
+                    <th className="p-4 text-sm font-semibold text-gold-300">Mobile</th>
+                    <th className="p-4 text-sm font-semibold text-gold-300">Password (Hashed)</th>
+                    <th className="p-4 text-sm font-semibold text-gold-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

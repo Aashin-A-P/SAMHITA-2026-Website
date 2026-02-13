@@ -39,7 +39,7 @@ const ThemedModal = ({
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="relative bg-gray-800 border border-purple-500 text-white p-8 rounded-lg shadow-lg max-w-md w-full">
+      <div className="relative bg-gray-800 border border-gold-500 text-white p-8 rounded-lg shadow-lg max-w-md w-full">
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-400 hover:text-white"
@@ -209,7 +209,7 @@ const UpdateWinnersPage: React.FC = () => {
             value="Carteblanche"
             checked={filterSymposium === 'Carteblanche'}
             onChange={(e) => setFilterSymposium(e.target.value as any)}
-            className="form-radio text-purple-600"
+            className="form-radio text-samhita-600"
           />
           <span className="ml-2">SAMHITA</span>
         </label>
@@ -233,7 +233,7 @@ const UpdateWinnersPage: React.FC = () => {
                       className={`w-full text-left p-2 rounded-md ${selectedRound?.eventId === event.id &&
                         selectedRound?.roundNumber === round.roundNumber &&
                         selectedRound?.symposiumName === event.symposiumName
-                        ? 'bg-purple-600'
+                        ? 'bg-samhita-600'
                         : 'bg-gray-700 hover:bg-gray-600'
                         }`}
                     >

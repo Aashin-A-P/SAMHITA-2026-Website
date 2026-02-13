@@ -249,7 +249,7 @@ const ManageAccommodationPage: React.FC = () => {
         <button
           onClick={handleSaveChanges}
           disabled={isLoading}
-          className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400"
+          className="px-4 py-2 bg-samhita-600 text-white rounded hover:bg-samhita-700 disabled:bg-gray-400"
         >
           {isLoading ? 'Saving...' : 'Save Changes'}
         </button>

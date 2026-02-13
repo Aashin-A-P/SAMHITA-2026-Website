@@ -159,8 +159,8 @@ const AdminEventsDisplayPage: React.FC = () => {
               onClick={() => setActiveSymposium('Carteblanche')}
               className={`px-6 py-3 font-semibold rounded-lg transition-all duration-300 ${
                 activeSymposium === 'Carteblanche'
-                  ? 'bg-purple-600 text-white scale-105 shadow-lg'
-                  : 'bg-gray-800/60 text-gray-300 hover:bg-purple-500/50'
+                  ? 'bg-samhita-600 text-white scale-105 shadow-lg'
+                  : 'bg-gray-800/60 text-gray-300 hover:bg-gold-500/50'
               }`}
             >
               SAMHITA

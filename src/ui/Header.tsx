@@ -135,9 +135,6 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
           <a href="#home" onClick={(e) => handleNavClick(e, "#home")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             Home
           </a>
-          <a href="#featured-alumni" onClick={(e) => handleNavClick(e, "#featured-alumni")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
-            Alumni
-          </a>
           <a href="#about" onClick={(e) => handleNavClick(e, "#about")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             About
           </a>
@@ -163,17 +160,6 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
           Events
         </a>
       )}
-      <a
-        href="/placements"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate("/placements");
-          if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-        }}
-        className="text-white hover:text-gold-400 transition block py-2 md:py-0"
-      >
-        Placements
-      </a>
       {user?.role === "admin" && (
         <a
           href="/admin/organizer"

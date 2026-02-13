@@ -83,7 +83,7 @@ const ThemedModal: React.FC<{
           {showConfirmButton && (
             <button
               onClick={onConfirm}
-              className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700"
+              className="px-4 py-2 bg-samhita-600 text-white font-semibold rounded-md hover:bg-samhita-700"
             >
               Confirm
             </button>
@@ -97,7 +97,7 @@ const ThemedModal: React.FC<{
 
 const Loader: React.FC = () => (
   <div className="flex justify-center items-center h-full">
-    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-500"></div>
+    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500"></div>
   </div>
 );
 
@@ -110,7 +110,7 @@ const Dropdown: React.FC<{
   <select
     value={selectedValue}
     onChange={(e) => onSelect(e.target.value)}
-    className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+    className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
   >
     <option value="" disabled>
       {placeholder}
@@ -471,7 +471,7 @@ const App: React.FC = () => {
     <>
       <div className="min-h-screen bg-gray-900 text-white p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-center mb-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          <h1 className="text-4xl font-extrabold text-center mb-10 text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-pink-600">
             Event Management Portal
           </h1>
           {isLoading ? (
@@ -482,7 +482,7 @@ const App: React.FC = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={() => setActiveSymposium('Carteblanche')}
-                    className={`px-6 py-3 font-semibold rounded-lg ${activeSymposium === 'Carteblanche' ? 'bg-purple-600' : 'bg-gray-800/60'
+                    className={`px-6 py-3 font-semibold rounded-lg ${activeSymposium === 'Carteblanche' ? 'bg-samhita-600' : 'bg-gray-800/60'
                       }`}
                   >
                     SAMHITA
@@ -595,7 +595,7 @@ const App: React.FC = () => {
                           name="isOpenForNonMIT"
                           checked={editingEvent?.isOpenForNonMIT || newEvent.isOpenForNonMIT}
                           onChange={handleInputChange}
-                          className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                          className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded focus:ring-gold-500"
                         />
                         <label htmlFor="isOpenForNonMIT" className="ml-2 text-sm font-medium text-gray-300">
                           Open to Non-MIT Students
@@ -633,7 +633,7 @@ const App: React.FC = () => {
 
                     <button
                       type="submit"
-                      className="px-6 py-3 bg-purple-600 rounded-lg font-bold hover:bg-purple-700 transition-colors"
+                      className="px-6 py-3 bg-samhita-600 rounded-lg font-bold hover:bg-samhita-700 transition-colors"
                     >
                       {editingEvent ? 'Update Event' : 'Add Event'}
                     </button>
@@ -752,13 +752,13 @@ const App: React.FC = () => {
           <div className="flex space-x-4 mb-4">
             <button
               onClick={() => setDiscountType('Event')}
-              className={`px-4 py-2 rounded ${discountType === 'Event' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded ${discountType === 'Event' ? 'bg-samhita-600 text-white' : 'bg-gray-200'}`}
             >
               Events
             </button>
             <button
               onClick={() => setDiscountType('Pass')}
-              className={`px-4 py-2 rounded ${discountType === 'Pass' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded ${discountType === 'Pass' ? 'bg-samhita-600 text-white' : 'bg-gray-200'}`}
             >
               Passes
             </button>
@@ -824,7 +824,7 @@ const App: React.FC = () => {
               id="isForMIT"
               checked={discountForm.isForMIT}
               onChange={(e) => setDiscountForm({ ...discountForm, isForMIT: e.target.checked })}
-              className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+              className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded focus:ring-gold-500"
             />
             <label htmlFor="isForMIT" className="ml-2 text-sm font-medium text-gray-300">
               Apply to MIT students only

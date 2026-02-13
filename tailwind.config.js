@@ -4,10 +4,16 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'system-ui', 'sans-serif'],
-        display: ['Cinzel', 'serif'],
+        sans: ['Marcellus', 'serif'],
+        display: ['"Cinzel Decorative"', 'serif'],
       },
       colors: {
+        samhita: {
+          300: '#f8d820',
+          500: '#e8b808',
+          600: '#d8a000',
+          700: '#b8860b',
+        },
         gold: {
           50: '#FFFBEB',
           100: '#FEF3C7',

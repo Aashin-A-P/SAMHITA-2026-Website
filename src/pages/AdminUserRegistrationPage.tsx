@@ -151,13 +151,13 @@ const AdminUserRegistrationPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-500"></div></div>;
+    return <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500"></div></div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+        <h1 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-gold-400 to-pink-600">
           Register User for Events/Passes
         </h1>
 
@@ -181,7 +181,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                 value={searchUserTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => searchUserTerm.length > 0 && setShowResults(true)}
-                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
               {selectedUserId && (
                 <button
@@ -203,7 +203,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                     onClick={() => handleUserSelect(user)}
                     className="px-4 py-3 hover:bg-gray-700 cursor-pointer border-b border-gray-700/50 last:border-none"
                   >
-                    <div className="font-semibold text-purple-400">{user.fullName}</div>
+                    <div className="font-semibold text-gold-400">{user.fullName}</div>
                     <div className="text-xs text-gray-400">{user.email}</div>
                   </div>
                 ))}
@@ -244,7 +244,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                       id={`event-${event.id}`}
                       checked={selectedEventIds.includes(event.id)}
                       onChange={() => handleEventCheckboxChange(event.id)}
-                      className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                      className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded focus:ring-gold-500"
                     />
                     <label htmlFor={`event-${event.id}`} className="ml-3 text-sm">
                       {event.eventName} <span className="text-xs text-gray-400">({event.symposiumName === 'Carteblanche' ? 'SAMHITA' : event.symposiumName})</span>
@@ -263,7 +263,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                       id={`pass-${pass.id}`}
                       checked={selectedPassIds.includes(pass.id)}
                       onChange={() => handlePassCheckboxChange(pass.id)}
-                      className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                      className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded focus:ring-gold-500"
                     />
                     <label htmlFor={`pass-${pass.id}`} className="ml-3 text-sm">{pass.name}</label>
                   </div>
@@ -276,7 +276,7 @@ const AdminUserRegistrationPage: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-purple-600 rounded-lg font-bold hover:bg-purple-700 transition-colors disabled:bg-gray-500"
+              className="w-full px-6 py-3 bg-samhita-600 rounded-lg font-bold hover:bg-samhita-700 transition-colors disabled:bg-gray-500"
             >
               {isSubmitting ? 'Registering...' : 'Register User'}
             </button>

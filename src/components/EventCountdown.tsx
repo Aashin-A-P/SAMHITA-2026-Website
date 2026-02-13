@@ -35,7 +35,7 @@ const EventCountdown: React.FC<EventCountdownProps> = ({ lastDateForRegistration
   Object.keys(timeLeft).forEach((interval) => {
     if (timeLeft[interval] !== undefined && timeLeft[interval] > 0) {
       timerComponents.push(
-        <span key={interval} className="text-purple-300 font-semibold mx-1">
+        <span key={interval} className="text-gold-300 font-semibold mx-1">
           {timeLeft[interval]} {interval}{" "}
         </span>
       );

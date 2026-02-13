@@ -161,7 +161,7 @@ const VerifyTransactionPage: React.FC = () => {
 
         {/* Single Verification Card */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8 border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-purple-700">Single Verification</h2>
+          <h2 className="text-xl font-semibold mb-4 text-samhita-700">Single Verification</h2>
           <div className="max-w-md">
             <div className="mb-4">
               <label htmlFor="transactionId" className="block text-sm font-medium text-gray-700 mb-1">
@@ -172,14 +172,14 @@ const VerifyTransactionPage: React.FC = () => {
                 id="transactionId"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-gold-500 outline-none"
                 placeholder="Enter a single ID"
               />
             </div>
             <button
               onClick={handleVerifySingle}
               disabled={isSingleLoading || isBulkLoading}
-              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 transition"
+              className="px-4 py-2 bg-samhita-600 text-white rounded hover:bg-samhita-700 disabled:bg-gray-400 transition"
             >
               {isSingleLoading ? 'Verifying...' : 'Verify Single ID'}
             </button>
@@ -193,7 +193,7 @@ const VerifyTransactionPage: React.FC = () => {
 
         {/* Bulk Verification Card */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-purple-700">Bulk Verification (CSV)</h2>
+          <h2 className="text-xl font-semibold mb-4 text-samhita-700">Bulk Verification (CSV)</h2>
           
           {/* Warning Tip */}
           <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200">
@@ -215,8 +215,8 @@ const VerifyTransactionPage: React.FC = () => {
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
                   file:text-sm file:font-semibold
-                  file:bg-purple-50 file:text-purple-700
-                  hover:file:bg-purple-100"
+                  file:bg-gold-50 file:text-samhita-700
+                  hover:file:bg-gold-100"
               />
               <button
                 onClick={handleBulkVerify}

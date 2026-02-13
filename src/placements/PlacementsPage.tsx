@@ -115,7 +115,7 @@ const PlacementsPage: React.FC = () => {
                 <h1 className="text-3xl font-bold text-white">Placement Details</h1>
                 <button
                   onClick={() => setIsFormOpen(true)}
-                  className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button"
+                  className="px-6 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button"
                 >
                   Post Experiences here
                 </button>
@@ -127,7 +127,7 @@ const PlacementsPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Search companies..."
-                    className="w-full pl-10 pr-10 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                    className="w-full pl-10 pr-10 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -151,7 +151,7 @@ const PlacementsPage: React.FC = () => {
 
               <div className="flex flex-col md:flex-row gap-8">
                 {/* Left Sidebar: Company List */}
-                <div className="md:w-1/3 lg:w-1/4 bg-gray-900/70 backdrop-blur-md border border-purple-500/30 rounded-lg p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <div className="md:w-1/3 lg:w-1/4 bg-gray-900/70 backdrop-blur-md border border-gold-500/30 rounded-lg p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                   <h2 className="text-xl font-bold text-white mb-4">Companies</h2>
                   {filteredCompanyNames.length > 0 ? (
                     <div className="space-y-3">
@@ -160,7 +160,7 @@ const PlacementsPage: React.FC = () => {
                           key={company}
                           onClick={() => handleCompanyClick(company)}
                           className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 
-                            ${expandedCompany === company ? 'bg-purple-700/50 text-white shadow-lg' : 'bg-gray-800/50 text-purple-300 hover:bg-gray-700/50'}
+                            ${expandedCompany === company ? 'bg-samhita-700/50 text-white shadow-lg' : 'bg-gray-800/50 text-gold-300 hover:bg-gray-700/50'}
                           `}
                         >
                           <span className="font-semibold">{company}</span>
@@ -173,16 +173,16 @@ const PlacementsPage: React.FC = () => {
                 </div>
 
                 {/* Right Content: Student Experiences */}
-                <div className="md:w-2/3 lg:w-3/4 bg-gray-900/70 backdrop-blur-md border border-purple-500/30 rounded-lg p-6">
+                <div className="md:w-2/3 lg:w-3/4 bg-gray-900/70 backdrop-blur-md border border-gold-500/30 rounded-lg p-6">
                   {expandedCompany ? (
                     <>
-                      <h2 className="text-2xl font-bold text-purple-400 mb-6">{expandedCompany} Experiences</h2>
+                      <h2 className="text-2xl font-bold text-gold-400 mb-6">{expandedCompany} Experiences</h2>
                       <div className="space-y-4">
                         {groupedExperiences[expandedCompany]?.map(exp => (
                           <div key={exp.id} className="p-4 bg-gray-800/70 rounded-lg shadow-md">
                             <p className="font-bold text-white text-lg">{exp.name} ({exp.year_of_passing})</p>
                             <p className="text-sm text-gray-300 mb-2">{exp.type}</p>
-                            <a href={`${API_BASE_URL}/placements/experiences/${exp.id}/pdf`} target="_blank" rel="noopener noreferrer" className="text-sm text-purple-400 hover:underline inline-block">View Experience (PDF)</a>
+                            <a href={`${API_BASE_URL}/placements/experiences/${exp.id}/pdf`} target="_blank" rel="noopener noreferrer" className="text-sm text-gold-400 hover:underline inline-block">View Experience (PDF)</a>
                           </div>
                         ))}
                       </div>

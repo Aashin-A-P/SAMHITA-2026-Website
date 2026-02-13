@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../ui/Header';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
-import backgroundImage from '../Login_Sign/photo.png';
+import backgroundImage from '../Login_Sign/image1.png';
 import ThemedModal from '../components/ThemedModal';
 import API_BASE_URL from '../Config';
 
@@ -166,7 +166,7 @@ const EnrolledEventsPage: React.FC = () => {
       >
         {selectedEvent ? (
           <div className="text-white">
-            <p className="text-purple-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
+            <p className="text-gold-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
             <p className="text-gray-300 text-base mb-4">{selectedEvent.eventDescription}</p>
             <p><strong>Rounds:</strong> {selectedEvent.numberOfRounds}</p>
             <p><strong>Type:</strong> {selectedEvent.teamOrIndividual}</p>
@@ -253,7 +253,7 @@ const EnrolledEventsPage: React.FC = () => {
                           </div>
                         )}
                         <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.event.eventName}</h3>
-                        <p className="text-purple-300 text-sm font-medium mb-3">{registration.event.eventCategory}</p>
+                        <p className="text-gold-300 text-sm font-medium mb-3">{registration.event.eventCategory}</p>
                         <p className="text-gray-300 text-base mb-4 flex-grow">{registration.event.eventDescription.substring(0, 100)}...</p>
 
                         <div className="mb-4">

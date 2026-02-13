@@ -41,7 +41,7 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
                   onConfirm && onConfirm();
                   onClose();
                 }}
-                className="px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-5 py-2 bg-samhita-600 text-white font-semibold rounded-lg hover:bg-samhita-700 transition-colors"
               >
                 Confirm
               </button>

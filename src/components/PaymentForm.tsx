@@ -28,7 +28,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ totalAmount, onPaymentSuccess
             type="text" 
             value={cardNumber}
             onChange={(e) => setCardNumber(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             placeholder="0000 0000 0000 0000"
           />
         </div>
@@ -39,7 +39,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ totalAmount, onPaymentSuccess
               type="text" 
               value={expiry}
               onChange={(e) => setExpiry(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               placeholder="MM/YY"
             />
           </div>
@@ -49,12 +49,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ totalAmount, onPaymentSuccess
               type="text" 
               value={cvc}
               onChange={(e) => setCvc(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               placeholder="123"
             />
           </div>
         </div>
-        <button type="submit" className="w-full px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition">
+        <button type="submit" className="w-full px-4 py-2 bg-gold-500 text-white rounded-md hover:bg-samhita-600 transition">
           Pay Now
         </button>
       </form>

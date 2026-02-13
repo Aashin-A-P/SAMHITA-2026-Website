@@ -83,7 +83,7 @@ const RegistrationPage: React.FC = () => {
         <p className="text-xl mb-4">You need to be logged in to access this page.</p>
         <button
           onClick={() => setIsLoginModalOpen(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+          className="px-4 py-2 bg-samhita-600 text-white rounded-md hover:bg-samhita-700 transition"
         >
           Login
         </button>

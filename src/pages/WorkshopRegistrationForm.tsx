@@ -223,7 +223,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       <div className="grid md:grid-cols-2 gap-8">
         {/* Left Column: Order Summary */}
         <div className="bg-gray-800/70 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold text-purple-300 mb-4">Order Summary</h3>
+          <h3 className="text-xl font-semibold text-gold-300 mb-4">Order Summary</h3>
           <div className="space-y-4 mb-4">
             {cartItems && cartItems.map(item => {
               if (item.type === 'event' && item.eventDetails) {
@@ -283,7 +283,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
         <div className="bg-gray-800/70 p-6 rounded-lg">
           {accountDetails ? (
             <div className="mb-6">
-              <h3 className="text-xl font-semibold text-purple-300 mb-4">Payment Information</h3>
+              <h3 className="text-xl font-semibold text-gold-300 mb-4">Payment Information</h3>
               <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700 text-sm">
                 <p><strong>Account Name:</strong> {accountDetails.accountName}</p>
                 <p><strong>Bank Name:</strong> {accountDetails.bankName}</p>
@@ -316,7 +316,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 id="mobileNumber"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 required
                 placeholder="Enter your mobile number"
               />
@@ -329,7 +329,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="date"
                   id="transactionDate"
-                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
                   required
@@ -342,7 +342,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="time"
                   id="transactionTime"
-                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                   value={transactionTime}
                   onChange={(e) => setTransactionTime(e.target.value)}
                   required
@@ -356,7 +356,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 id="transactionId"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 required
                 placeholder="Enter UPI / Bank Transaction ID"
               />
@@ -367,7 +367,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 type="file"
                 id="transactionScreenshot"
                 onChange={handleFileChange}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 accept="image/jpeg,image/png,application/pdf"
                 required
               />
@@ -376,7 +376,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
               <button type="button" onClick={onCancel} className="w-1/3 px-4 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-transform duration-300">
                 Cancel
               </button>
-              <button type="submit" className="w-2/3 px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-transform duration-300 shadow-lg glow-button">
+              <button type="submit" className="w-2/3 px-4 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:bg-samhita-700 transition-transform duration-300 shadow-lg glow-button">
                 Complete Registration
               </button>
             </div>

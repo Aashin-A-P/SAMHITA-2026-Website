@@ -106,7 +106,7 @@ const AdminViewRegistrationsOverviewPage: React.FC = () => {
                   <td className="py-3 px-4">
                     <button
                       onClick={() => handleViewRegistrations(event.id, event.symposiumName)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+                      className="bg-samhita-600 hover:bg-samhita-700 text-white font-bold py-2 px-4 rounded"
                     >
                       View Registrations
                     </button>

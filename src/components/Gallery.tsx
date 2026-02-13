@@ -1,18 +1,12 @@
 const imageUrls = [
   "gallery-images/A_img1.png",
-  "gallery-images/A_img2.png",
   "gallery-images/A_img3.png",
   "gallery-images/A_img4.png",
-  "gallery-images/Carte Blanche 19.png",
-  "gallery-images/Carte Blanche'15.png",
   "gallery-images/CBKO Exclusive Event.png",
   "gallery-images/Community Service 2014-2015.png",
   "gallery-images/Community Service 2015-2016.png",
-  "gallery-images/CSMIT Inaguration - 2017.png",
   "gallery-images/CSMIT Inaugration 19-20.png",
   "gallery-images/CSMIT Inaugration 2019-2020.png",
-  "gallery-images/CSMIT Inaugration-2018.png",
-  "gallery-images/CSMIT Registration for Carte Blanche-2019.png",
   "gallery-images/Demonstrating science through experiments for Government school students.png",
   "gallery-images/Demonstrating science through experiments for Government school students(1).png",
   "gallery-images/Development Workshop.png",
@@ -23,8 +17,7 @@ const imageUrls = [
   "gallery-images/Paper Presentation.png",
   "gallery-images/Python and Web Development.png",
   "gallery-images/Registration Desk.png",
-  "gallery-images/School Events.png",
-  "gallery-images/TEAM CSMIT 19-20.png"
+  "gallery-images/School Events.png"
 ];
 
 export default function Gallery() {
@@ -39,7 +32,7 @@ export default function Gallery() {
         {imageUrls.map((url, index) => (
           <div
             key={index}
-            className="bg-gray-900/70 backdrop-blur-md border border-purple-500/30 p-2 rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
+            className="bg-gray-900/70 backdrop-blur-md border border-gold-500/30 p-2 rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
           >
             <img
               src={`${import.meta.env.BASE_URL}${url}`}

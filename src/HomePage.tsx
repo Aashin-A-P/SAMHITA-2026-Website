@@ -5,7 +5,7 @@ import Header from "./ui/Header";
 import { FaBullseye, FaEye, FaChevronDown } from "react-icons/fa";
 
 
-import backgroundImage from './Login_Sign/photo.png';
+import backgroundImage from './Login_Sign/image.png';
 import LoginPage from './Login_Sign/LoginPage';
 import SignUpPage from './Login_Sign/SignUpPage';
 import ForgotPassword from './Login_Sign/Forgot_Pass';
@@ -184,15 +184,9 @@ export default function HomePage() {
 
             <section id="about" className="py-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
-                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">About CSMIT</h2>
+                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">About SAMHITA</h2>
                   <p className="text-lg text-gray-300 mb-8">
-                    The Computer Society of MIT (CSMIT), founded in 1983 at Madras Institute
-                    of Technology, Anna University, began as a computer club teaching basic
-                    programming and hardware tools. With the rise of Computer Science and IT
-                    departments, it grew into an inclusive platform for students across
-                    streams, fostering coding, technical skills, and industry readiness. Today,
-                    CSMIT actively organizes national-level symposiums, training, and placement
-                    preparation, transforming students into skilled technocrats.
+                    SAMHITA, the flagship national-level technical symposium organized by the Information Technology Association, stands as a premier platform for innovation, collaboration, and technical excellence. Designed to bring together aspiring technocrats from across institutions, SAMHITA features a diverse array of competitions, workshops, and knowledge-sharing sessions that challenge creativity and problem-solving skills. Over the years, it has evolved into more than just an event - it is a dynamic forum that nurtures talent, encourages industry interaction, and empowers students to transform their ideas into impactful solutions, shaping them into confident and future-ready professionals.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
@@ -250,30 +244,26 @@ export default function HomePage() {
             </section>
             <section id="why-join" className="py-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-5xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
-                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">Why Join CSMIT?</h2>
+                  <h2 className="text-3xl font-bold font-display mb-6 text-gold-gradient">Why Experience SAMHITA?</h2>
                   <ul className="text-left text-lg text-gray-300 space-y-4 list-disc list-inside">
                     <li>
-                      Students get to know more about FOSS and other recent technologies.
+                      Explore cutting-edge tools, participate in hands-on workshops, and stay ahead in the evolving tech landscape.
                     </li>
                     <li>
-                      They can improve not only their technical skills but also their
-                      aptitude and managerial skills through weekly sessions.
+                      Strengthen your coding, problem-solving, and analytical abilities through competitive events and challenges.
                     </li>
                     <li>
-                      Juggernaut (monthly competition) helps students improve their
-                      technical as well as aptitude skills, which are very useful in
-                      placements.
+                      Showcase your talent, collaborate with peers, and gain recognition on a prestigious platform.
                     </li>
                     <li>
-                      It’s your privilege to be part of an organization recognized at
-                      the international level.
+                      Develop teamwork, communication, and leadership skills essential for academic and placement success.
                     </li>
                     <li>
-                      Several interesting classes will be conducted, such as:
+                      What You Gain at SAMHITA 2026:
                       <ul className="list-disc list-inside ml-6 text-gray-400">
-                        <li>Android Application Development</li>
-                        <li>Networking classes with hands-on training</li>
-                        <li>Software classes (AutoCAD, Ansys, Pro E, Mat Lab)</li>
+                        <li>Anna University–affiliated participation certificates</li>
+                        <li>Resume-enhancing national-level recognition</li>
+                        <li>Cash prizes and rewards for winners</li>
                       </ul>
                     </li>
                   </ul>

@@ -146,7 +146,7 @@ const AccommodationBooking: React.FC = () => {
           <select 
             value={selectedGender} 
             onChange={(e) => setSelectedGender(e.target.value as 'male' | 'female')}
-            className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500"
             disabled={isInCart}
           >
             <option value="" disabled>Select Gender</option>
@@ -161,7 +161,7 @@ const AccommodationBooking: React.FC = () => {
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500"
                 min="1"
                 disabled={isInCart}
             />
@@ -174,7 +174,7 @@ const AccommodationBooking: React.FC = () => {
               if (!details) return null;
               return (
                 <div className="text-gray-300 space-y-2">
-                  <p><strong>Fees per room:</strong> <span className="text-purple-300">₹{details.fees}</span></p>
+                  <p><strong>Fees per room:</strong> <span className="text-gold-300">₹{details.fees}</span></p>
                   <p><strong>Total Fees:</strong> <span className="font-bold text-green-400">₹{details.fees * quantity}</span></p>
                   <p><strong>Available Rooms:</strong> {details.available_rooms}</p>
                 </div>
@@ -194,7 +194,7 @@ const AccommodationBooking: React.FC = () => {
           <button 
             onClick={handleAddToCart}
             disabled={!selectedGender || quantity <= 0}
-            className="w-full px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-transform duration-300"
+            className="w-full px-4 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:bg-samhita-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-transform duration-300"
           >
             Add to Cart
           </button>

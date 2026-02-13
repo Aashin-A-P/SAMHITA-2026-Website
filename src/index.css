@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Manrope:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Cinzel+Decorative:wght@400;700&display=swap');
 
 /* These @tailwind directives must be processed by Tailwind CSS via PostCSS or the Tailwind CLI. 
    Do not import this file directly as plain CSS in your HTML or JS. 
@@ -13,10 +13,26 @@
     --gold-2: #d4af37;
     --gold-3: #b8860b;
     --obsidian: #0b0b0b;
+    --samhita-bg: url('/src/Photos/samhita-bg.png');
   }
 
   body {
     background-color: var(--obsidian);
+    background-image: var(--samhita-bg);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    font-family: 'Marcellus', serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Cinzel Decorative', serif;
   }
 }
 

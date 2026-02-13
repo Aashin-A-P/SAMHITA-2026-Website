@@ -47,9 +47,10 @@ export default function App() {
   const location = useLocation();
 
   const lines = [
-  "SAMHITA 2026",
-  "Innovate. Collaborate. Elevate."
+    "SAMHITA 2026",
+    "Innovation is Coming..."
   ];
+
 
 
   useEffect(() => {
@@ -96,12 +97,12 @@ export default function App() {
         {/* Subtle background grid */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1a1a1a_1px,transparent_1px)] [background-size:35px_35px] opacity-40"></div>
 
-        <div className="relative z-10 bg-black/80 border border-purple-500/40 rounded-lg shadow-lg shadow-purple-500/20 p-8 font-mono text-purple-400 text-lg max-w-2xl w-[90%] flex flex-col items-center">
-          {/* Loader (Purple Glowing Dots) */}
+        <div className="relative z-10 bg-black/80 border border-gold-500/40 rounded-lg shadow-lg shadow-gold-500/20 p-8 font-mono text-gold-400 text-lg max-w-2xl w-[90%] flex flex-col items-center">
+          {/* Loader (gold Glowing Dots) */}
           <div className="flex space-x-3 mb-6">
-            <span className="w-3 h-3 bg-purple-500 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(168,85,247,0.7)] [animation-delay:-0.3s]"></span>
-            <span className="w-3 h-3 bg-purple-400 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(192,132,252,0.7)] [animation-delay:-0.15s]"></span>
-            <span className="w-3 h-3 bg-purple-300 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(216,180,254,0.7)]"></span>
+            <span className="w-3 h-3 bg-gold-500 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(168,85,247,0.7)] [animation-delay:-0.3s]"></span>
+            <span className="w-3 h-3 bg-gold-400 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(192,132,252,0.7)] [animation-delay:-0.15s]"></span>
+            <span className="w-3 h-3 bg-gold-300 rounded-full animate-bounce shadow-[0_0_8px_2px_rgba(216,180,254,0.7)]"></span>
           </div>
 
           {/* Typewriter Text */}

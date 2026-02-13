@@ -1,5 +1,5 @@
 import Gallery from '../components/Gallery';
-import backgroundImage from '../Login_Sign/photo.png';
+import backgroundImage from '../Login_Sign/image.png';
 
 export default function GalleryPage() {
   return (

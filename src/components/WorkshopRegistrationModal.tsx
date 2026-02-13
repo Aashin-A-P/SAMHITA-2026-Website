@@ -167,14 +167,14 @@ const WorkshopRegistrationModal: React.FC<WorkshopRegistrationModalProps> = ({ /
       )}
 
       {!loading && !error && accountDetails && (
-        <div className="mb-6 p-5 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg border border-purple-700">
-          <h3 className="text-2xl font-bold text-purple-300 mb-4 border-b border-purple-600 pb-2">Payment Details</h3>
-          <p className="text-gray-200 text-xl mb-4"><strong className="text-purple-400">Amount to Transfer:</strong> ₹{event.registrationFees}</p>
+        <div className="mb-6 p-5 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg border border-samhita-700">
+          <h3 className="text-2xl font-bold text-gold-300 mb-4 border-b border-samhita-600 pb-2">Payment Details</h3>
+          <p className="text-gray-200 text-xl mb-4"><strong className="text-gold-400">Amount to Transfer:</strong> ₹{event.registrationFees}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
-            <p className="text-gray-200"><strong className="text-purple-400">Bank Name:</strong> {accountDetails.bankName}</p>
-            <p className="text-gray-200"><strong className="text-purple-400">Account Name:</strong> {accountDetails.accountName}</p>
-            <p className="text-gray-200"><strong className="text-purple-400">Account Number:</strong> {accountDetails.accountNumber}</p>
-            <p className="text-gray-200"><strong className="text-purple-400">IFSC Code:</strong> {accountDetails.ifscCode}</p>
+            <p className="text-gray-200"><strong className="text-gold-400">Bank Name:</strong> {accountDetails.bankName}</p>
+            <p className="text-gray-200"><strong className="text-gold-400">Account Name:</strong> {accountDetails.accountName}</p>
+            <p className="text-gray-200"><strong className="text-gold-400">Account Number:</strong> {accountDetails.accountNumber}</p>
+            <p className="text-gray-200"><strong className="text-gold-400">IFSC Code:</strong> {accountDetails.ifscCode}</p>
           </div>
           <p className="text-gray-300 mt-4 text-sm italic">Please make the payment to the above account and enter the transaction details below.</p>
         </div>
@@ -260,7 +260,7 @@ const WorkshopRegistrationModal: React.FC<WorkshopRegistrationModalProps> = ({ /
       <div className="flex justify-end space-x-4 mt-6">
         <button
           onClick={handleRegistration}
-          className="px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+          className="px-5 py-2 bg-samhita-600 text-white font-semibold rounded-lg hover:bg-samhita-700 transition-colors"
           disabled={loading || isRegistered || !transactionId || !transactionUsername || !transactionTime || !transactionDate || transactionAmount === '' || !accountDetails}
         >
           Register

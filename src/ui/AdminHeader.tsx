@@ -56,7 +56,7 @@ const AdminHeader: React.FC = () => {
           </button>
           <button
             onClick={() => setIsAddOrganizerModalOpen(true)}
-            className="flex items-center px-4 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+            className="flex items-center px-4 py-2 text-sm bg-samhita-600 text-white rounded-md hover:bg-samhita-700 transition"
           >
             <FiUserPlus className="mr-2" />
             Add Organizer
@@ -97,7 +97,7 @@ const AdminHeader: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setIsAddOrganizerModalOpen(true); setIsMobileMenuOpen(false); }}
-                  className="flex items-center px-4 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                  className="flex items-center px-4 py-2 text-sm bg-samhita-600 text-white rounded-md hover:bg-samhita-700 transition"
                 >
                   <FiUserPlus className="mr-2" />
                   Add Organizer

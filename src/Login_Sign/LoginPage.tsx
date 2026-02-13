@@ -30,7 +30,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'csmitindia@gmail.com' && password === '2026@Csmit') {
+    if (email === 'itasamhita26@gmail.com' && password === 'ITA2026#') {
       login(null, email, 'admin');
       navigate('/admin/manage-events');
       onClose();
@@ -73,12 +73,12 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md bg-gray-900/80 border border-purple-500/30 rounded-2xl p-8 shadow-2xl shadow-purple-500/20 z-10"
+        className="relative w-full max-w-md bg-gray-900/80 border border-gold-500/30 rounded-2xl p-8 shadow-2xl shadow-gold-500/20 z-10"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-purple-400 transition-colors duration-300"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gold-400 transition-colors duration-300"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -87,7 +87,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
 
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white">CSMIT</h2>
-          <p className="text-purple-300">Member, Admin & Organizer Login</p>
+          <p className="text-gold-300">Member, Admin & Organizer Login</p>
         </div>
 
         <form className="space-y-6" onSubmit={handleLogin}>
@@ -98,7 +98,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
               placeholder="you@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+              className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
             />
           </div>
 
@@ -109,12 +109,12 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+              className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-purple-400"
+              className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-gold-400"
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -133,13 +133,13 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
           </div>
 
           <div className="flex items-center justify-between">
-            <a href="#" onClick={handleSwitchToForgotPassword} className="text-sm text-purple-400 hover:underline">
+            <a href="#" onClick={handleSwitchToForgotPassword} className="text-sm text-gold-400 hover:underline">
               Forgot Password?
             </a>
           </div>
 
           <div>
-            <button type="submit" className="w-full px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button">
+            <button type="submit" className="w-full px-8 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button">
               Login
             </button>
           </div>
@@ -147,7 +147,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
 
         <p className="text-center text-sm text-gray-400 mt-8">
           Don't have an account?{' '}
-          <a href="#" onClick={handleSwitchToSignUp} className="font-medium text-purple-400 hover:underline">
+          <a href="#" onClick={handleSwitchToSignUp} className="font-medium text-gold-400 hover:underline">
             Sign up
           </a>
         </p>

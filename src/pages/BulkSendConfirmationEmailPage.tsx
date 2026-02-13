@@ -185,7 +185,7 @@ const BulkSendConfirmationEmailPage: React.FC = () => {
                   value="Carteblanche"
                   checked={filterSymposium === 'Carteblanche'}
                   onChange={(e) => setFilterSymposium(e.target.value as any)}
-                  className="form-radio text-purple-600"
+                  className="form-radio text-samhita-600"
                 />
                 <span className="ml-2 text-gray-700">SAMHITA</span>
               </label>

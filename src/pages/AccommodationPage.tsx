@@ -1,6 +1,6 @@
 import React from 'react';
 import AccommodationBooking from '../components/AccommodationBooking';
-import backgroundImage from '../Login_Sign/photo.png';
+import backgroundImage from '../Login_Sign/5.png';
 
 const AccommodationPage: React.FC = () => {
   return (
@@ -24,7 +24,7 @@ const AccommodationPage: React.FC = () => {
              2. [&_label]:text-gray-200: Forces all form labels inside to be light gray.
              3. [&_h2]:text-white: Forces headers to be white.
           */}
-          <div className="max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-md border border-purple-500/30 p-8 rounded-lg shadow-2xl text-white">
+          <div className="max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg shadow-2xl text-white">
             
             <AccommodationBooking />
             

@@ -12,9 +12,9 @@ const AdminOrganizerHeader: React.FC = () => {
         <Link to="/admin/organizer" className="text-xl font-bold">Organizer Portal</Link>
       </div>
       <nav className="flex items-center space-x-4">
-        <Link to="/admin/organizer/registrations/view" className="hover:text-purple-400">View Registrations</Link>
-        <Link to="/admin/organizer/registration-status" className="hover:text-purple-400">Registration Status</Link>
-        <Link to="/admin/organizer/update-winners" className="hover:text-purple-400">Update Winners</Link>
+        <Link to="/admin/organizer/registrations/view" className="hover:text-gold-400">View Registrations</Link>
+        <Link to="/admin/organizer/registration-status" className="hover:text-gold-400">Registration Status</Link>
+        <Link to="/admin/organizer/update-winners" className="hover:text-gold-400">Update Winners</Link>
         <button onClick={logout} className="flex items-center px-4 py-2 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">
           <FiLogOut className="mr-2" />
           Logout

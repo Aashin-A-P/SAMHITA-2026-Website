@@ -16,8 +16,8 @@ const OrganizerHeader: React.FC = () => {
 
   const navLinks = (
     <>
-      <Link to="/organizer/registrations/view" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-purple-400 block py-2 md:py-0">View Registrations</Link>
-      <Link to="/organizer/update-winners" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-purple-400 block py-2 md:py-0">Update Winners</Link>
+      <Link to="/organizer/registrations/view" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gold-400 block py-2 md:py-0">View Registrations</Link>
+      <Link to="/organizer/update-winners" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gold-400 block py-2 md:py-0">Update Winners</Link>
     </>
   );
 

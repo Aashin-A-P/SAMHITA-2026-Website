@@ -5,9 +5,9 @@ const Loader: React.FC = () => {
   return createPortal(
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90 z-50">
       <div className="relative flex justify-center items-center">
-        <div className="absolute w-24 h-24 rounded-full animate-ping-slow border-4 border-purple-400"></div>
-        <div className="absolute w-16 h-16 rounded-full animate-ping-slow border-4 border-purple-500" style={{ animationDelay: '-0.5s' }}></div>
-        <div className="absolute w-8 h-8 rounded-full animate-ping-slow border-4 border-purple-600" style={{ animationDelay: '-1s' }}></div>
+        <div className="absolute w-24 h-24 rounded-full animate-ping-slow border-4 border-gold-400"></div>
+        <div className="absolute w-16 h-16 rounded-full animate-ping-slow border-4 border-gold-500" style={{ animationDelay: '-0.5s' }}></div>
+        <div className="absolute w-8 h-8 rounded-full animate-ping-slow border-4 border-samhita-600" style={{ animationDelay: '-1s' }}></div>
       </div>
       <style>{`
         @keyframes ping-slow {

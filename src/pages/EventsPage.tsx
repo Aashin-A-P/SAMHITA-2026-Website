@@ -336,8 +336,8 @@ const EventsPage: React.FC = () => {
             <button
               onClick={() => setActiveSymposium('Carteblanche')}
               className={`px-6 py-3 font-semibold rounded-lg transition-all duration-300 ${activeSymposium === 'Carteblanche'
-                ? 'bg-purple-600 text-white scale-105 shadow-lg'
-                : 'bg-gray-800/60 text-gray-300 hover:bg-purple-500/50'
+                ? 'bg-samhita-600 text-white scale-105 shadow-lg'
+                : 'bg-gray-800/60 text-gray-300 hover:bg-gold-500/50'
                 }`}
             >
               SAMHITA
@@ -351,8 +351,8 @@ const EventsPage: React.FC = () => {
                   key={category}
                   onClick={() => setActiveCategory(category)}
                   className={`px-6 py-3 text-sm font-medium transition ${activeCategory === category
-                    ? 'text-purple-400 border-b-2 border-purple-400'
-                    : 'text-gray-400 hover:text-purple-300'
+                    ? 'text-gold-400 border-b-2 border-gold-400'
+                    : 'text-gray-400 hover:text-gold-300'
                     }`}
                 >
                   {category}
@@ -422,7 +422,7 @@ const EventsPage: React.FC = () => {
                     className="relative group overflow-hidden rounded-xl shadow-lg border border-gray-700 bg-gray-800/70 backdrop-blur-md cursor-pointer transition-all duration-500 hover:scale-105 hover:border-blue-400 w-full sm:w-96"
                     onClick={() => handleViewDetails(event)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-samhita-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
 
                     <div className="relative z-10 p-6 flex flex-col h-full">
                       {event.posterImage && (
@@ -436,7 +436,7 @@ const EventsPage: React.FC = () => {
                       )}
 
                       <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{event.eventName}</h3>
-                      <p className="text-purple-300 text-sm font-medium mb-3">{event.eventCategory}</p>
+                      <p className="text-gold-300 text-sm font-medium mb-3">{event.eventCategory}</p>
                       <p className="text-gray-300 text-base mb-4 flex-grow">{event.eventDescription.substring(0, 100)}...</p>
 
                       {/* --- DISCOUNT PRICE DISPLAY IN CARD --- */}
@@ -496,7 +496,7 @@ const EventsPage: React.FC = () => {
                                     ? 'bg-green-600 text-white hover:bg-green-700'
                                     : isInCart
                                       ? 'bg-red-600 text-white hover:bg-red-700'
-                                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                                      : 'bg-samhita-600 text-white hover:bg-samhita-700'
                               }`}
                           >
                             {hasPassCoverage
@@ -553,7 +553,7 @@ const EventsPage: React.FC = () => {
       >
         {selectedEvent ? (
           <div className="text-white">
-            <p className="text-purple-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
+            <p className="text-gold-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
             <p className="text-gray-300 text-base mb-4">{selectedEvent.eventDescription}</p>
             <p><strong>Rounds:</strong> {selectedEvent.numberOfRounds}</p>
             <p><strong>Type:</strong> {selectedEvent.teamOrIndividual}</p>

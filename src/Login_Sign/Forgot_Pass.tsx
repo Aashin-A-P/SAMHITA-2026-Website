@@ -145,10 +145,10 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" // Changed to fixed overlay
       onClick={onClose} // Close modal when clicking outside
     >
-      <div className="relative w-full max-w-md bg-gray-900/80 border border-purple-500/30 rounded-2xl p-8 shadow-2xl shadow-purple-500/20 z-10" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-md bg-gray-900/80 border border-gold-500/30 rounded-2xl p-8 shadow-2xl shadow-gold-500/20 z-10" onClick={(e) => e.stopPropagation()}>
         <button 
           onClick={onClose} // Use prop function
-          className="absolute top-4 right-4 text-gray-500 hover:text-purple-400 transition-colors duration-300"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gold-400 transition-colors duration-300"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -157,7 +157,7 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
 
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-white">Forgot Password</h2>
-          <p className="text-purple-300">Reset your password</p>
+          <p className="text-gold-300">Reset your password</p>
         </div>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
@@ -171,13 +171,13 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 placeholder="you@example.com"
               />
             </div>
             <button
               type="submit"
-              className="w-full px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
+              className="w-full px-8 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -200,13 +200,13 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
                 type="text"
                 value={otp}
                 onChange={handleOtpChange}
-                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 maxLength={6}
               />
             </div>
             <button
               type="submit"
-              className="w-full px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
+              className="w-full px-8 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -229,12 +229,12 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-purple-400"
+                className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-gold-400"
               >
                 {showNewPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -257,12 +257,12 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-purple-400"
+                className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-400 hover:text-gold-400"
               >
                 {showConfirmPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -281,7 +281,7 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
             </div>
             <button
               type="submit"
-              className="w-full px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
+              className="w-full px-8 py-3 bg-samhita-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform duration-300 shadow-lg glow-button flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -296,7 +296,7 @@ export default function ForgotPassword({ isOpen, onClose, onSwitchToLogin }: For
           </form>
         )}
         <p className="text-center text-sm text-gray-400 mt-8">
-          <a href="#" onClick={handleSwitch} className="font-medium text-purple-400 hover:underline">Back to Login</a>
+          <a href="#" onClick={handleSwitch} className="font-medium text-gold-400 hover:underline">Back to Login</a>
         </p>
       </div>
     </div>

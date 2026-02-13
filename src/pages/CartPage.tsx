@@ -5,7 +5,7 @@ import Header from "../ui/Header";
 import LoginPage from '../Login_Sign/LoginPage';
 import SignUpPage from '../Login_Sign/SignUpPage';
 import ForgotPassword from '../Login_Sign/Forgot_Pass';
-import backgroundImage from '../Login_Sign/photo.png';
+import backgroundImage from '../Login_Sign/3.png';
 import WorkshopRegistrationForm from './WorkshopRegistrationForm';
 import ThemedModal from '../components/ThemedModal';
 import API_BASE_URL from '../Config'; // adjust path if needed
@@ -253,7 +253,7 @@ const CartPage: React.FC = () => {
         <Header setIsLoginModalOpen={setIsLoginModalOpen} setIsSignUpModalOpen={setIsSignUpModalOpen} />
 
         <main className="relative z-10 flex items-center justify-center min-h-screen pt-16">
-          <div className="container mx-auto p-4 bg-gray-900/70 backdrop-blur-md border border-purple-500/30 rounded-lg">
+          <div className="container mx-auto p-4 bg-gray-900/70 backdrop-blur-md border border-gold-500/30 rounded-lg">
             {showRegistrationForm ? (
               <WorkshopRegistrationForm
                 cartItems={cartItems}
@@ -345,13 +345,13 @@ const CartPage: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col items-center mt-8">
-                      <div className="text-xl font-bold mb-4 p-4 bg-gray-800 rounded-lg border border-purple-500/50">
+                      <div className="text-xl font-bold mb-4 p-4 bg-gray-800 rounded-lg border border-gold-500/50">
                         Total Amount: <span className="text-green-400">₹{totalAmount}</span>
                       </div>
 
                       <button
                         onClick={handleRegisterAll}
-                        className="px-6 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition disabled:bg-gray-500 disabled:cursor-not-allowed shadow-lg"
+                        className="px-6 py-3 bg-samhita-600 text-white font-bold rounded-lg hover:bg-samhita-700 transition disabled:bg-gray-500 disabled:cursor-not-allowed shadow-lg"
                         disabled={cartItems.length === 0}
                       >
                         Register for All Events

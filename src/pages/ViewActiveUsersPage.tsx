@@ -82,7 +82,7 @@ const ViewActiveUsersPage: React.FC = () => {
               value="Carteblanche"
               checked={filterSymposium === 'Carteblanche'}
               onChange={(e) => setFilterSymposium(e.target.value as any)}
-              className="form-radio text-purple-600"
+              className="form-radio text-samhita-600"
             />
             <span className="ml-2 text-white">SAMHITA</span>
           </label>
@@ -116,7 +116,7 @@ const ViewActiveUsersPage: React.FC = () => {
                 <td className="py-3 px-4">{user.mobile}</td>
                 <td className="py-3 px-4">{user.college}</td>
                 <td className="py-3 px-4">{user.department}</td>
-                <td className="py-3 px-4 text-purple-400 font-medium">{(user as any).symposiums || 'N/A'}</td>
+                <td className="py-3 px-4 text-gold-400 font-medium">{(user as any).symposiums || 'N/A'}</td>
                 <td className="py-3 px-4 text-center font-bold">{user.totalEvents}</td>
               </tr>
             ))}

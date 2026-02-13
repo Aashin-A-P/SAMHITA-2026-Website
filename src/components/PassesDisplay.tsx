@@ -182,7 +182,7 @@ const PassesDisplay: React.FC = () => {
                                 setModal(prev => ({ ...prev, isOpen: false }));
                                 navigate('/cart');
                             }}
-                            className="px-5 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                            className="px-5 py-2 bg-samhita-600 text-white font-semibold rounded-lg hover:bg-samhita-700 transition-colors"
                         >
                             Go to Cart
                         </button>
@@ -194,7 +194,7 @@ const PassesDisplay: React.FC = () => {
                     <div key={pass.id} className="flex flex-col items-center">
                         <button
                             onClick={() => setSelectedPass(pass)}
-                            className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform hover:scale-125 animate-zoom-in-out"
+                            className="p-3 bg-gradient-to-br from-gold-500 to-indigo-600 text-white rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform hover:scale-125 animate-zoom-in-out"
                             title={`View details for ${pass.name}`}
                         >
                             <FiTag size={24} />
@@ -206,7 +206,7 @@ const PassesDisplay: React.FC = () => {
 
             {selectedPass && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 border border-purple-500/50 rounded-lg shadow-xl max-w-sm w-full relative text-white">
+                    <div className="bg-gray-800 border border-gold-500/50 rounded-lg shadow-xl max-w-sm w-full relative text-white">
                         <button
                             onClick={() => setSelectedPass(null)}
                             className="absolute top-2 right-2 text-gray-400 hover:text-white"
@@ -214,7 +214,7 @@ const PassesDisplay: React.FC = () => {
                             <FiX size={24} />
                         </button>
                         <div className="p-8">
-                            <h2 className="text-2xl font-bold text-purple-400 mb-2">{selectedPass.name}</h2>
+                            <h2 className="text-2xl font-bold text-gold-400 mb-2">{selectedPass.name}</h2>
                             <p className="text-3xl font-bold mb-4">₹{selectedPass.cost}</p>
                             <p className="text-gray-300 mb-6">{selectedPass.description}</p>
                             {isLoggedIn ? (
@@ -235,7 +235,7 @@ const PassesDisplay: React.FC = () => {
                                 ) : (
                                     <button
                                         onClick={() => handleAddToCart(selectedPass)}
-                                        className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                                        className="w-full bg-samhita-600 text-white py-2 rounded-lg hover:bg-samhita-700 transition-colors"
                                     >
                                         Add to Cart
                                     </button>
