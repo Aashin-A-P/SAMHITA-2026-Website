@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
   const { user, logout } = useAuth();
   const [symposiumStatus, setSymposiumStatus] = useState<any[]>([]);
   const [isSymposiumModalOpen, setIsSymposiumModalOpen] = useState(false);
-  const [carteblancheDate, setCarteblancheDate] = useState("");
+  const [samhitaDate, setSamhitaDate] = useState("");
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
       try {
         const response = await fetch(`${API_BASE_URL}/symposium/status`);
         const data = await response.json();
+        console.log("Symposium status response:", data);
         if (data.success) {
           setSymposiumStatus(data.data);
         } else {
@@ -128,6 +129,9 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
     return symposium ? symposium.isOpen === 1 : false;
   };
 
+  const hasSymposiumStatus = Array.isArray(symposiumStatus) && symposiumStatus.length > 0;
+  const samhitaIsOpen = getSymposiumStatus("SAMHITA");
+
   const navLinks = (
     <>
       {user?.role !== "admin" && (
@@ -160,6 +164,12 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
           Events
         </a>
       )}
+      <a href="#passes" onClick={(e) => handleNavClick(e, "#passes")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
+        Event Passes
+      </a>
+      <a href="#contact" onClick={(e) => handleNavClick(e, "#contact")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
+        Contact Us
+      </a>
       {user?.role === "admin" && (
         <a
           href="/admin/organizer"
@@ -352,12 +362,24 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
         title="Symposium Control"
         hideDefaultFooter={true}
       >
+        <div style={{ color: '#fff', border: '1px solid #fff', padding: '8px', marginBottom: '8px' }}>
+          Debug visible
+        </div>
+        <div className="mb-3 p-2 text-xs text-gray-300 bg-black/40 rounded border border-gold-500/20">
+          Debug symposiumStatus: {JSON.stringify(symposiumStatus)}
+        </div>
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-bold text-white">SAMHITA</h3>
-            {getSymposiumStatus("Carteblanche") ? (
+            {!hasSymposiumStatus && (
+              <p className="text-sm text-gray-300">
+                No symposium status found. Ensure a `symposium_status` row exists for SAMHITA.
+              </p>
+            )}
+            <p className="text-sm text-gray-300">Status: {samhitaIsOpen ? "Open" : "Closed"}</p>
+            {samhitaIsOpen ? (
               <button
-                onClick={() => handleStopSymposium("Carteblanche")}
+                onClick={() => handleStopSymposium("SAMHITA")}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
               >
                 Stop
@@ -367,11 +389,11 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                 <input
                   type="date"
                   className="bg-gray-700 p-1 rounded-md text-white"
-                  value={carteblancheDate}
-                  onChange={(e) => setCarteblancheDate(e.target.value)}
+                  value={samhitaDate}
+                  onChange={(e) => setSamhitaDate(e.target.value)}
                 />
                 <button
-                  onClick={() => handleStartSymposium("Carteblanche", carteblancheDate)}
+                  onClick={() => handleStartSymposium("SAMHITA", samhitaDate)}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
                 >
                   Start

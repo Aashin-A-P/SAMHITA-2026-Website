@@ -38,35 +38,7 @@ module.exports = (db, uploadDocument) => {
     }
   });
 
-  // Get account details for a specific event
-  router.get('/event/:eventId', async (req, res) => {
-    const { eventId } = req.params;
-
-    try {
-      // First, find the accountId linked to the eventId
-      const [eventAccount] = await db.execute('SELECT accountId FROM event_accounts WHERE eventId = ?', [eventId]);
-
-      if (eventAccount.length === 0) {
-        console.warn(`No account mapping found for eventId: ${eventId}`);
-        return res.status(404).json({ message: 'Account for this event not found.' });
-      }
-
-      const accountId = eventAccount[0].accountId;
-
-      // Now, fetch the account details using the found accountId
-      const [account] = await db.execute('SELECT id, accountName, bankName, accountNumber, ifscCode, qrCodePdf FROM accounts WHERE id = ?', [accountId]);
-
-      if (account.length === 0) {
-        console.warn(`Account details not found for accountId: ${accountId} (linked to eventId: ${eventId})`);
-        return res.status(404).json({ message: 'Account details not found.' });
-      }
-
-      res.status(200).json(account[0]);
-    } catch (error) {
-      console.error(`Error fetching account for event ${eventId}:`, error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
+  // event_accounts removed for SAMHITA DB
 
   // Get account details for a specific pass
   router.get('/pass/:passId', async (req, res) => {

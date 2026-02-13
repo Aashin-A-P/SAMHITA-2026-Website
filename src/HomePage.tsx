@@ -270,7 +270,9 @@ export default function HomePage() {
                 </div>
               </section>
 
-            <PassesDisplay />
+            <section id="passes" className="py-20 px-4 sm:px-6 lg:px-8">
+              <PassesDisplay />
+            </section>
 
             <section id="sponsors" className="py-20">
               <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">The Esteemed Banners of Support</h2>
@@ -292,7 +294,7 @@ export default function HomePage() {
 
         </main>
 
-        <footer className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
+        <footer id="contact" className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-7xl mx-auto text-center md:text-left">
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">CSMIT</h3>

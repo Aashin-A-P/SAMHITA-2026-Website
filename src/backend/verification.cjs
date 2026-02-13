@@ -27,11 +27,10 @@ module.exports = function (db) {
     }
 
     // 3. Fetch Events
-    const [events] = await executor.execute(`
-        SELECT id, 'Enigma' as symposium FROM enigma_events WHERE eventCategory = ?
-        UNION ALL
-        SELECT id, 'Carteblanche' as symposium FROM carte_blanche_events WHERE eventCategory = ?
-    `, [category, category]);
+    const [events] = await executor.execute(
+      `SELECT id, 'SAMHITA' as symposium FROM events WHERE eventCategory = ?`,
+      [category]
+    );
 
     // 4. Get User Details for Registration Entry
     const [users] = await executor.execute('SELECT fullName, email, mobile FROM users WHERE id = ?', [userId]);

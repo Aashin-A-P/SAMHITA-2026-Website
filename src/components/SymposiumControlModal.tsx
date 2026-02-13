@@ -7,7 +7,7 @@ interface SymposiumControlModalProps {
 }
 
 interface SymposiumStatus {
-  symposiumName: 'Carteblanche';
+  symposiumName: string;
   isOpen: 0 | 1;
   startDate: string;
 }
@@ -85,7 +85,7 @@ const SymposiumControlModal: React.FC<SymposiumControlModalProps> = ({ isOpen, o
           <p className="text-center text-red-500">{error}</p>
         ) : (
           <div className="space-y-4">
-            {symposiumStatus.filter(s => s.symposiumName === 'Carteblanche').map(symposium => (
+            {symposiumStatus.filter(s => s.symposiumName === 'SAMHITA').map(symposium => (
               <div key={symposium.symposiumName} className="flex justify-between items-center p-4 bg-gray-800/50 rounded-lg">
                 <div>
                   <p className="font-bold text-lg">SAMHITA</p>

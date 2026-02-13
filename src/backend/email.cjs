@@ -11,7 +11,7 @@ module.exports = function (db, transporter, uploadDocument) {
       const [openStatus] = await db.execute('SELECT symposiumName FROM symposium_status WHERE isOpen = 1');
       const openSymposiums = openStatus.map(s => s.symposiumName);
       // Fallback to Carteblanche or Enigma if nothing is open, or just use the first open one
-      const activeSymp = openSymposiums.length > 0 ? openSymposiums[0] : 'Carteblanche';
+      const activeSymp = openSymposiums.length > 0 ? openSymposiums[0] : 'SAMHITA';
 
       const { includeSent } = req.query;
 
@@ -23,16 +23,14 @@ module.exports = function (db, transporter, uploadDocument) {
           COUNT(vr.id) as unconfirmedItems,
           GROUP_CONCAT(DISTINCT
             CASE
-              WHEN ee.id IS NOT NULL THEN 'Enigma'
-              WHEN cbe.id IS NOT NULL THEN 'Carteblanche'
+              WHEN e.id IS NOT NULL THEN 'SAMHITA'
               WHEN p.id IS NOT NULL THEN ?
               ELSE 'General'
             END
           ) as symposiums
         FROM users u
         JOIN verified_registrations vr ON u.id = vr.userId
-        LEFT JOIN enigma_events ee ON vr.eventId = ee.id
-        LEFT JOIN carte_blanche_events cbe ON vr.eventId = cbe.id
+        LEFT JOIN events e ON vr.eventId = e.id
         LEFT JOIN passes p ON vr.passId = p.id
         WHERE vr.verified = true ${includeSent === 'true' ? '' : 'AND vr.confirmation_email_sent = false'}
         GROUP BY u.id, u.fullName, u.email
@@ -80,21 +78,16 @@ module.exports = function (db, transporter, uploadDocument) {
           }
 
           let query = `
-            SELECT DISTINCT COALESCE(ee.eventName, cbe.eventName, p.name) as itemName
+            SELECT DISTINCT COALESCE(e.eventName, p.name) as itemName
              FROM verified_registrations vr
-             LEFT JOIN enigma_events ee ON vr.eventId = ee.id
-             LEFT JOIN carte_blanche_events cbe ON vr.eventId = cbe.id
+             LEFT JOIN events e ON vr.eventId = e.id
              LEFT JOIN passes p ON vr.passId = p.id
              WHERE vr.userId = ? AND vr.verified = true ${forceResend === 'true' || forceResend === true ? '' : 'AND vr.confirmation_email_sent = false'}
           `;
 
           const queryParams = [userId];
 
-          if (symposium === 'Enigma') {
-            query += " AND (ee.id IS NOT NULL OR (p.id IS NOT NULL AND p.name LIKE '%Tech%'))";
-          } else if (symposium === 'Carteblanche') {
-            query += " AND (cbe.id IS NOT NULL OR (p.id IS NOT NULL AND p.name NOT LIKE '%Tech%' AND p.name != 'Pass Unlocked'))";
-          }
+          // Single symposium; no additional filtering needed
 
           const [items] = await connection.execute(query, queryParams);
 
@@ -173,10 +166,9 @@ module.exports = function (db, transporter, uploadDocument) {
       const user = users[0];
 
       const [items] = await db.execute(
-        `SELECT DISTINCT COALESCE(ee.eventName, cbe.eventName, p.name) as itemName
+        `SELECT DISTINCT COALESCE(e.eventName, p.name) as itemName
          FROM verified_registrations vr
-         LEFT JOIN enigma_events ee ON vr.eventId = ee.id
-         LEFT JOIN carte_blanche_events cbe ON vr.eventId = cbe.id
+         LEFT JOIN events e ON vr.eventId = e.id
          LEFT JOIN passes p ON vr.passId = p.id
          WHERE vr.userId = ? AND vr.verified = true`,
         [userId]

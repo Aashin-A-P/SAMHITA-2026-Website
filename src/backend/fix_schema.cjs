@@ -5,7 +5,7 @@ async function fixSchema() {
         host: 'localhost',
         user: 'backend_user',
         password: 'Backend@123!',
-        database: 'csmit_db',
+        database: 'samhita_db',
         waitForConnections: true,
         connectionLimit: 1
     });
@@ -14,7 +14,7 @@ async function fixSchema() {
         console.log('Checking verified_registrations table...');
         const [columns] = await db.execute(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = 'csmit_db' AND TABLE_NAME = 'verified_registrations' AND COLUMN_NAME = 'confirmation_email_sent'
+      WHERE TABLE_SCHEMA = 'samhita_db' AND TABLE_NAME = 'verified_registrations' AND COLUMN_NAME = 'confirmation_email_sent'
     `);
 
         if (columns.length === 0) {

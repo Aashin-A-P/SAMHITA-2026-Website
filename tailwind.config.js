@@ -1,6 +1,13 @@
 /** @type {import('tailwindcss').Config} */
+import path from 'path';
+
+const content = [
+  './index.html',
+  path.posix.join('src', '**/*.{js,ts,jsx,tsx}')
+];
+
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content,
   theme: {
     extend: {
       fontFamily: {

@@ -175,7 +175,7 @@ module.exports = function (db, transporter) {
       mobile,
       college,
       department,
-      yearOfPassing,
+      yearofPassing,
       state,
       district
     } = req.body;
@@ -191,8 +191,8 @@ module.exports = function (db, transporter) {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const [result] = await db.execute(
-        'INSERT INTO users (fullName, email, password, dob, mobile, college, department, yearOfPassing, state, district) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [fullName, email, hashedPassword, dob, mobile, college, department, yearOfPassing, state, district]
+        'INSERT INTO users (fullName, email, password, dob, mobile, college, department, yearofPassing, state, district) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [fullName, email, hashedPassword, dob, mobile, college, department, yearofPassing, state, district]
       );
 
 

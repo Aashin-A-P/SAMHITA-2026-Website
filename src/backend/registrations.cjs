@@ -22,11 +22,10 @@ module.exports = function (db, uploadTransactionScreenshot) {
     }
 
     // Fetch Events
-    const [events] = await executor.execute(`
-        SELECT id, 'Enigma' as symposium FROM enigma_events WHERE eventCategory = ?
-        UNION ALL
-        SELECT id, 'Carteblanche' as symposium FROM carte_blanche_events WHERE eventCategory = ?
-    `, [category, category]);
+    const [events] = await executor.execute(
+      `SELECT id, 'SAMHITA' as symposium FROM events WHERE eventCategory = ?`,
+      [category]
+    );
 
     // Get User Details for Registration Entry
     const [users] = await executor.execute('SELECT fullName, email, mobile FROM users WHERE id = ?', [userId]);
@@ -77,7 +76,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
             u.college,
             CASE
                 WHEN r.symposium = 'Accommodation' THEN 'Accommodation'
-                ELSE COALESCE(ee.eventName, cbe.eventName, p.name)
+                ELSE COALESCE(e.eventName, p.name)
             END as itemName,
             CASE
                 WHEN r.symposium = 'Accommodation' THEN 'accommodation'
@@ -86,15 +85,14 @@ module.exports = function (db, uploadTransactionScreenshot) {
             END as itemType
         FROM registrations r
         LEFT JOIN users u ON r.userEmail = u.email
-        LEFT JOIN enigma_events ee ON r.eventId = ee.id AND r.symposium = 'Enigma'
-        LEFT JOIN carte_blanche_events cbe ON r.eventId = cbe.id AND r.symposium = 'Carteblanche'
+        LEFT JOIN events e ON r.eventId = e.id
         LEFT JOIN passes p ON r.passId = p.id
         LEFT JOIN verified_registrations vr ON u.id = vr.userId AND ((r.eventId IS NOT NULL AND r.eventId = vr.eventId) OR (r.passId IS NOT NULL AND r.passId = vr.passId))
         LEFT JOIN accommodation_bookings ab ON u.id = ab.userId AND r.symposium = 'Accommodation'
         WHERE (r.transactionId IS NULL OR r.transactionId != 'PASS_ENTRY')
         GROUP BY r.transactionId, u.id, r.symposium, r.eventId, r.passId, r.userName, r.userEmail, 
                  r.mobileNumber, r.transactionUsername, r.transactionTime, r.transactionDate, 
-                 r.transactionAmount, r.transactionScreenshot, u.college, ee.eventName, cbe.eventName, 
+                 r.transactionAmount, r.transactionScreenshot, u.college, e.eventName, 
                  p.name, vr.verified, ab.status
         ORDER BY MAX(r.createdAt) DESC
       `);
@@ -183,12 +181,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
         // --- Process Event Registrations ---
         for (const eventId of parsedEventIds) {
           const [[event]] = await connection.execute(
-            `SELECT eventName, registrationFees, discountPercentage, 'Enigma' as symposium 
-             FROM enigma_events WHERE id = ? 
-             UNION 
-             SELECT eventName, registrationFees, discountPercentage, 'Carteblanche' as symposium 
-             FROM carte_blanche_events WHERE id = ?`,
-            [eventId, eventId]
+            `SELECT eventName, registrationFees, discountPercentage, 'SAMHITA' as symposium 
+             FROM events WHERE id = ?`,
+            [eventId]
           );
           if (!event) {
             console.warn(`Event with ID ${eventId} not found. Skipping.`);
@@ -249,7 +244,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
           const [symposiumStatus] = await connection.execute(
             'SELECT symposiumName FROM symposium_status WHERE isOpen = 1'
           );
-          const activeSymposium = symposiumStatus.length > 0 ? symposiumStatus[0].symposiumName : 'Carteblanche';
+          const activeSymposium = symposiumStatus.length > 0 ? symposiumStatus[0].symposiumName : 'SAMHITA';
 
           const symposium = activeSymposium;
 
@@ -365,7 +360,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
           u.mobile, 
           u.college, 
           u.department, 
-          u.yearOfPassing, 
+          u.yearofPassing, 
           u.state, 
           u.district,
           COUNT(r.id) AS totalEvents,
@@ -384,7 +379,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
       query += `
         GROUP BY u.id, u.fullName, u.email, u.mobile, u.college, 
-                 u.department, u.yearOfPassing, u.state, u.district
+                 u.department, u.yearofPassing, u.state, u.district
         ORDER BY totalEvents DESC;
       `;
 
@@ -463,12 +458,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
     try {
       // [MODIFIED] Fetch discountPercentage to check if event is effectively free
       const [[event]] = await db.execute(
-        `SELECT eventName, registrationFees, discountPercentage, 'Enigma' as symposium 
-         FROM enigma_events WHERE id = ? 
-         UNION 
-         SELECT eventName, registrationFees, discountPercentage, 'Carteblanche' as symposium 
-         FROM carte_blanche_events WHERE id = ?`,
-        [eventId, eventId]
+        `SELECT eventName, registrationFees, discountPercentage, 'SAMHITA' as symposium 
+         FROM events WHERE id = ?`,
+        [eventId]
       );
 
       if (!event) {
@@ -551,33 +543,21 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
       for (const reg of allRegistrations) {
         if (reg.itemType === 'event') {
-          let event;
-          let eventTable = '';
-          let roundsTable = '';
-
-          if (reg.symposium === 'Enigma') {
-            eventTable = 'enigma_events';
-            roundsTable = 'enigma_rounds';
-          } else if (reg.symposium === 'Carteblanche') {
-            eventTable = 'carte_blanche_events';
-            roundsTable = 'carte_blanche_rounds';
-          }
-
-          if (eventTable) {
-            const [eventRows] = await db.execute(
-              `SELECT * FROM ${eventTable} WHERE id = ?`,
+          const eventTable = 'events';
+          const roundsTable = 'rounds';
+          const [eventRows] = await db.execute(
+            `SELECT * FROM ${eventTable} WHERE id = ?`,
+            [reg.eventId]
+          );
+          const event = eventRows[0];
+          if (event) {
+            const [roundsResult] = await db.execute(
+              `SELECT * FROM ${roundsTable} WHERE eventId = ?`,
               [reg.eventId]
             );
-            event = eventRows[0];
-            if (event) {
-              const [roundsResult] = await db.execute(
-                `SELECT * FROM ${roundsTable} WHERE eventId = ?`,
-                [reg.eventId]
-              );
-              event.rounds = roundsResult;
-              registrationsWithDetails.push({ ...reg, event });
-              eventIds.add(reg.eventId);
-            }
+            event.rounds = roundsResult;
+            registrationsWithDetails.push({ ...reg, event });
+            eventIds.add(reg.eventId);
           }
         } else if (reg.itemType === 'pass') {
           const [[pass]] = await db.execute(
@@ -603,8 +583,8 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
 
       const fetchEventsByCategory = async (category, symposium, rounds) => {
-        const eventTable = symposium === 'Enigma' ? 'enigma_events' : 'carte_blanche_events';
-        const roundsTable = symposium === 'Enigma' ? 'enigma_rounds' : 'carte_blanche_rounds';
+        const eventTable = 'events';
+        const roundsTable = 'rounds';
 
         const [events] = await db.execute(`SELECT * FROM ${eventTable} WHERE eventCategory = ?`, [category]);
 
@@ -632,13 +612,12 @@ module.exports = function (db, uploadTransactionScreenshot) {
         return acc;
       }, {});
 
-      if (hasTechPass) {
-        if (symposiumStatus['Enigma']) await fetchEventsByCategory('Technical Events', 'Enigma', techPassRounds);
-        if (symposiumStatus['Carteblanche']) await fetchEventsByCategory('Technical Events', 'Carteblanche', techPassRounds);
+      const isOpen = symposiumStatus['SAMHITA'] ?? true;
+      if (hasTechPass && isOpen) {
+        await fetchEventsByCategory('Technical Events', 'SAMHITA', techPassRounds);
       }
-      if (hasNonTechPass) {
-        if (symposiumStatus['Enigma']) await fetchEventsByCategory('Non-Technical Events', 'Enigma', nonTechPassRounds);
-        if (symposiumStatus['Carteblanche']) await fetchEventsByCategory('Non-Technical Events', 'Carteblanche', nonTechPassRounds);
+      if (hasNonTechPass && isOpen) {
+        await fetchEventsByCategory('Non-Technical Events', 'SAMHITA', nonTechPassRounds);
       }
 
       res.status(200).json(registrationsWithDetails);
@@ -680,15 +659,12 @@ module.exports = function (db, uploadTransactionScreenshot) {
       // Process Event Registrations
       if (eventIds && eventIds.length > 0) {
         for (const eventId of eventIds) {
-          const [[enigmaEvent]] = await connection.execute('SELECT eventName FROM enigma_events WHERE id = ?', [eventId]);
-          const [[cbEvent]] = await connection.execute('SELECT eventName FROM carte_blanche_events WHERE id = ?', [eventId]);
-
-          const event = enigmaEvent || cbEvent;
+          const [[event]] = await connection.execute('SELECT eventName FROM events WHERE id = ?', [eventId]);
           if (!event) {
             console.warn(`Event with ID ${eventId} not found. Skipping.`);
             continue;
           }
-          const symposium = enigmaEvent ? 'Enigma' : 'Carteblanche';
+          const symposium = 'SAMHITA';
 
           const [existing] = await connection.execute('SELECT id FROM registrations WHERE userEmail = ? AND eventId = ?', [user.email, eventId]);
           if (existing.length > 0) {
@@ -727,7 +703,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
           const [symposiumStatus] = await connection.execute(
             'SELECT symposiumName FROM symposium_status WHERE isOpen = 1'
           );
-          const symposium = symposiumStatus.length > 0 ? symposiumStatus[0].symposiumName : 'Carteblanche';
+          const symposium = symposiumStatus.length > 0 ? symposiumStatus[0].symposiumName : 'SAMHITA';
 
           await connection.execute(
             `INSERT INTO registrations (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionAmount) VALUES (?, ?, ?, ?, ?, ?, ?)`,

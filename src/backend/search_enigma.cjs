@@ -5,7 +5,7 @@ async function searchEnigma() {
         host: 'localhost',
         user: 'backend_user',
         password: 'Backend@123!',
-        database: 'csmit_db'
+        database: 'samhita_db'
     });
 
     try {

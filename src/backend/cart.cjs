@@ -79,14 +79,7 @@ module.exports = function (db) {
 
       const eventsWithDetails = await Promise.all(
         filteredEventCartItems.map(async (item) => {
-          let eventTable;
-          if (item.symposiumName === 'Enigma') {
-            eventTable = 'enigma_events';
-          } else if (item.symposiumName === 'Carteblanche') {
-            eventTable = 'carte_blanche_events';
-          } else {
-            return null;
-          }
+          const eventTable = 'events';
 
           // [UPDATED] Added discountPercentage, mit_discount_percentage and discountReason to the SELECT query
           const [eventDetails] = await db.execute(

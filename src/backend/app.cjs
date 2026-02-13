@@ -43,7 +43,7 @@ const db = mysql.createPool({
   host: 'localhost',
   user: 'backend_user',
   password: 'Backend@123!',
-  database: 'csmit_db',
+  database: 'samhita_db',
   waitForConnections: true,
   connectionLimit: 10
 });
@@ -52,18 +52,20 @@ async function createTablesIfNotExists() {
   try {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id VARCHAR(5) NOT NULL,
         fullName VARCHAR(255),
-        email VARCHAR(255) UNIQUE,
+        email VARCHAR(255) PRIMARY KEY,
         password VARCHAR(255),
         dob DATE,
         mobile VARCHAR(20),
         college VARCHAR(255),
         department VARCHAR(255),
-        yearOfPassing INT,
+        yearofPassing INT,
         state VARCHAR(255),
         district VARCHAR(255),
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY id_UNIQUE (id),
+        CONSTRAINT users_id_format CHECK (id REGEXP '^S[0-9]{4}$')
       );
     `);
 
@@ -85,7 +87,7 @@ async function createTablesIfNotExists() {
     await addColumnIfNotExists('users', 'mobile', 'VARCHAR(20)');
     await addColumnIfNotExists('users', 'college', 'VARCHAR(255)');
     await addColumnIfNotExists('users', 'department', 'VARCHAR(255)');
-    await addColumnIfNotExists('users', 'yearOfPassing', 'INT');
+    await addColumnIfNotExists('users', 'yearofPassing', 'INT');
     await addColumnIfNotExists('users', 'state', 'VARCHAR(255)');
     await addColumnIfNotExists('users', 'district', 'VARCHAR(255)');
 
@@ -173,7 +175,7 @@ async function createTablesIfNotExists() {
       );
     `);
 
-    const symposiums = ['Enigma', 'Carteblanche'];
+    const symposiums = ['SAMHITA'];
     for (const s of symposiums) {
       await db.execute(
         'INSERT IGNORE INTO symposium_status (symposiumName) VALUES (?)',
@@ -182,7 +184,7 @@ async function createTablesIfNotExists() {
     }
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS enigma_events (
+      CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,
         eventName VARCHAR(255) NOT NULL,
         eventCategory VARCHAR(255) NOT NULL,
@@ -202,7 +204,7 @@ async function createTablesIfNotExists() {
     `);
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS carte_blanche_events (
+      CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,
         eventName VARCHAR(255) NOT NULL,
         eventCategory VARCHAR(255) NOT NULL,
@@ -221,35 +223,35 @@ async function createTablesIfNotExists() {
       );
     `);
 
-    // Add discount columns to enigma_events if not exists
-    await addColumnIfNotExists('enigma_events', 'discountPercentage', 'INT DEFAULT 0');
-    await addColumnIfNotExists('enigma_events', 'discountReason', 'VARCHAR(255) NULL');
-    await addColumnIfNotExists('enigma_events', 'mit_discount_percentage', 'INT DEFAULT 0');
+    // Add discount columns to events if not exists
+    await addColumnIfNotExists('events', 'discountPercentage', 'INT DEFAULT 0');
+    await addColumnIfNotExists('events', 'discountReason', 'VARCHAR(255) NULL');
+    await addColumnIfNotExists('events', 'mit_discount_percentage', 'INT DEFAULT 0');
 
-    // Add discount columns to carte_blanche_events if not exists
-    await addColumnIfNotExists('carte_blanche_events', 'discountPercentage', 'INT DEFAULT 0');
-    await addColumnIfNotExists('carte_blanche_events', 'discountReason', 'VARCHAR(255) NULL');
-    await addColumnIfNotExists('carte_blanche_events', 'mit_discount_percentage', 'INT DEFAULT 0');
+    // Add discount columns to events if not exists
+    await addColumnIfNotExists('events', 'discountPercentage', 'INT DEFAULT 0');
+    await addColumnIfNotExists('events', 'discountReason', 'VARCHAR(255) NULL');
+    await addColumnIfNotExists('events', 'mit_discount_percentage', 'INT DEFAULT 0');
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS enigma_rounds (
+      CREATE TABLE IF NOT EXISTS rounds (
         id INT AUTO_INCREMENT PRIMARY KEY,
         eventId INT NOT NULL,
         roundNumber INT NOT NULL,
         roundDetails TEXT NOT NULL,
         roundDateTime DATETIME NOT NULL,
-        FOREIGN KEY (eventId) REFERENCES enigma_events(id) ON DELETE CASCADE
+        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
       );
     `);
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS carte_blanche_rounds (
+      CREATE TABLE IF NOT EXISTS rounds (
         id INT AUTO_INCREMENT PRIMARY KEY,
         eventId INT NOT NULL,
         roundNumber INT NOT NULL,
         roundDetails TEXT NOT NULL,
         roundDateTime DATETIME NOT NULL,
-        FOREIGN KEY (eventId) REFERENCES carte_blanche_events(id) ON DELETE CASCADE
+        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
       );
     `);
 
@@ -265,24 +267,7 @@ async function createTablesIfNotExists() {
       );
     `);
 
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS event_accounts (
-        eventId INT NOT NULL,
-        accountId INT NOT NULL,
-        PRIMARY KEY (eventId, accountId),
-        FOREIGN KEY (accountId) REFERENCES accounts(id) ON DELETE CASCADE
-      );
-    `);
-
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS pass_accounts (
-        passId INT NOT NULL,
-        accountId INT NOT NULL,
-        PRIMARY KEY (passId, accountId),
-        FOREIGN KEY (passId) REFERENCES passes(id) ON DELETE CASCADE,
-        FOREIGN KEY (accountId) REFERENCES accounts(id) ON DELETE CASCADE
-      );
-    `);
+    // event_accounts and pass_accounts removed for SAMHITA DB
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registrations (
@@ -325,18 +310,9 @@ async function createTablesIfNotExists() {
     }
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS enigma_non_workshop_registrations (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        userEmail VARCHAR(255) NOT NULL,
-        eventId INT NOT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS cart (
         cartId INT AUTO_INCREMENT PRIMARY KEY,
-        userId INT NOT NULL,
+        userId VARCHAR(5) NOT NULL,
         eventId INT NOT NULL,
         symposiumName VARCHAR(255) NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -347,7 +323,7 @@ async function createTablesIfNotExists() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS pass_cart (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        userId INT NOT NULL,
+        userId VARCHAR(5) NOT NULL,
         passId INT NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(userId, passId),
@@ -359,11 +335,12 @@ async function createTablesIfNotExists() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS verified_registrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        userId INT NOT NULL,
+        userId VARCHAR(5) NOT NULL,
         eventId INT,
         passId INT,
-        verified BOOLEAN NOT NULL,
-        confirmation_email_sent BOOLEAN DEFAULT FALSE,
+        verified TINYINT(1) NOT NULL,
+        confirmation_email_sent TINYINT(1) DEFAULT 0,
+        transactionId VARCHAR(255) NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       );
@@ -415,7 +392,7 @@ async function createTablesIfNotExists() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS \`accommodation_bookings\` (
         \`id\` INT AUTO_INCREMENT,
-        \`userId\` INT NOT NULL,
+        \`userId\` VARCHAR(5) NOT NULL,
         \`gender\` ENUM('male', 'female') NOT NULL,
         \`status\` ENUM('pending', 'confirmed', 'cancelled', 'rejected') NULL DEFAULT 'pending',
         \`transactionId\` VARCHAR(255) NULL,
@@ -441,7 +418,7 @@ async function createTablesIfNotExists() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS \`accommodation_cart\` (
         \`id\` INT AUTO_INCREMENT,
-        \`userId\` INT NOT NULL,
+        \`userId\` VARCHAR(5) NOT NULL,
         \`gender\` ENUM('male', 'female') NOT NULL,
         \`createdAt\` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (\`id\`),

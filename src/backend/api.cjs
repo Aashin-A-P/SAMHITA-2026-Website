@@ -16,7 +16,7 @@ const dbConfig = {
     host: 'localhost',
     user: 'backend_user',
     password: 'Backend@123!',
-    database: 'csmit_db',
+    database: 'samhita_db',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -32,7 +32,7 @@ app.get('/api/test', (req, res) => {
 // --- Get all users ---
 app.get('/api/users', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT id, fullName, email, dob, mobile, college, department, yearOfPassing, state, district, createdAt FROM users');
+        const [rows] = await db.query('SELECT id, fullName, email, dob, mobile, college, department, yearofPassing, state, district, createdAt FROM users');
         res.json(rows);
     } catch (error) {
         console.error('Error fetching users:', error);
