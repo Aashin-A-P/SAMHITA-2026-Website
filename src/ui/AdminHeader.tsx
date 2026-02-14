@@ -30,6 +30,7 @@ const AdminHeader: React.FC = () => {
     { label: 'Registered Users', onClick: () => { navigate('/admin/registered-users'); setIsMobileMenuOpen(false); } },
     { label: 'View Organizers', onClick: () => { navigate('/admin/view-organizers'); setIsMobileMenuOpen(false); } },
     { label: 'Manage Passes', onClick: () => { navigate('/admin/manage-passes'); setIsMobileMenuOpen(false); } },
+    { label: 'Manage Coupons', onClick: () => { navigate('/admin/manage-coupons'); setIsMobileMenuOpen(false); } },
     { label: 'Register User', onClick: () => { navigate('/admin/register-user'); setIsMobileMenuOpen(false); } },
     { label: 'Verify Transaction', onClick: () => { navigate('/admin/verify-transaction'); setIsMobileMenuOpen(false); } },
     { label: 'Bulk Send Confirmation', onClick: () => { navigate('/admin/bulk-send-confirmation'); setIsMobileMenuOpen(false); } },

@@ -9,14 +9,6 @@ type Round = {
   roundDateTime: string;
 };
 
-type AccountDetail = {
-  id: number;
-  accountName: string;
-  bankName: string;
-  accountNumber: string;
-  ifscCode: string;
-};
-
 type Event = {
   id: number;
   eventName: string;
@@ -31,9 +23,10 @@ type Event = {
   coordinatorMail: string;
   lastDateForRegistration: string;
   symposiumName: 'Carteblanche';
+  passId?: number | null;
+  passName?: string | null;
   posterImage?: string;
   rounds?: Round[];
-  assignedAccounts?: AccountDetail[];
   isOpenForNonMIT?: boolean;
 };
 
@@ -139,10 +132,11 @@ type Pass = {
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [passes, setPasses] = useState<Pass[]>([]); // New State
-  const [activeSymposium, setActiveSymposium] = useState<'Carteblanche'>('Carteblanche');
+  const [activeSymposium, setActiveSymposium] = useState<'SAMHITA'>('SAMHITA');
   const [newEvent, setNewEvent] = useState({
     eventName: '',
     eventCategory: '',
+    passId: '',
     eventDescription: '',
     numberOfRounds: 1,
     teamOrIndividual: 'Individual',
@@ -160,10 +154,6 @@ const App: React.FC = () => {
   const [modalOnConfirm, setModalOnConfirm] = useState<(() => void) | undefined>(undefined);
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [accounts, setAccounts] = useState<AccountDetail[]>([]);
-  const [selectedEventForAccount, setSelectedEventForAccount] = useState<Event | null>(null);
-  const [selectedAccountToAssign, setSelectedAccountToAssign] = useState<AccountDetail | null>(null);
-  const [isAssignAccountModalOpen, setIsAssignAccountModalOpen] = useState(false);
   const [organizers, setOrganizers] = useState<Organizer[]>([]);
 
   // --- Discount State ---
@@ -177,16 +167,6 @@ const App: React.FC = () => {
     isForMIT: false,
     selectedPassId: '' // New Field
   });
-
-  const fetchAccountDetails = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/accounts`);
-      const data = await response.json();
-      setAccounts(data.length ? data : []);
-    } catch (err) {
-
-    }
-  };
 
   const fetchPasses = async () => {
     try {
@@ -205,19 +185,6 @@ const App: React.FC = () => {
       const response = await fetch(`${API_BASE_URL}/events`);
       if (!response.ok) throw new Error('Failed to fetch events');
       let eventsData: Event[] = await response.json();
-
-      eventsData = await Promise.all(
-        eventsData.map(async (event) => {
-          try {
-            const accResp = await fetch(`${API_BASE_URL}/events/${event.id}/accounts`);
-            const assignedAccounts = await accResp.json();
-            return { ...event, assignedAccounts: assignedAccounts || [] };
-          } catch (innerError) {
-            // console.error('Error fetching assigned accounts for event', event.id, innerError);
-            return { ...event, assignedAccounts: [] };
-          }
-        })
-      );
 
       setEvents(eventsData);
     } catch (err) {
@@ -244,10 +211,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchEvents();
-    fetchAccountDetails();
     fetchOrganizers();
     fetchPasses(); // Fetch passes
   }, []);
+
+  useEffect(() => {
+    if (!passes.length || !events.length) return;
+    setEvents((prev) =>
+      prev.map((event) => {
+        if (event.passId) return event;
+        if (!event.passName) return event;
+        const matched = passes.find((p) => p.name.toLowerCase() === String(event.passName).toLowerCase());
+        return matched ? { ...event, passId: matched.id } : event;
+      })
+    );
+  }, [passes, events.length]);
 
   // --- Discount Handler ---
   const handleApplyDiscount = async () => {
@@ -302,17 +280,29 @@ const App: React.FC = () => {
     const { name, value, type } = e.target;
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : type === 'number' ? parseInt(value, 10) : value;
 
+    const resolvePassName = (passIdValue: string) => {
+      const pass = passes.find(p => p.id.toString() === passIdValue);
+      return pass ? pass.name.toLowerCase() : '';
+    };
+
     if (editingEvent) {
       const updatedEvent = { ...editingEvent, [name]: val };
-      if (name === 'eventCategory' && value === 'Workshop') {
-        updatedEvent.numberOfRounds = 0;
+      if (name === 'passId') {
+        const passName = resolvePassName(String(value));
+        if (passName.includes('workshop')) {
+          updatedEvent.numberOfRounds = 0;
+          setRounds([]);
+        }
       }
       setEditingEvent(updatedEvent);
     } else {
       const updatedNewEvent = { ...newEvent, [name]: val };
-      if (name === 'eventCategory' && value === 'Workshop') {
-        updatedNewEvent.numberOfRounds = 0;
-        setRounds([]);
+      if (name === 'passId') {
+        const passName = resolvePassName(String(value));
+        if (passName.includes('workshop')) {
+          updatedNewEvent.numberOfRounds = 0;
+          setRounds([]);
+        }
       }
       setNewEvent(updatedNewEvent);
     }
@@ -325,7 +315,11 @@ const App: React.FC = () => {
 
   const handleNumberOfRoundsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const num = parseInt(e.target.value, 10);
-    setNewEvent((prev) => ({ ...prev, numberOfRounds: num }));
+    if (editingEvent) {
+      setEditingEvent((prev) => (prev ? { ...prev, numberOfRounds: num } : prev));
+    } else {
+      setNewEvent((prev) => ({ ...prev, numberOfRounds: num }));
+    }
     setRounds((prevRounds) => {
       const newRounds: Round[] = [];
       for (let i = 0; i < num; i++) {
@@ -337,9 +331,22 @@ const App: React.FC = () => {
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
+    const resolvedPassId = editingEvent?.passId ?? newEvent.passId;
+    const passIdNumber = resolvedPassId !== '' && resolvedPassId !== null && resolvedPassId !== undefined
+      ? parseInt(String(resolvedPassId), 10)
+      : NaN;
+
+    if (Number.isNaN(passIdNumber)) {
+      setModalTitle('Error');
+      setModalMessage('Please select a pass for this event.');
+      setShowConfirmButton(false);
+      setIsModalOpen(true);
+      return;
+    }
+
     const eventData = editingEvent
-      ? { ...editingEvent, rounds, isOpenForNonMIT: editingEvent.isOpenForNonMIT }
-      : { ...newEvent, rounds, symposiumName: activeSymposium, isOpenForNonMIT: newEvent.isOpenForNonMIT };
+      ? { ...editingEvent, rounds, isOpenForNonMIT: editingEvent.isOpenForNonMIT, eventCategory: editingEvent.eventCategory || '', passId: passIdNumber }
+      : { ...newEvent, rounds, symposiumName: activeSymposium, isOpenForNonMIT: newEvent.isOpenForNonMIT, eventCategory: newEvent.eventCategory || '', passId: passIdNumber };
 
     const url = editingEvent ? `${API_BASE_URL}/events/${editingEvent.id}` : `${API_BASE_URL}/events`;
     const method = editingEvent ? 'PUT' : 'POST';
@@ -364,6 +371,7 @@ const App: React.FC = () => {
         setNewEvent({
           eventName: '',
           eventCategory: '',
+          passId: '',
           eventDescription: '',
           numberOfRounds: 1,
           teamOrIndividual: 'Individual',
@@ -414,57 +422,6 @@ const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleAssignAccount = async () => {
-    if (!selectedEventForAccount || !selectedAccountToAssign) return;
-    try {
-      const response = await fetch(`${API_BASE_URL}/events/${selectedEventForAccount.id}/accounts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountId: selectedAccountToAssign.id }),
-      });
-      if (!response.ok) throw new Error('Failed to assign account');
-      fetchEvents();
-      setModalTitle('Success');
-      setModalMessage('Account assigned successfully');
-      setShowConfirmButton(false);
-      setIsModalOpen(true);
-    } catch (err) {
-
-      setModalTitle('Error');
-      setModalMessage('Failed to assign account');
-      setShowConfirmButton(false);
-      setIsModalOpen(true);
-    } finally {
-      setIsAssignAccountModalOpen(false);
-      setSelectedEventForAccount(null);
-      setSelectedAccountToAssign(null);
-    }
-  };
-
-  const handleRemoveAccount = async (eventId: number, accountId: number) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/events/${eventId}/accounts/${accountId}`,
-        { method: 'DELETE' }
-      );
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to remove account.');
-      }
-      await fetchEvents();
-      setModalTitle('Success');
-      setModalMessage('Account removed successfully!');
-      setShowConfirmButton(false);
-      setIsModalOpen(true);
-    } catch (err) {
-
-      setModalTitle('Error');
-      setModalMessage(`Failed to remove account: ${err}`);
-      setShowConfirmButton(false);
-      setIsModalOpen(true);
-    }
-  };
-
   const filteredEvents = events.filter((e) => e.symposiumName === activeSymposium);
 
   return (
@@ -481,8 +438,8 @@ const App: React.FC = () => {
               <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                 <div className="flex gap-4">
                   <button
-                    onClick={() => setActiveSymposium('Carteblanche')}
-                    className={`px-6 py-3 font-semibold rounded-lg ${activeSymposium === 'Carteblanche' ? 'bg-samhita-600' : 'bg-gray-800/60'
+                    onClick={() => setActiveSymposium('SAMHITA')}
+                    className={`px-6 py-3 font-semibold rounded-lg ${activeSymposium === 'SAMHITA' ? 'bg-samhita-600' : 'bg-gray-800/60'
                       }`}
                   >
                     SAMHITA
@@ -523,18 +480,18 @@ const App: React.FC = () => {
                         className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white"
                       />
                       <select
-                        name="eventCategory"
-                        value={editingEvent?.eventCategory || newEvent.eventCategory}
+                        name="passId"
+                        value={(editingEvent?.passId ?? newEvent.passId) || ''}
                         onChange={handleInputChange}
                         required
                         className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white"
                       >
-                        <option value="">Select Category</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Paper Presentation">Paper Presentation</option>
-                        <option value="Technical Events">Technical Events</option>
-                        <option value="Non-Technical Events">Non-Technical Events</option>
-                        <option value="Other">Other</option>
+                        <option value="">Select Pass</option>
+                        {passes.map(pass => (
+                          <option key={pass.id} value={pass.id}>
+                            {pass.name}
+                          </option>
+                        ))}
                       </select>
                       <input
                         type="text"
@@ -608,12 +565,20 @@ const App: React.FC = () => {
                         onChange={handleNumberOfRoundsChange}
                         min={0}
                         required
-                        disabled={(editingEvent?.eventCategory || newEvent.eventCategory) === 'Workshop'}
+                        disabled={(() => {
+                          const selectedPassId = (editingEvent?.passId ?? newEvent.passId);
+                          const passName = passes.find(p => p.id.toString() === String(selectedPassId))?.name.toLowerCase() || '';
+                          return passName.includes('workshop');
+                        })()}
                         className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white"
                       />
                     </div>
 
-                    {(editingEvent?.eventCategory || newEvent.eventCategory) !== 'Workshop' && rounds.map((round, idx) => (
+                    {(() => {
+                      const selectedPassId = (editingEvent?.passId ?? newEvent.passId);
+                      const passName = passes.find(p => p.id.toString() === String(selectedPassId))?.name.toLowerCase() || '';
+                      return !passName.includes('workshop');
+                    })() && rounds.map((round, idx) => (
                       <div key={idx} className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 space-y-4">
                         <textarea
                           value={round.roundDetails}
@@ -660,15 +625,6 @@ const App: React.FC = () => {
                           <button onClick={() => handleDeleteEvent(event.id, event.symposiumName)} className="px-2 py-1 bg-red-600 rounded-md text-sm">
                             Delete
                           </button>
-                          <button
-                            onClick={() => {
-                              setSelectedEventForAccount(event);
-                              setIsAssignAccountModalOpen(true);
-                            }}
-                            className="px-2 py-1 bg-green-600 rounded-md text-sm"
-                          >
-                            Assign Account
-                          </button>
                           <Link to={`/admin/events/registrations/${event.id}?symposium=${event.symposiumName}`}>
                             <button className="px-2 py-1 bg-yellow-600 rounded-md text-sm">
                               View Registrations
@@ -676,30 +632,6 @@ const App: React.FC = () => {
                           </Link>
                         </div>
                       </div>
-                      {event.assignedAccounts && event.assignedAccounts.length > 0 && (
-                        <ul className="list-disc list-inside mt-2 text-gray-300 text-sm">
-                          {event.assignedAccounts.map((acc) => (
-                            <li key={acc.id} className="flex justify-between items-center">
-                              <span>{acc.accountName} ({acc.bankName})</span>
-                              <button
-                                onClick={() => {
-                                  if (event.id !== undefined && acc.id !== undefined) {
-                                    handleRemoveAccount(event.id, acc.id);
-                                  } else {
-                                    setModalTitle('Error');
-                                    setModalMessage('Cannot remove account: Invalid event or account ID.');
-                                    setShowConfirmButton(false);
-                                    setIsModalOpen(true);
-                                  }
-                                }}
-                                className="px-2 py-1 bg-red-600 rounded-md text-xs ml-2"
-                              >
-                                Remove
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -708,26 +640,6 @@ const App: React.FC = () => {
           )}
         </div>
       </div>
-
-      <ThemedModal
-        isOpen={isAssignAccountModalOpen}
-        onClose={() => {
-          setIsAssignAccountModalOpen(false);
-          setSelectedEventForAccount(null);
-          setSelectedAccountToAssign(null);
-        }}
-        title={`Assign Account to ${selectedEventForAccount?.eventName || ''}`}
-        message="Select an account to assign:"
-        showConfirmButton={true}
-        onConfirm={handleAssignAccount}
-      >
-        <Dropdown
-          options={accounts.map((acc) => ({ label: `${acc.accountName} (${acc.bankName})`, value: acc.id.toString() }))}
-          selectedValue={selectedAccountToAssign?.id.toString() || ''}
-          onSelect={(val) => setSelectedAccountToAssign(accounts.find((a) => a.id.toString() === val) || null)}
-          placeholder="Select Account"
-        />
-      </ThemedModal>
 
       <ThemedModal
         isOpen={isModalOpen}

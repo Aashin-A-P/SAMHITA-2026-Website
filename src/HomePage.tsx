@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useLocation, Link} from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Header from "./ui/Header";
 import { FaBullseye, FaEye, FaChevronDown } from "react-icons/fa";
@@ -113,8 +113,13 @@ export default function HomePage() {
   const [selectedEvent, setSelectedEvent] = useState<{ title: string; subtitle: string; tag: string; description: string } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [isEventsLoading, setIsEventsLoading] = useState(true);
+  const [passes, setPasses] = useState<any[]>([]);
+  const [isPassesLoading, setIsPassesLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
+  const toastTimeoutRef = useRef<number | null>(null);
   const location = useLocation();
-  const { } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual';
@@ -122,6 +127,14 @@ export default function HomePage() {
     window.addEventListener('load', handleLoad);
 
     return () => window.removeEventListener('load', handleLoad);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -150,20 +163,39 @@ export default function HomePage() {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    const fetchPasses = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/passes`);
+        const data = await response.json();
+        setPasses(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load passes for homepage:', error);
+      } finally {
+        setIsPassesLoading(false);
+      }
+    };
+
+    fetchPasses();
+  }, []);
+
   const categorizedEvents = useMemo(() => {
     const normalized = events.map((event) => ({
       id: event.id,
       title: event.eventName,
       subtitle: event.teamOrIndividual || 'Event',
-      tag: event.eventCategory || 'Event',
+      tag: event.passName || event.eventCategory || 'Event',
       description: event.eventDescription || 'Details will be announced soon.',
-      category: (event.eventCategory || '').toLowerCase(),
+      passName: ((event.passName || '') as string).toLowerCase(),
     }));
 
+    const isTechPass = (name: string) => name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
+    const isNonTechPass = (name: string) => name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
+
     return {
-      Technical: normalized.filter((e) => e.category.includes('technical') && !e.category.includes('non')),
-      'Non-Technical': normalized.filter((e) => e.category.includes('non-technical') || e.category.includes('non technical') || e.category.includes('nontech')),
-      Signature: normalized.filter((e) => e.category.includes('signature')),
+      Technical: normalized.filter((e) => isTechPass(e.passName)),
+      'Non-Technical': normalized.filter((e) => isNonTechPass(e.passName)),
+      Signature: normalized.filter((e) => !isTechPass(e.passName) && !isNonTechPass(e.passName)),
     };
   }, [events]);
 
@@ -181,6 +213,57 @@ export default function HomePage() {
   const handleSwitchToForgotPassword = () => {
     setIsLoginModalOpen(false);
     setIsForgotPasswordModalOpen(true);
+  };
+
+  const handleAddPassToCart = async (passId: number, passName: string) => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/pass-cart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, passId }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        console.error(err?.message || 'Failed to add pass to cart.');
+        setToastVariant('error');
+        setToastMessage(err?.message || 'Could not add to cart');
+        if (toastTimeoutRef.current) {
+          window.clearTimeout(toastTimeoutRef.current);
+        }
+        toastTimeoutRef.current = window.setTimeout(() => {
+          setToastMessage(null);
+          toastTimeoutRef.current = null;
+        }, 2600);
+        return;
+      }
+
+      setToastVariant('success');
+      setToastMessage(`${passName} added to cart`);
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+      toastTimeoutRef.current = window.setTimeout(() => {
+        setToastMessage(null);
+        toastTimeoutRef.current = null;
+      }, 2200);
+    } catch (error) {
+      console.error('Failed to add pass to cart:', error);
+      setToastVariant('error');
+      setToastMessage('Network error while adding to cart');
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+      toastTimeoutRef.current = window.setTimeout(() => {
+        setToastMessage(null);
+        toastTimeoutRef.current = null;
+      }, 2600);
+    }
   };
 
   
@@ -205,6 +288,20 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,0.18)_0%,_rgba(0,0,0,0)_60%)] z-0"></div>
 
         <Header setIsLoginModalOpen={setIsLoginModalOpen} setIsSignUpModalOpen={setIsSignUpModalOpen}  />
+
+        {toastMessage && (
+          <div
+            className={`fixed top-24 right-6 z-50 px-4 py-2 rounded-lg shadow-lg text-sm backdrop-blur-md border ${
+              toastVariant === 'success'
+                ? 'bg-black/85 border-gold-500/40 text-gold-200'
+                : 'bg-black/85 border-red-500/50 text-red-200'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {toastMessage}
+          </div>
+        )}
 
         <main className="relative z-10 pt-16">
             <div className="fixed top-16 left-0 w-screen z-20">
@@ -291,8 +388,8 @@ export default function HomePage() {
                               className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
                             >
                               <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
-                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
+                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -337,8 +434,8 @@ export default function HomePage() {
                               className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
                             >
                               <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
-                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
+                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -383,8 +480,8 @@ export default function HomePage() {
                               className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
                             >
                               <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
-                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
+                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -420,38 +517,32 @@ export default function HomePage() {
                 </div>
 
                 <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient scroll-mt-28">Event Passes</h2>
-                <div className="max-w-5xl mx-auto space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
-                    {[
-                      { name: 'Tech Pass', desc: 'Best for technical event access.' },
-                      { name: 'Non‑Tech Pass', desc: 'Perfect for creative & strategy tracks.' },
-                      { name: 'Global Pass', desc: 'All‑access pass across categories.' },
-                    ].map((pass) => (
-                      <div
-                        key={pass.name}
-                        className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
-                      >
-                        <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
-                        <p className="text-gray-300 mb-4">{pass.desc}</p>
-                        <a href="#passes-details" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto">View Passes</a>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col md:flex-row justify-center gap-8">
-                    {[
-                      { name: 'Signature Pass', desc: 'Flagship events and elite challenges.' },
-                      { name: 'Workshop Pass', desc: 'Focused access to workshops only.' },
-                    ].map((pass) => (
-                      <div
-                        key={pass.name}
-                        className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
-                      >
-                        <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
-                        <p className="text-gray-300 mb-4">{pass.desc}</p>
-                        <a href="#passes-details" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto">View Passes</a>
-                      </div>
-                    ))}
-                  </div>
+                <div className="max-w-6xl mx-auto">
+                  {isPassesLoading ? (
+                    <div className="text-center text-gray-400">Loading passes...</div>
+                  ) : passes.length === 0 ? (
+                    <div className="text-center text-gray-400">No passes available yet.</div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+                      {passes.map((pass) => (
+                        <div
+                          key={pass.id}
+                          className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
+                        >
+                          <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
+                          <p className="text-2xl font-bold text-gold-400 mb-3">₹{pass.cost}</p>
+                          <p className="text-gray-300 mb-4">{pass.description || 'Pass details will be announced soon.'}</p>
+                          <button
+                            type="button"
+                            onClick={() => handleAddPassToCart(pass.id, pass.name)}
+                            className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform mt-auto"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
             </section>
             <section id="why-join" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -509,8 +600,8 @@ export default function HomePage() {
             {selectedEvent && (
               <div className="space-y-3">
                 <p className="text-gold-400 text-xs uppercase tracking-widest">{selectedEvent.tag}</p>
-                <p className="text-gray-300 text-sm">{selectedEvent.subtitle}</p>
-                <p className="text-gray-200">{selectedEvent.description}</p>
+                <p className="text-gray-300 text-sm font-event-body">{selectedEvent.subtitle}</p>
+                <p className="text-gray-200 font-event-body">{selectedEvent.description}</p>
                 <div className="pt-2">
                   <a href="#passes" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform">
                     View Passes

@@ -11,6 +11,7 @@ interface AccountDetail {
   bankName: string;
   accountNumber: string;
   ifscCode: string;
+  upiId?: string;
 }
 
 const AccountDetailsPage: React.FC = () => {
@@ -22,6 +23,7 @@ const AccountDetailsPage: React.FC = () => {
     bankName: '',
     accountNumber: '',
     ifscCode: '',
+    upiId: '',
   });
   const [qrCodePdf, setQrCodePdf] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -62,6 +64,7 @@ const AccountDetailsPage: React.FC = () => {
     formData.append('bankName', form.bankName);
     formData.append('accountNumber', form.accountNumber);
     formData.append('ifscCode', form.ifscCode);
+    formData.append('upiId', form.upiId);
     if (qrCodePdf) {
       formData.append('qrCodePdf', qrCodePdf);
     }
@@ -79,7 +82,7 @@ const AccountDetailsPage: React.FC = () => {
       });
 
       showModal('Success', `Account details ${editingId ? 'updated' : 'added'} successfully!`);
-      setForm({ accountName: '', bankName: '', accountNumber: '', ifscCode: '' });
+      setForm({ accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' });
       setQrCodePdf(null);
       setEditingId(null);
       fetchAccountDetails();
@@ -89,7 +92,7 @@ const AccountDetailsPage: React.FC = () => {
   };
 
   const handleEdit = (account: AccountDetail) => {
-    setForm({ accountName: account.accountName, bankName: account.bankName, accountNumber: account.accountNumber, ifscCode: account.ifscCode });
+    setForm({ accountName: account.accountName, bankName: account.bankName, accountNumber: account.accountNumber, ifscCode: account.ifscCode, upiId: account.upiId || '' });
     setEditingId(account.id);
   };
 
@@ -185,6 +188,18 @@ const AccountDetailsPage: React.FC = () => {
             />
           </div>
           <div>
+            <label htmlFor="upiId" className="block text-sm font-medium text-gray-300">UPI ID</label>
+            <input
+              type="text"
+              id="upiId"
+              name="upiId"
+              value={form.upiId}
+              onChange={handleChange}
+              className="mt-1 block w-full p-2 border border-gray-600 rounded-md bg-gray-200 text-black"
+              placeholder="example@upi"
+            />
+          </div>
+          <div>
             <label htmlFor="qrCodePdf" className="block text-sm font-medium text-gray-300">QR Code Document/Image</label>
             <input
               type="file"
@@ -204,7 +219,7 @@ const AccountDetailsPage: React.FC = () => {
           {editingId && (
             <button
               type="button"
-              onClick={() => { setEditingId(null); setForm({ accountName: '', bankName: '', accountNumber: '', ifscCode: '' }); }}
+              onClick={() => { setEditingId(null); setForm({ accountName: '', bankName: '', accountNumber: '', ifscCode: '', upiId: '' }); }}
               className="ml-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
             >
               Cancel
@@ -225,6 +240,9 @@ const AccountDetailsPage: React.FC = () => {
                   <p className="font-semibold">{account.accountName} ({account.bankName})</p>
                   <p className="text-sm text-gray-300">Account No: {account.accountNumber}</p>
                   <p className="text-sm text-gray-300">IFSC: {account.ifscCode}</p>
+                  {account.upiId && (
+                    <p className="text-sm text-gray-300">UPI ID: {account.upiId}</p>
+                  )}
                 </div>
                 <div>
                   <button

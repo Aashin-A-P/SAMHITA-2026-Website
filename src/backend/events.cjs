@@ -18,21 +18,35 @@ module.exports = function (db, uploadEventPoster, transporter) {
       lastDateForRegistration,
       isOpenForNonMIT,
       rounds,
+      passId,
     } = req.body;
 
-    if (!eventName || !eventCategory || !eventDescription ||
+    const passIdNumber = passId !== undefined && passId !== null ? parseInt(passId, 10) : NaN;
+
+    if (!eventName || !eventDescription ||
       numberOfRounds === undefined || !teamOrIndividual || !location ||
-      registrationFees === undefined || !organizerId || !lastDateForRegistration || !rounds) {
+      registrationFees === undefined || !lastDateForRegistration || !rounds || Number.isNaN(passIdNumber)) {
       return res.status(400).json({ message: 'Missing required event fields.' });
     }
 
     try {
-      const [[organizer]] = await db.execute('SELECT name, mobile, email FROM organizers WHERE id = ?', [organizerId]);
-      if (!organizer) {
-        return res.status(404).json({ message: 'Organizer not found.' });
+      let coordinatorName = req.body.coordinatorName;
+      let coordinatorContactNo = req.body.coordinatorContactNo;
+      let coordinatorMail = req.body.coordinatorMail;
+
+      if (organizerId) {
+        const [[organizer]] = await db.execute('SELECT name, mobile, email FROM organizers WHERE id = ?', [organizerId]);
+        if (!organizer) {
+          return res.status(404).json({ message: 'Organizer not found.' });
+        }
+        coordinatorName = organizer.name;
+        coordinatorContactNo = organizer.mobile;
+        coordinatorMail = organizer.email;
       }
 
-      const { name: coordinatorName, mobile: coordinatorContactNo, email: coordinatorMail } = organizer;
+      if (!coordinatorName || !coordinatorContactNo || !coordinatorMail) {
+        return res.status(400).json({ message: 'Coordinator details are required.' });
+      }
 
       const eventTable = 'events';
       const roundsTable = 'rounds';
@@ -44,7 +58,7 @@ module.exports = function (db, uploadEventPoster, transporter) {
           lastDateForRegistration, open_to_non_mit
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          eventName, eventCategory, eventDescription, numberOfRounds, teamOrIndividual,
+          eventName, eventCategory || '', eventDescription, numberOfRounds, teamOrIndividual,
           location, registrationFees, coordinatorName, coordinatorContactNo, coordinatorMail,
           lastDateForRegistration, isOpenForNonMIT ? 1 : 0,
         ]
@@ -52,6 +66,13 @@ module.exports = function (db, uploadEventPoster, transporter) {
 
 
       const eventId = eventResult.insertId;
+
+      if (!Number.isNaN(passIdNumber)) {
+        await db.execute(
+          'INSERT INTO pass_events (passId, eventId) VALUES (?, ?)',
+          [passIdNumber, eventId]
+        );
+      }
 
       for (const round of rounds) {
         await db.execute(
@@ -106,7 +127,11 @@ module.exports = function (db, uploadEventPoster, transporter) {
           event.posterImage = event.posterImage.toString('base64');
         }
         const [rounds] = await db.execute('SELECT roundNumber, roundDetails, roundDateTime FROM rounds WHERE eventId = ?', [event.id]);
-        allEvents.push({ ...event, symposiumName: 'SAMHITA', rounds });
+        const [[passMapping]] = await db.execute(
+          'SELECT p.id as passId, p.name as passName FROM pass_events pe JOIN passes p ON p.id = pe.passId WHERE pe.eventId = ?',
+          [event.id]
+        );
+        allEvents.push({ ...event, symposiumName: 'SAMHITA', rounds, passId: passMapping ? passMapping.passId : null, passName: passMapping ? passMapping.passName : null });
       }
 
       res.json(allEvents);
@@ -159,23 +184,24 @@ module.exports = function (db, uploadEventPoster, transporter) {
             MAX(COALESCE(r_event.symposium, r_pass.symposium)) as symposium
          FROM users u
          JOIN (
-            -- Case 1: Direct verified registration for this event
             SELECT DISTINCT userId FROM verified_registrations 
             WHERE eventId = ? AND verified = true
             
-            UNION -- Use UNION to remove duplicates between direct and pass access
+            UNION
             
-            -- Case 2: User has a verified pass that unlocks this event category
             SELECT DISTINCT vr.userId
             FROM verified_registrations vr
             JOIN passes p ON vr.passId = p.id
-            JOIN (
-                SELECT id, eventCategory, 'SAMHITA' as symposium FROM events WHERE id = ?
-            ) e ON (
-                ((p.name LIKE '%non-tech%' OR p.name LIKE '%non tech%' OR p.name LIKE '%nontech%') AND e.eventCategory = 'Non-Technical Events') OR
-                (p.name LIKE '%tech%' AND NOT (p.name LIKE '%non-tech%' OR p.name LIKE '%non tech%' OR p.name LIKE '%nontech%') AND e.eventCategory = 'Technical Events')
-            )
+            JOIN pass_events pe_event ON pe_event.eventId = ?
             WHERE vr.verified = true
+              AND (
+                p.id = pe_event.passId OR
+                (LOWER(p.name) LIKE '%global%' AND pe_event.passId IN (
+                  SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'
+                  UNION
+                  SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'
+                ))
+              )
          ) vr_all ON u.id = vr_all.userId
          LEFT JOIN registrations r_event ON u.email = r_event.userEmail AND r_event.eventId = ? AND r_event.symposium = ?
          LEFT JOIN registrations r_pass ON u.email = r_pass.userEmail AND r_pass.passId IS NOT NULL AND r_pass.symposium = ?
@@ -192,27 +218,30 @@ module.exports = function (db, uploadEventPoster, transporter) {
 
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const {
-      symposiumName,
-      eventName,
-      eventCategory,
-      eventDescription,
-      numberOfRounds,
-      teamOrIndividual,
-      location,
-      registrationFees,
-      coordinatorName,
-      coordinatorContactNo,
-      coordinatorMail,
-      lastDateForRegistration,
-      isOpenForNonMIT,
-      rounds,
-    } = req.body;
+      const {
+        symposiumName,
+        eventName,
+        eventCategory,
+        eventDescription,
+        numberOfRounds,
+        teamOrIndividual,
+        location,
+        registrationFees,
+        coordinatorName,
+        coordinatorContactNo,
+        coordinatorMail,
+        lastDateForRegistration,
+        isOpenForNonMIT,
+        rounds,
+        passId,
+      } = req.body;
 
-    if (!eventName || !eventCategory || !eventDescription ||
+    const passIdNumber = passId !== undefined && passId !== null ? parseInt(passId, 10) : NaN;
+
+    if (!eventName || !eventDescription ||
       numberOfRounds === undefined || !teamOrIndividual || !location ||
       registrationFees === undefined || !coordinatorName || !coordinatorContactNo ||
-      !coordinatorMail || !lastDateForRegistration || !rounds) {
+      !coordinatorMail || !lastDateForRegistration || !rounds || Number.isNaN(passIdNumber)) {
       return res.status(400).json({ message: 'Missing required event fields.' });
     }
 
@@ -227,11 +256,16 @@ module.exports = function (db, uploadEventPoster, transporter) {
           lastDateForRegistration = ?, open_to_non_mit = ?
         WHERE id = ?`,
         [
-          eventName, eventCategory, eventDescription, numberOfRounds, teamOrIndividual,
+          eventName, eventCategory || '', eventDescription, numberOfRounds, teamOrIndividual,
           location, registrationFees, coordinatorName, coordinatorContactNo, coordinatorMail,
           lastDateForRegistration, isOpenForNonMIT ? 1 : 0, id,
         ]
       );
+
+      await db.execute('DELETE FROM pass_events WHERE eventId = ?', [id]);
+      if (!Number.isNaN(passIdNumber)) {
+        await db.execute('INSERT INTO pass_events (passId, eventId) VALUES (?, ?)', [passIdNumber, id]);
+      }
 
 
       // Delete existing rounds and insert new ones

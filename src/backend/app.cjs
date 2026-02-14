@@ -115,6 +115,18 @@ async function createTablesIfNotExists() {
       );
     `);
 
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS pass_events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        passId INT NOT NULL,
+        eventId INT NOT NULL,
+        UNIQUE KEY unique_event (eventId),
+        KEY passId (passId),
+        CONSTRAINT pass_events_ibfk_1 FOREIGN KEY (passId) REFERENCES passes(id) ON DELETE CASCADE,
+        CONSTRAINT pass_events_ibfk_2 FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
+      );
+    `);
+
 
     // Check if accountId column exists and add it if not
     const [columns] = await db.execute(`
@@ -262,10 +274,13 @@ async function createTablesIfNotExists() {
         bankName VARCHAR(255) NOT NULL,
         accountNumber VARCHAR(255) NOT NULL,
         ifscCode VARCHAR(255) NOT NULL,
+        upiId VARCHAR(255) NULL,
         qrCodePdf BLOB,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    await addColumnIfNotExists('accounts', 'upiId', 'VARCHAR(255) NULL');
 
     // event_accounts and pass_accounts removed for SAMHITA DB
 
@@ -467,6 +482,16 @@ async function createTablesIfNotExists() {
       )
     `);
 
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        \`limit\` INT NOT NULL DEFAULT 0,
+        discountPercent INT NOT NULL DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
   } catch (err) {
     process.exit(1);
   }
@@ -510,6 +535,7 @@ async function startServer() {
   apiRouter.use('/accommodation', require('./accommodation.cjs')(db));
   apiRouter.use('/email', require('./email.cjs')(db, transporter, uploadDocument));
   apiRouter.use('/offer', require('./offer.cjs')(db));
+  apiRouter.use('/coupons', require('./coupons.cjs')(db));
   apiRouter.use('/attendance', require('./attendance.cjs')(db));
 
   app.use('/api', apiRouter);

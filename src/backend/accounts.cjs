@@ -6,7 +6,7 @@ module.exports = (db, uploadDocument) => {
   // Add new account details
   router.post('/', uploadDocument.single('qrCodePdf'), async (req, res) => {
 
-    const { accountName, bankName, accountNumber, ifscCode } = req.body;
+    const { accountName, bankName, accountNumber, ifscCode, upiId } = req.body;
     const qrCodePdf = req.file ? req.file.buffer : null;
 
     if (!accountName || !bankName || !accountNumber || !ifscCode) {
@@ -15,8 +15,8 @@ module.exports = (db, uploadDocument) => {
     }
     try {
       const [result] = await db.execute(
-        'INSERT INTO accounts (accountName, bankName, accountNumber, ifscCode, qrCodePdf) VALUES (?, ?, ?, ?, ?)',
-        [accountName, bankName, accountNumber, ifscCode, qrCodePdf]
+        'INSERT INTO accounts (accountName, bankName, accountNumber, ifscCode, upiId, qrCodePdf) VALUES (?, ?, ?, ?, ?, ?)',
+        [accountName, bankName, accountNumber, ifscCode, upiId || null, qrCodePdf]
       );
       res.status(201).json({ message: 'Account details added successfully', accountId: result.insertId });
     } catch (error) {
@@ -56,7 +56,7 @@ module.exports = (db, uploadDocument) => {
       const accountId = passAccount[0].accountId;
 
       // Now, fetch the account details using the found accountId
-      const [account] = await db.execute('SELECT id, accountName, bankName, accountNumber, ifscCode, qrCodePdf FROM accounts WHERE id = ?', [accountId]);
+      const [account] = await db.execute('SELECT id, accountName, bankName, accountNumber, ifscCode, upiId, qrCodePdf FROM accounts WHERE id = ?', [accountId]);
 
       if (account.length === 0) {
         console.warn(`Account details not found for accountId: ${accountId} (linked to passId: ${passId})`);
@@ -76,7 +76,7 @@ module.exports = (db, uploadDocument) => {
 
 
     try {
-      const [account] = await db.execute('SELECT id, accountName, bankName, accountNumber, ifscCode, qrCodePdf FROM accounts WHERE id = ?', [id]);
+      const [account] = await db.execute('SELECT id, accountName, bankName, accountNumber, ifscCode, upiId, qrCodePdf FROM accounts WHERE id = ?', [id]);
 
       if (account.length === 0) {
         console.warn(`Account details not found for accountId: ${id}`);
@@ -95,7 +95,7 @@ module.exports = (db, uploadDocument) => {
   router.put('/:id', uploadDocument.single('qrCodePdf'), async (req, res) => {
     const { id } = req.params;
 
-    const { accountName, bankName, accountNumber, ifscCode } = req.body;
+    const { accountName, bankName, accountNumber, ifscCode, upiId } = req.body;
     const qrCodePdf = req.file ? req.file.buffer : null;
 
     if (!accountName || !bankName || !accountNumber || !ifscCode) {
@@ -103,8 +103,8 @@ module.exports = (db, uploadDocument) => {
       return res.status(400).json({ message: 'All fields are required.' });
     }
     try {
-      let sql = 'UPDATE accounts SET accountName = ?, bankName = ?, accountNumber = ?, ifscCode = ?';
-      const params = [accountName, bankName, accountNumber, ifscCode];
+      let sql = 'UPDATE accounts SET accountName = ?, bankName = ?, accountNumber = ?, ifscCode = ?, upiId = ?';
+      const params = [accountName, bankName, accountNumber, ifscCode, upiId || null];
 
       // Only add the PDF to the update query if a new one was uploaded
       if (qrCodePdf) {

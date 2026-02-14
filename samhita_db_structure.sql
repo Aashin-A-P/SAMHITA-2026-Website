@@ -123,6 +123,7 @@ CREATE TABLE `accounts` (
   `bankName` varchar(255) NOT NULL,
   `accountNumber` varchar(255) NOT NULL,
   `ifscCode` varchar(255) NOT NULL,
+  `upiId` varchar(255) DEFAULT NULL,
   `qrCodePdf` longblob,
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -145,14 +146,17 @@ CREATE TABLE `passes` (
   CONSTRAINT `passes_ibfk_1` FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Coupons table
-DROP TABLE IF EXISTS `coupons`;
-CREATE TABLE `coupons` (
+-- Pass to Events mapping
+DROP TABLE IF EXISTS `pass_events`;
+CREATE TABLE `pass_events` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `limit` int NOT NULL,
-  `discount_percent` int NOT NULL,
-  PRIMARY KEY (`id`)
+  `passId` int NOT NULL,
+  `eventId` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_event` (`eventId`),
+  KEY `passId` (`passId`),
+  CONSTRAINT `pass_events_ibfk_1` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_events_ibfk_2` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Workshops table
@@ -172,6 +176,18 @@ CREATE TABLE `offers` (
   `active` tinyint(1) DEFAULT '1',
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Coupons table
+DROP TABLE IF EXISTS `coupons`;
+CREATE TABLE `coupons` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `limit` int NOT NULL DEFAULT '0',
+  `discountPercent` int NOT NULL DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Pass cart table (like pass_cart in csmit_db)

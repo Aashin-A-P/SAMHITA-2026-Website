@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Cinzel+Decorative:wght@400;700&family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Marcellus&family=Press+Start+2P&family=Spectral:wght@400;500;600&display=swap');
 
 /* These @tailwind directives must be processed by Tailwind CSS via PostCSS or the Tailwind CLI. 
    Do not import this file directly as plain CSS in your HTML or JS. 
@@ -39,6 +39,12 @@
 @layer components {
   .font-game {
     font-family: 'Press Start 2P', cursive;
+  }
+  .font-event-heading {
+    font-family: 'Cinzel', serif;
+  }
+  .font-event-body {
+    font-family: 'Spectral', serif;
   }
   .no-scrollbar {
     -ms-overflow-style: none;

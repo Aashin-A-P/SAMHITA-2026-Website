@@ -9,23 +9,37 @@ module.exports = function (db, uploadTransactionScreenshot) {
     if (passes.length === 0) return;
     const pass = passes[0];
 
-    // Identify Tech vs Non-Tech
-    let category = '';
     const passNameLower = pass.name.toLowerCase();
 
-    if (passNameLower.includes('non-tech') || passNameLower.includes('non tech') || passNameLower.includes('nontech')) {
-      category = 'Non-Technical Events';
-    } else if (passNameLower.includes('tech')) {
-      category = 'Technical Events';
-    } else {
-      return; // Not a category pass we handle for explosion
-    }
+    let events = [];
 
-    // Fetch Events
-    const [events] = await executor.execute(
-      `SELECT id, 'SAMHITA' as symposium FROM events WHERE eventCategory = ?`,
-      [category]
-    );
+    if (passNameLower.includes('global')) {
+      const [techPasses] = await executor.execute(
+        `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
+      );
+      const [nonTechPasses] = await executor.execute(
+        `SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'`
+      );
+      const passIds = [...techPasses, ...nonTechPasses].map(p => p.id);
+      if (passIds.length === 0) return;
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         JOIN pass_events pe ON pe.eventId = e.id
+         WHERE pe.passId IN (${passIds.map(() => '?').join(',')})`,
+        passIds
+      );
+      events = rows;
+    } else {
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         JOIN pass_events pe ON pe.eventId = e.id
+         WHERE pe.passId = ?`,
+        [passId]
+      );
+      events = rows;
+    }
 
     // Get User Details for Registration Entry
     const [users] = await executor.execute('SELECT fullName, email, mobile FROM users WHERE id = ?', [userId]);
@@ -137,6 +151,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         transactionDate,
         transactionAmount,
         mobileNumber,
+        couponCode,
       } = req.body;
 
       const transactionScreenshot = req.file ? req.file.buffer : null;
@@ -145,6 +160,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
       const accommodationInfo = req.body.accommodation ? JSON.parse(req.body.accommodation) : null;
 
       if (!userId) return res.status(400).json({ message: 'Missing required field: userId.' });
+      if (parsedEventIds.length > 0) {
+        return res.status(400).json({ message: 'Individual event registration is disabled. Please select a pass.' });
+      }
       if (parsedEventIds.length === 0 && parsedPassIds.length === 0 && !accommodationInfo) return res.status(400).json({ message: 'No items to register.' });
       if (!transactionId) return res.status(400).json({ message: 'Missing required field: transactionId.' });
       if (!transactionTime) return res.status(400).json({ message: 'Missing required field: transactionTime.' });
@@ -157,6 +175,25 @@ module.exports = function (db, uploadTransactionScreenshot) {
       try {
         connection = await db.getConnection();
         await connection.beginTransaction();
+
+        let couponDiscount = 0;
+        if (couponCode && couponCode.trim().length > 0) {
+          const [couponRows] = await connection.execute(
+            'SELECT id, name, `limit`, discountPercent FROM coupons WHERE name = ? FOR UPDATE',
+            [couponCode.trim()]
+          );
+          if (couponRows.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid coupon code.' });
+          }
+          const coupon = couponRows[0];
+          if (coupon.limit <= 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Coupon expired.' });
+          }
+          couponDiscount = Number(coupon.discountPercent) || 0;
+          await connection.execute('UPDATE coupons SET `limit` = `limit` - 1 WHERE id = ?', [coupon.id]);
+        }
 
         // --- Check for unique transaction ID ---
         const [existingTransaction] = await connection.execute(
@@ -179,48 +216,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         }
 
         // --- Process Event Registrations ---
-        for (const eventId of parsedEventIds) {
-          const [[event]] = await connection.execute(
-            `SELECT eventName, registrationFees, discountPercentage, 'SAMHITA' as symposium 
-             FROM events WHERE id = ?`,
-            [eventId]
-          );
-          if (!event) {
-            console.warn(`Event with ID ${eventId} not found. Skipping.`);
-            continue;
-          }
-
-          const discount = event.discountPercentage || 0;
-          const effectiveFee = Math.floor(event.registrationFees * (1 - discount / 100));
-
-          const [existing] = await connection.execute(
-            'SELECT id FROM registrations WHERE userEmail = ? AND eventId = ?',
-            [user.email, eventId]
-          );
-          if (existing.length > 0) {
-            console.warn(`Already registered for event ${event.eventName}. Skipping.`);
-            continue;
-          }
-
-          await connection.execute(
-            `INSERT INTO registrations 
-             (symposium, eventId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot, round1, round2, round3) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
-            [
-              event.symposium,
-              eventId,
-              user.fullName,
-              user.email,
-              mobileNumber,
-              transactionId,
-              transactionUsername || user.fullName,
-              transactionTime,
-              transactionDate,
-              effectiveFee,
-              transactionScreenshot,
-            ]
-          );
-        }
+        // Individual event registration disabled; passes only.
 
         // --- Process Pass Registrations ---
         for (const passId of parsedPassIds) {
@@ -248,6 +244,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
           const symposium = activeSymposium;
 
+          const discountedPassCost = Math.floor(pass.cost * (1 - couponDiscount / 100));
           await connection.execute(
             `INSERT INTO registrations 
                  (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
@@ -262,7 +259,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
               transactionUsername || user.fullName,
               transactionTime,
               transactionDate,
-              pass.cost,
+              discountedPassCost,
               transactionScreenshot,
             ]
           );
@@ -285,6 +282,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
             throw new Error(`Not enough rooms available for ${gender}.`);
           }
           const accommodationFee = accommodation.fees * quantity;
+          const discountedAccommodationFee = Math.floor(accommodationFee * (1 - couponDiscount / 100));
 
           await connection.execute(
             `INSERT INTO registrations 
@@ -299,7 +297,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
               transactionUsername || user.fullName,
               transactionTime,
               transactionDate,
-              accommodationFee,
+              discountedAccommodationFee,
               transactionScreenshot,
             ]
           );
@@ -454,6 +452,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         .status(400)
         .json({ message: 'Missing required fields for simple registration.' });
     }
+    return res.status(400).json({ message: 'Individual event registration is disabled. Please use passes.' });
 
     try {
       // [MODIFIED] Fetch discountPercentage to check if event is effectively free
@@ -536,10 +535,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
       const registrationsWithDetails = [];
       const eventIds = new Set();
-      let hasTechPass = false;
-      let hasNonTechPass = false;
-      let techPassRounds = { r1: 0, r2: 0, r3: 0 };
-      let nonTechPassRounds = { r1: 0, r2: 0, r3: 0 };
+      const passRegistrations = [];
 
       for (const reg of allRegistrations) {
         if (reg.itemType === 'event') {
@@ -566,27 +562,26 @@ module.exports = function (db, uploadTransactionScreenshot) {
           );
           if (pass) {
             registrationsWithDetails.push({ ...reg, pass });
-            const passNameLower = pass.name.toLowerCase();
-            const passRounds = { r1: reg.round1, r2: reg.round2, r3: reg.round3 };
-
-            // IMPORTANT: Check 'non-tech' FIRST before 'tech' because 'non-tech' contains 'tech'
-            if (passNameLower.includes('non-tech') || passNameLower.includes('nontech') || passNameLower.includes('non tech')) {
-              hasNonTechPass = true;
-              nonTechPassRounds = passRounds;
-            } else if (passNameLower.includes('tech')) {
-              hasTechPass = true;
-              techPassRounds = passRounds;
-            }
+            passRegistrations.push({
+              passId: reg.passId,
+              passName: pass.name,
+              rounds: { r1: reg.round1, r2: reg.round2, r3: reg.round3 }
+            });
           }
         }
       }
 
-
-      const fetchEventsByCategory = async (category, symposium, rounds) => {
+      const fetchEventsByPassIds = async (passIds, symposium, rounds) => {
         const eventTable = 'events';
         const roundsTable = 'rounds';
-
-        const [events] = await db.execute(`SELECT * FROM ${eventTable} WHERE eventCategory = ?`, [category]);
+        if (!passIds || passIds.length === 0) return;
+        const placeholders = passIds.map(() => '?').join(',');
+        const [events] = await db.execute(
+          `SELECT e.* FROM ${eventTable} e
+           JOIN pass_events pe ON pe.eventId = e.id
+           WHERE pe.passId IN (${placeholders})`,
+          passIds
+        );
 
         for (const event of events) {
           if (!eventIds.has(event.id)) {
@@ -613,11 +608,22 @@ module.exports = function (db, uploadTransactionScreenshot) {
       }, {});
 
       const isOpen = symposiumStatus['SAMHITA'] ?? true;
-      if (hasTechPass && isOpen) {
-        await fetchEventsByCategory('Technical Events', 'SAMHITA', techPassRounds);
-      }
-      if (hasNonTechPass && isOpen) {
-        await fetchEventsByCategory('Non-Technical Events', 'SAMHITA', nonTechPassRounds);
+      if (isOpen) {
+        for (const passReg of passRegistrations) {
+          const passNameLower = (passReg.passName || '').toLowerCase();
+          if (passNameLower.includes('global')) {
+            const [techPasses] = await db.execute(
+              `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
+            );
+            const [nonTechPasses] = await db.execute(
+              `SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'`
+            );
+            const passIds = [...techPasses, ...nonTechPasses].map(p => p.id);
+            await fetchEventsByPassIds(passIds, 'SAMHITA', passReg.rounds);
+          } else {
+            await fetchEventsByPassIds([passReg.passId], 'SAMHITA', passReg.rounds);
+          }
+        }
       }
 
       res.status(200).json(registrationsWithDetails);
@@ -645,6 +651,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
     if (!userId || (!eventIds && !passIds)) {
       return res.status(400).json({ message: 'Missing userId or event/pass selections.' });
     }
+    if (eventIds && eventIds.length > 0) {
+      return res.status(400).json({ message: 'Individual event registration is disabled. Please use passes.' });
+    }
 
     let connection;
     try {
@@ -656,33 +665,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         throw new Error(`User with ID ${userId} not found.`);
       }
 
-      // Process Event Registrations
-      if (eventIds && eventIds.length > 0) {
-        for (const eventId of eventIds) {
-          const [[event]] = await connection.execute('SELECT eventName FROM events WHERE id = ?', [eventId]);
-          if (!event) {
-            console.warn(`Event with ID ${eventId} not found. Skipping.`);
-            continue;
-          }
-          const symposium = 'SAMHITA';
-
-          const [existing] = await connection.execute('SELECT id FROM registrations WHERE userEmail = ? AND eventId = ?', [user.email, eventId]);
-          if (existing.length > 0) {
-            console.warn(`User ${user.email} already registered for event ${eventId}. Skipping.`);
-            continue;
-          }
-
-          await connection.execute(
-            `INSERT INTO registrations (symposium, eventId, userName, userEmail, mobileNumber, transactionId, transactionAmount, round1, round2, round3) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
-            [symposium, eventId, user.fullName, user.email, user.mobile || null, 'ADMIN_REG', 0]
-          );
-
-          await connection.execute(
-            'INSERT INTO verified_registrations (userId, eventId, verified) VALUES (?, ?, ?)',
-            [userId, eventId, true]
-          );
-        }
-      }
+      // Individual event registrations are disabled.
 
       // Process Pass Registrations
       if (passIds && passIds.length > 0) {

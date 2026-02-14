@@ -38,6 +38,7 @@ import VerifyTransactionPage from "./pages/VerifyTransactionPage.tsx";
 import SendConfirmationEmailPage from "./pages/SendConfirmationEmailPage.tsx";
 import BulkSendConfirmationEmailPage from "./pages/BulkSendConfirmationEmailPage";
 import ManageOfferPage from "./pages/ManageOfferPage.tsx";
+import ManageCouponsPage from "./pages/ManageCouponsPage.tsx";
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(sessionStorage.getItem("introSeen") !== "true");
@@ -148,6 +149,7 @@ export default function App() {
             <Route path="send-confirmation-email/:userId" element={<SendConfirmationEmailPage />} />
             <Route path="bulk-send-confirmation" element={<BulkSendConfirmationEmailPage />} />
             <Route path="manage-offer" element={<ManageOfferPage />} />
+            <Route path="manage-coupons" element={<ManageCouponsPage />} />
           </Route>
         </Route>
 

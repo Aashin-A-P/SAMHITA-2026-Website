@@ -38,6 +38,7 @@ interface AccountDetails {
   bankName: string;
   accountNumber: string;
   ifscCode: string;
+  upiId?: string;
   qrCodePdf?: { type: 'Buffer', data: number[] };
 }
 
@@ -60,7 +61,12 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const [transactionScreenshot, setTransactionScreenshot] = useState<File | null>(null);
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [qrIsPdf, setQrIsPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   // Calculate Total Amount with Discount
   const totalAmount = (cartItems || []).reduce((sum, item) => {
@@ -76,6 +82,8 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
     }
     return sum;
   }, 0);
+
+  const discountedTotal = Math.floor(totalAmount * (1 - couponDiscount / 100));
 
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -152,9 +160,16 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   useEffect(() => {
     if (accountDetails && accountDetails.qrCodePdf) {
       const buffer = new Uint8Array(accountDetails.qrCodePdf.data);
-      const blob = new Blob([buffer], { type: 'application/pdf' });
+      const isPdf =
+        buffer.length >= 4 &&
+        buffer[0] === 0x25 &&
+        buffer[1] === 0x50 &&
+        buffer[2] === 0x44 &&
+        buffer[3] === 0x46; // %PDF
+      const blob = new Blob([buffer], { type: isPdf ? 'application/pdf' : undefined });
       const url = URL.createObjectURL(blob);
       setQrCodeUrl(url);
+      setQrIsPdf(isPdf);
 
       return () => {
         URL.revokeObjectURL(url);
@@ -165,6 +180,31 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setTransactionScreenshot(e.target.files[0]);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) {
+      setCouponMessage('Enter a coupon code.');
+      setCouponDiscount(0);
+      return;
+    }
+
+    try {
+      setIsApplyingCoupon(true);
+      setCouponMessage(null);
+      const response = await axios.get(`${API_BASE_URL}/coupons/validate`, {
+        params: { code }
+      });
+      setCouponDiscount(Number(response.data.discountPercent || 0));
+      setCouponMessage(`Coupon applied: ${response.data.discountPercent}% off`);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Invalid coupon code.';
+      setCouponDiscount(0);
+      setCouponMessage(message);
+    } finally {
+      setIsApplyingCoupon(false);
     }
   };
 
@@ -198,7 +238,8 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       formData.append('transactionId', transactionId);
       formData.append('transactionTime', transactionTime);
       formData.append('transactionDate', transactionDate);
-      formData.append('transactionAmount', totalAmount.toString());
+      formData.append('transactionAmount', (couponDiscount > 0 ? discountedTotal : totalAmount).toString());
+      formData.append('couponCode', couponCode.trim());
       formData.append('mobileNumber', mobileNumber);
       formData.append('transactionScreenshot', transactionScreenshot);
 
@@ -275,7 +316,14 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
           <hr className="border-gray-700 my-4" />
           <div className="flex justify-between text-white font-bold text-lg">
             <span>Total Amount</span>
-            <span className="text-green-400">₹{totalAmount}</span>
+            {couponDiscount > 0 ? (
+              <span className="text-green-400">
+                <span className="line-through text-red-400 mr-2 text-sm">{'\u20B9'}{totalAmount}</span>
+                {'\u20B9'}{discountedTotal}
+              </span>
+            ) : (
+              <span className="text-green-400">{'\u20B9'}{totalAmount}</span>
+            )}
           </div>
         </div>
 
@@ -289,17 +337,40 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <p><strong>Bank Name:</strong> {accountDetails.bankName}</p>
                 <p><strong>Account Number:</strong> {accountDetails.accountNumber}</p>
                 <p><strong>IFSC Code:</strong> {accountDetails.ifscCode}</p>
+                {accountDetails.upiId && (
+                  <p><strong>UPI ID:</strong> {accountDetails.upiId}</p>
+                )}
               </div>
-              {qrCodeUrl && (
-                <div className="mt-4 flex justify-center">
-                  <object data={qrCodeUrl} type="application/pdf" width="200px" height="200px" className="rounded-lg overflow-hidden border border-white">
-                    <p>Your browser does not support PDFs. <a href={qrCodeUrl} target="_blank" rel="noreferrer" className="text-blue-400 underline">View QR Code</a></p>
-                  </object>
+              
+              <div className="mt-4">
+                <label htmlFor="couponCode" className="block text-sm font-medium text-gray-400 mb-2">Coupon Code (Optional)</label>
+                <div className="flex gap-2">
+                  <input
+                    id="couponCode"
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                    placeholder="Enter coupon code"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    className="px-4 py-2 bg-samhita-600 text-white rounded-lg hover:bg-samhita-700 transition disabled:opacity-60"
+                    disabled={isApplyingCoupon}
+                  >
+                    {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                  </button>
                 </div>
-              )}
+                {couponMessage && (
+                  <p className={`mt-2 text-sm ${couponDiscount > 0 ? 'text-green-400' : 'text-red-400'}`} >
+                    {couponMessage}
+                  </p>
+                )}
+              </div>
 
               <p className="text-sm text-gray-400 mt-4 bg-yellow-900/20 p-2 rounded border border-yellow-700/50">
-                Please transfer <strong>₹{totalAmount}</strong> to the account above and upload the screenshot below.
+                Please transfer <strong>{'\u20B9'}{couponDiscount > 0 ? discountedTotal : totalAmount}</strong> to the account above and upload the screenshot below.
               </p>
             </div>
           ) : (

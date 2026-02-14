@@ -11,26 +11,36 @@ module.exports = function (db) {
     if (passes.length === 0) return;
     const pass = passes[0];
 
-    // 2. Identify Tech vs Non-Tech
-    let category = '';
     const passNameLower = pass.name.toLowerCase();
+    let events = [];
 
-    // STRICT check for Non-Tech
-    if (passNameLower.includes('non-tech') || passNameLower.includes('non tech') || passNameLower.includes('nontech')) {
-      category = 'Non-Technical Events';
-    }
-    // If not non-tech, check for tech
-    else if (passNameLower.includes('tech')) {
-      category = 'Technical Events';
+    if (passNameLower.includes('global')) {
+      const [techPasses] = await executor.execute(
+        `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
+      );
+      const [nonTechPasses] = await executor.execute(
+        `SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'`
+      );
+      const passIds = [...techPasses, ...nonTechPasses].map(p => p.id);
+      if (passIds.length === 0) return;
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         JOIN pass_events pe ON pe.eventId = e.id
+         WHERE pe.passId IN (${passIds.map(() => '?').join(',')})`,
+        passIds
+      );
+      events = rows;
     } else {
-      return; // Not a category pass we handle for explosion
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         JOIN pass_events pe ON pe.eventId = e.id
+         WHERE pe.passId = ?`,
+        [passId]
+      );
+      events = rows;
     }
-
-    // 3. Fetch Events
-    const [events] = await executor.execute(
-      `SELECT id, 'SAMHITA' as symposium FROM events WHERE eventCategory = ?`,
-      [category]
-    );
 
     // 4. Get User Details for Registration Entry
     const [users] = await executor.execute('SELECT fullName, email, mobile FROM users WHERE id = ?', [userId]);
@@ -221,3 +231,4 @@ module.exports = function (db) {
 
   return router;
 };
+

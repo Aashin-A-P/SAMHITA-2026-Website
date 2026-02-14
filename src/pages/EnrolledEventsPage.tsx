@@ -58,6 +58,7 @@ const EnrolledEventsPage: React.FC = () => {
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [attendanceMap, setAttendanceMap] = useState<Record<number, boolean>>({});
 
   const showModal = (title: string, message: string) => {
     setModal({ isOpen: true, title, message });
@@ -101,6 +102,49 @@ const EnrolledEventsPage: React.FC = () => {
       setIsLoading(false);
     }
   }, [isLoggedIn, user]);
+
+  useEffect(() => {
+    const fetchAttendanceForEvents = async () => {
+      if (!user?.id) return;
+      const eventIds = Array.from(
+        new Set(
+          registrations
+            .filter((registration) => registration.itemType === 'event')
+            .map((registration) => registration.eventId ?? registration.event?.id)
+            .filter((id): id is number => typeof id === 'number')
+        )
+      );
+
+      if (eventIds.length === 0) {
+        setAttendanceMap({});
+        return;
+      }
+
+      try {
+        const results = await Promise.all(
+          eventIds.map(async (eventId) => {
+            const response = await fetch(`${API_BASE_URL}/attendance/event/${eventId}`);
+            if (!response.ok) {
+              throw new Error('Failed to fetch attendance');
+            }
+            const data = await response.json();
+            const attended = Array.isArray(data) && data.some((row: any) => row.userId === user.id);
+            return [eventId, attended] as const;
+          })
+        );
+
+        const nextMap: Record<number, boolean> = {};
+        results.forEach(([eventId, attended]) => {
+          nextMap[eventId] = attended;
+        });
+        setAttendanceMap(nextMap);
+      } catch (error) {
+        console.error('Failed to load attendance for enrollments:', error);
+      }
+    };
+
+    fetchAttendanceForEvents();
+  }, [registrations, user]);
 
   const getStatusText = (status: any, roundDate: Date, roundNumber: number, registration: any) => {
     const numericStatus = Number(status);
@@ -167,7 +211,7 @@ const EnrolledEventsPage: React.FC = () => {
         {selectedEvent ? (
           <div className="text-white">
             <p className="text-gold-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
-            <p className="text-gray-300 text-base mb-4">{selectedEvent.eventDescription}</p>
+            <p className="text-gray-300 text-base mb-4 font-event-body">{selectedEvent.eventDescription}</p>
             <p><strong>Rounds:</strong> {selectedEvent.numberOfRounds}</p>
             <p><strong>Type:</strong> {selectedEvent.teamOrIndividual}</p>
             <p><strong>Location:</strong> {selectedEvent.location}</p>
@@ -216,93 +260,143 @@ const EnrolledEventsPage: React.FC = () => {
           {registrations.length === 0 ? (
             <p className="text-center text-xl text-gray-400 mt-10">You have not enrolled in any events or purchased any passes yet, or they have not been verified.</p>
           ) : (
-            <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-8">
-              {registrations.map((registration) => {
-                if (registration.itemType === 'event' && registration.event) {
-                  let hasBeenRejected = false;
-                  let hasNotAttended = false;
-                  if (registration.event && registration.event.rounds) {
-                    hasBeenRejected = registration.event.rounds.some(round =>
-                      Number(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3']) === -1
-                    );
-                    hasNotAttended = registration.event.rounds.some(round => {
-                      const roundStatus = Number(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3']);
-                      const roundDate = new Date(round.roundDateTime);
-                      const now = new Date();
-                      return roundDate < now && roundStatus === 0;
-                    });
-                  }
-                  const cardTheme = hasBeenRejected
-                    ? 'border-red-500/50 bg-red-900/20'
-                    : hasNotAttended
-                      ? 'border-yellow-500/50 bg-yellow-900/20'
-                      : 'border-gray-700 bg-gray-800/70';
-
-                  const renderRoundStatus = () => {
-                    return registration.event?.rounds?.map(round => (
-                      <li key={round.roundNumber}>Round {round.roundNumber}: {getStatusText(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3'], new Date(round.roundDateTime), round.roundNumber, registration)}</li>
-                    ));
-                  };
-
-                  return (
-                    <div key={`event-${registration.id}`} className={`relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 ${cardTheme} cursor-pointer`} onClick={() => registration.event && handleViewDetails(registration.event)}>
-                      <div className="relative z-10 p-6 flex flex-col h-full">
-                        {registration.event.posterUrl && (
-                          <div className="mb-4">
-                            <img src={`${API_BASE_URL}${registration.event.posterUrl}`} alt={registration.event.eventName} className="w-full h-48 object-cover rounded-md mx-auto shadow-md" />
-                          </div>
-                        )}
-                        <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.event.eventName}</h3>
-                        <p className="text-gold-300 text-sm font-medium mb-3">{registration.event.eventCategory}</p>
-                        <p className="text-gray-300 text-base mb-4 flex-grow">{registration.event.eventDescription.substring(0, 100)}...</p>
-
-                        <div className="mb-4">
-                          {registration.event.discountPercentage && registration.event.discountPercentage > 0 ? (
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <span className="line-through text-red-400 text-sm">₹{registration.event.registrationFees}</span>
-                                <span className="text-green-400 font-bold text-lg">
-                                  ₹{Math.floor(registration.event.registrationFees * (1 - registration.event.discountPercentage / 100))}
-                                </span>
+            <div className="max-w-7xl mx-auto space-y-12">
+              <section>
+                <h3 className="text-2xl font-bold text-gold-400 mb-6 text-center">Passes</h3>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {registrations.filter((registration) => registration.itemType === 'pass' && registration.pass).length === 0 ? (
+                    <p className="text-gray-400">No passes found.</p>
+                  ) : (
+                    registrations.map((registration) => {
+                      if (registration.itemType === 'pass' && registration.pass) {
+                        return (
+                          <div key={`pass-${registration.id}`} className="relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 border-green-500/50 bg-green-900/20">
+                            <div className="relative z-10 p-6 flex flex-col h-full">
+                              <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.pass.name}</h3>
+                              <p className="text-gray-300 text-base mb-4 flex-grow">{registration.pass.description}</p>
+                              <div className="mt-auto">
+                                <p className="text-2xl font-bold text-green-400">{'\u20B9'}{registration.pass.cost}</p>
+                                <p className="text-green-300 text-sm">Verified and Active</p>
                               </div>
-                              <span className="text-xs text-yellow-400 italic">
-                                {registration.event.discountPercentage}% OFF: {registration.event.discountReason}
-                              </span>
                             </div>
-                          ) : (
-                            registration.event.registrationFees > 0 ? (
-                              <p className="text-white font-bold">₹{registration.event.registrationFees}</p>
-                            ) : (
-                              <p className="text-green-400 font-bold">Free</p>
-                            )
-                          )}
-                        </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })
+                  )}
+                </div>
+              </section>
 
-                        <div className={`mt-4 p-4 rounded-lg ${hasBeenRejected ? 'bg-red-900/30' : hasNotAttended ? 'bg-yellow-900/30' : 'bg-gray-900/50'}`}>
-                          <h4 className="font-bold text-lg mb-2 text-white">Round Status</h4>
-                          <ul className="space-y-1 text-gray-300">{renderRoundStatus()}</ul>
-                        </div>
+              <section>
+                <h3 className="text-2xl font-bold text-gold-400 mb-6 text-center">Events</h3>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {registrations.filter((registration) => registration.itemType === 'event' && registration.event).length === 0 ? (
+                    <p className="text-gray-400">No events found.</p>
+                  ) : (
+                    registrations.map((registration) => {
+                      if (registration.itemType === 'event' && registration.event) {
+                        let hasBeenRejected = false;
+                        let hasNotAttended = false;
+                        if (registration.event && registration.event.rounds) {
+                          hasBeenRejected = registration.event.rounds.some(round =>
+                            Number(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3']) === -1
+                          );
+                          hasNotAttended = registration.event.rounds.some(round => {
+                            const roundStatus = Number(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3']);
+                            const roundDate = new Date(round.roundDateTime);
+                            const now = new Date();
+                            return roundDate < now && roundStatus === 0;
+                          });
+                        }
+                        const cardTheme = hasBeenRejected
+                          ? 'border-red-500/50 bg-red-900/20'
+                          : hasNotAttended
+                            ? 'border-yellow-500/50 bg-yellow-900/20'
+                            : 'border-gray-700 bg-gray-800/70';
+
+                        const renderRoundStatus = () => {
+                          return registration.event?.rounds?.map(round => (
+                            <li key={round.roundNumber}>Round {round.roundNumber}: {getStatusText(registration[`round${round.roundNumber}` as 'round1' | 'round2' | 'round3'], new Date(round.roundDateTime), round.roundNumber, registration)}</li>
+                          ));
+                        };
+
+                        const eventId = registration.eventId ?? registration.event?.id;
+                        const isAttended = eventId ? attendanceMap[eventId] : false;
+
+                        return (
+                          <div key={`event-${registration.id}`} className={`relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 ${cardTheme} cursor-pointer`} onClick={() => registration.event && handleViewDetails(registration.event)}>
+                            <div className="relative z-10 p-6 flex flex-col h-full">
+                              {registration.event.posterUrl && (
+                                <div className="mb-4">
+                                  <img src={`${API_BASE_URL}${registration.event.posterUrl}`} alt={registration.event.eventName} className="w-full h-48 object-cover rounded-md mx-auto shadow-md" />
+                                </div>
+                              )}
+                              <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight font-event-heading">{registration.event.eventName}</h3>
+                              <p className="text-gold-300 text-sm font-medium mb-3 font-event-body">{registration.event.eventCategory}</p>
+                              <p className="text-gray-300 text-base mb-4 font-event-body">{registration.event.eventDescription}</p>
+
+                              <div className="text-sm text-gray-300 space-y-1 mb-4 font-event-body">
+                                <p><span className="text-gray-400">Location:</span> {registration.event.location}</p>
+                                <p><span className="text-gray-400">Coordinator:</span> {registration.event.coordinatorName}</p>
+                                <p><span className="text-gray-400">Contact:</span> {registration.event.coordinatorContactNo}</p>
+                                <p><span className="text-gray-400">Rounds:</span> {registration.event.numberOfRounds}</p>
+                              </div>
+
+                              <div className="mb-4">
+                                {registration.event.discountPercentage && registration.event.discountPercentage > 0 ? (
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                      <span className="line-through text-red-400 text-sm">{'\u20B9'}{registration.event.registrationFees}</span>
+                                      <span className="text-green-400 font-bold text-lg">
+                                        {'\u20B9'}{Math.floor(registration.event.registrationFees * (1 - registration.event.discountPercentage / 100))}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-yellow-400 italic">
+                                      {registration.event.discountPercentage}% OFF: {registration.event.discountReason}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  registration.event.registrationFees > 0 ? (
+                                    <p className="text-white font-bold">{'\u20B9'}{registration.event.registrationFees}</p>
+                                  ) : (
+                                    <p className="text-green-400 font-bold font-event-body">
+                                      Included in the{' '}
+                                      {registration.event.eventCategory?.toLowerCase().includes('non')
+                                        ? 'Non-Tech'
+                                        : 'Tech'}{' '}
+                                      pass
+                                    </p>
+                                  )
+                                )}
+                              </div>
+
+                              <div className="mb-4">
+                                <p className="text-sm text-gray-300 font-event-body">
+                                  Attendance:{' '}
+                                  {isAttended ? (
+                                    <span className="text-green-400 font-semibold">Attended</span>
+                                  ) : (
+                                    <span className="text-yellow-400 font-semibold">Yet to attend</span>
+                                  )}
+                                </p>
+                              </div>
+
+                              <div className={`mt-4 p-4 rounded-lg ${hasBeenRejected ? 'bg-red-900/30' : hasNotAttended ? 'bg-yellow-900/30' : 'bg-gray-900/50'}`}>
+                                <h4 className="font-bold text-lg mb-2 text-white">Round Status</h4>
+                                <ul className="space-y-1 text-gray-300">{renderRoundStatus()}</ul>
+                              </div>
 
 
-                      </div>
-                    </div>
-                  );
-                } else if (registration.itemType === 'pass' && registration.pass) {
-                  return (
-                    <div key={`pass-${registration.id}`} className="relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 border-green-500/50 bg-green-900/20">
-                      <div className="relative z-10 p-6 flex flex-col h-full">
-                        <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.pass.name}</h3>
-                        <p className="text-gray-300 text-base mb-4 flex-grow">{registration.pass.description}</p>
-                        <div className="mt-auto">
-                          <p className="text-2xl font-bold text-green-400">₹{registration.pass.cost}</p>
-                          <p className="text-green-300 text-sm">Verified and Active</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })
+                  )}
+                </div>
+              </section>
             </div>
           )}
         </div>
@@ -312,5 +406,3 @@ const EnrolledEventsPage: React.FC = () => {
 };
 
 export default EnrolledEventsPage;
-
-
