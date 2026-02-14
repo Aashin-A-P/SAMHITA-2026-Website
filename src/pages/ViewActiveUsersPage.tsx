@@ -20,30 +20,35 @@ interface ActiveUser {
 const ViewActiveUsersPage: React.FC = () => {
   const [users, setUsers] = useState<ActiveUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterSymposium, setFilterSymposium] = useState<'All' | 'Carteblanche'>('All');
+  const [searchNumber, setSearchNumber] = useState('');
+
+  const filteredUsers = users.filter(user => {
+    const digits = searchNumber.replace(/\D/g, '').slice(0, 4);
+    if (!digits) return true;
+    const padded = digits.padStart(4, '0');
+    const targetId = `S${padded}`;
+    return (user as any).id === targetId || user.id === (targetId as any);
+  });
 
   useEffect(() => {
     setLoading(true);
     let url = `${API_BASE_URL}/registrations/registered-users`;
-    if (filterSymposium !== 'All') {
-      url += `?symposium=${filterSymposium}`;
-    }
 
     fetch(url)
       .then(res => res.json())
       .then(data => setUsers(data))
       .catch(err => console.error("Error fetching active users:", err))
       .finally(() => setLoading(false));
-  }, [filterSymposium]);
+  }, []);
 
   const exportToPDF = () => {
-    const symposiumLabel = filterSymposium === 'Carteblanche' ? 'SAMHITA' : filterSymposium;
+    const symposiumLabel = 'SAMHITA';
     const doc = new jsPDF();
     doc.text(`Active Users List - ${symposiumLabel}`, 14, 15);
     (doc as any).autoTable({
       startY: 20,
       head: [["Name", "Email", "Mobile", "College", "Department", "Symposia", "Events"]],
-      body: users.map(u => [
+      body: filteredUsers.map(u => [
         u.fullName,
         u.email,
         u.mobile,
@@ -62,38 +67,28 @@ const ViewActiveUsersPage: React.FC = () => {
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Active Users</h1>
 
-      <div className="flex justify-between items-center mb-6">
-        {/* Filter Controls */}
+      <div className="flex flex-col gap-4 mb-6">
         <div className="p-4 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
-          <span className="font-semibold mr-4 text-white">Filter by Symposium:</span>
-          <label className="inline-flex items-center mr-4 cursor-pointer">
-            <input
-              type="radio"
-              value="All"
-              checked={filterSymposium === 'All'}
-              onChange={(e) => setFilterSymposium(e.target.value as any)}
-              className="form-radio text-blue-600"
-            />
-            <span className="ml-2 text-white">All</span>
-          </label>
-          <label className="inline-flex items-center mr-4 cursor-pointer">
-            <input
-              type="radio"
-              value="Carteblanche"
-              checked={filterSymposium === 'Carteblanche'}
-              onChange={(e) => setFilterSymposium(e.target.value as any)}
-              className="form-radio text-samhita-600"
-            />
-            <span className="ml-2 text-white">SAMHITA</span>
-          </label>
+          <label className="block text-sm text-gray-300 mb-2">Search by User ID number (e.g., 1 for S0001)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="Enter number only"
+            value={searchNumber}
+            onChange={(e) => setSearchNumber(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-900/70 border border-gray-700 rounded-lg text-white"
+          />
         </div>
 
-        <button
-          onClick={exportToPDF}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          Export to PDF
-        </button>
+        <div className="flex justify-end">
+          <button
+            onClick={exportToPDF}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Export to PDF
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-600 rounded-lg">
@@ -109,7 +104,7 @@ const ViewActiveUsersPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user, idx) => (
+            {filteredUsers.map((user, idx) => (
               <tr key={idx} className="hover:bg-gray-800/40">
                 <td className="py-3 px-4">{user.fullName}</td>
                 <td className="py-3 px-4">{user.email}</td>

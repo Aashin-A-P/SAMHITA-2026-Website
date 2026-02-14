@@ -68,7 +68,10 @@ const OrganizerAttendancePage: React.FC = () => {
         const attendanceData = await attendanceRes.json();
 
         setRegistrations(regsData);
-        setPresentSet(new Set(attendanceData));
+        const presentIds = Array.isArray(attendanceData)
+          ? attendanceData.map((row: any) => row.userId)
+          : [];
+        setPresentSet(new Set(presentIds));
       } catch (error) {
         showModal('Error', 'Failed to load registrations or attendance.');
       } finally {

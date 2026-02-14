@@ -190,6 +190,21 @@ CREATE TABLE `coupons` (
   UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- Pass issues table
+DROP TABLE IF EXISTS `pass_issues`;
+CREATE TABLE `pass_issues` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` varchar(5) NOT NULL,
+  `passId` int NOT NULL,
+  `issued` tinyint(1) NOT NULL DEFAULT '1',
+  `issuedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_issue` (`userId`,`passId`),
+  KEY `passId` (`passId`),
+  CONSTRAINT `pass_issues_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_issues_ibfk_2` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Pass cart table (like pass_cart in csmit_db)
 DROP TABLE IF EXISTS `pass_cart`;
 CREATE TABLE `pass_cart` (

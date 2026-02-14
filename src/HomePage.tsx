@@ -42,6 +42,22 @@ import vijayashree from './Photos/vijayashree.jpeg';
 import aravinth from './Photos/aravinth.jpeg';
 import HomePageGallery from './components/HomePageGallery';
 import CsmitLogo from './Photos/Logo.png';
+import EventCover from './Photos/event_cover.png';
+import RobertBaratheon from './Photos/Robert Baratheon.png';
+import CerseiLannister from './Photos/Cersei Lannister.png';
+import TywinLannister from './Photos/Tywin Lannister.png';
+import JamieLannister from './Photos/Jamie Lannister.png';
+import TyrionLannister from './Photos/Tyrion Lannister.png';
+import JoffreyLannister from './Photos/Joffrey Lannister.png';
+import TommenLannister from './Photos/Tommen Lannister.png';
+import MyrcellaLannister from './Photos/Myrcella Lannister.png';
+import NedStark from './Photos/Ned Stark.png';
+import CatelynStark from './Photos/Catelyn Stark.png';
+import RobbStark from './Photos/Robb Stark.png';
+import SansaStark from './Photos/Sansa Stark.png';
+import AryaStark from './Photos/Arya Stark.png';
+import BranStark from './Photos/Bran Stark.png';
+import RickonStark from './Photos/Rickon Stark.png';
 import RegistrationTimer from './components/RegistrationTimer';
 import OfferBanner from './components/OfferBanner';
 import PassesDisplay from './components/PassesDisplay';
@@ -105,10 +121,11 @@ export default function HomePage() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [showAllMembers, setShowAllMembers] = useState(false);
-  const [activeEventTab, setActiveEventTab] = useState<'Technical' | 'Non-Technical' | 'Signature'>('Technical');
+  const [activeEventTab, setActiveEventTab] = useState<'Technical' | 'Non-Technical' | 'Signature' | 'Workshop'>('Technical');
   const techScrollRef = useRef<HTMLDivElement | null>(null);
   const nonTechScrollRef = useRef<HTMLDivElement | null>(null);
   const signatureScrollRef = useRef<HTMLDivElement | null>(null);
+  const workshopScrollRef = useRef<HTMLDivElement | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{ title: string; subtitle: string; tag: string; description: string } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -118,6 +135,12 @@ export default function HomePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
   const toastTimeoutRef = useRef<number | null>(null);
+  const [eventsInView, setEventsInView] = useState(false);
+  const eventsSectionRef = useRef<HTMLElement | null>(null);
+  const [showTechArrows, setShowTechArrows] = useState(false);
+  const [showNonTechArrows, setShowNonTechArrows] = useState(false);
+  const [showSignatureArrows, setShowSignatureArrows] = useState(false);
+  const [showWorkshopArrows, setShowWorkshopArrows] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
 
@@ -164,6 +187,42 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    const section = eventsSectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setEventsInView(entry.isIntersecting);
+      },
+      { threshold: 0.4 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (techScrollRef.current) {
+        setShowTechArrows(techScrollRef.current.scrollWidth > techScrollRef.current.clientWidth);
+      }
+      if (nonTechScrollRef.current) {
+        setShowNonTechArrows(nonTechScrollRef.current.scrollWidth > nonTechScrollRef.current.clientWidth);
+      }
+      if (signatureScrollRef.current) {
+        setShowSignatureArrows(signatureScrollRef.current.scrollWidth > signatureScrollRef.current.clientWidth);
+      }
+      if (workshopScrollRef.current) {
+        setShowWorkshopArrows(workshopScrollRef.current.scrollWidth > workshopScrollRef.current.clientWidth);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [events, activeEventTab, eventsInView]);
+
+  useEffect(() => {
     const fetchPasses = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/passes`);
@@ -186,18 +245,50 @@ export default function HomePage() {
       subtitle: event.teamOrIndividual || 'Event',
       tag: event.passName || event.eventCategory || 'Event',
       description: event.eventDescription || 'Details will be announced soon.',
+      posterImage: event.posterImage,
       passName: ((event.passName || '') as string).toLowerCase(),
+      category: (event.eventCategory || '') as string,
     }));
 
     const isTechPass = (name: string) => name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
     const isNonTechPass = (name: string) => name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
+    const isWorkshop = (category: string) => category.toLowerCase().includes('workshop');
 
     return {
       Technical: normalized.filter((e) => isTechPass(e.passName)),
       'Non-Technical': normalized.filter((e) => isNonTechPass(e.passName)),
-      Signature: normalized.filter((e) => !isTechPass(e.passName) && !isNonTechPass(e.passName)),
+      Signature: normalized.filter((e) => !isTechPass(e.passName) && !isNonTechPass(e.passName) && !isWorkshop(e.category)),
+      Workshop: normalized.filter((e) => isWorkshop(e.category)),
     };
   }, [events]);
+
+  const getPosterSrc = (posterImage?: string) => {
+    if (!posterImage) return null;
+    const isPng = posterImage.startsWith('iVBOR');
+    const isJpeg = posterImage.startsWith('/9j/');
+    const mime = isPng ? 'image/png' : isJpeg ? 'image/jpeg' : 'image/*';
+    return `data:${mime};base64,${posterImage}`;
+  };
+
+  const techCoverImages = [
+    RobertBaratheon,
+    CerseiLannister,
+    TywinLannister,
+    JamieLannister,
+    TyrionLannister,
+    JoffreyLannister,
+    TommenLannister,
+    MyrcellaLannister,
+  ];
+  const nonTechCoverImages = [
+    NedStark,
+    CatelynStark,
+    RobbStark,
+    SansaStark,
+    AryaStark,
+    BranStark,
+    RickonStark,
+  ];
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -303,6 +394,8 @@ export default function HomePage() {
           </div>
         )}
 
+        
+
         <main className="relative z-10 pt-16">
             <div className="fixed top-16 left-0 w-screen z-20">
             <RegistrationTimer />
@@ -311,6 +404,8 @@ export default function HomePage() {
 
 
             <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative pt-20">
+              <p className="text-sm sm:text-base tracking-[0.35em] uppercase text-gold-300 mb-2">Information Technology Association</p>
+              <p className="text-xs sm:text-sm tracking-[0.6em] uppercase text-gold-200/80 mb-6 font-display italic">Presents</p>
               <img src={CsmitLogo} alt="SAMHITA Logo" className="w-56 md:w-64 h-auto mb-6 drop-shadow-[0_0_35px_rgba(212,175,55,0.45)]" />
               <h1 className="text-4xl md:text-6xl font-bold font-display mb-4 text-gold-gradient">SAMHITA '26</h1>
               <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl">
@@ -358,12 +453,12 @@ export default function HomePage() {
 
             
                     <HomePageGallery />
-            <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
+            <section id="events" ref={eventsSectionRef} className="py-20 px-4 sm:px-6 lg:px-8">
                 <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
                 <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
 
                 <div className="flex flex-wrap justify-center gap-4 mb-10">
-                  {['Technical', 'Non-Technical', 'Signature'].map((tab) => (
+                  {['Technical', 'Non-Technical', 'Signature', 'Workshop'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveEventTab(tab)}
@@ -382,43 +477,67 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Technical Events</h3>
                       <div className="relative">
                         <div ref={techScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Technical.map((event) => (
+                          {categorizedEvents.Technical.map((event, index) => {
+                            const coverImage = techCoverImages[index] || EventCover;
+                            return (
                             <div
                               key={event.id}
-                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                             >
-                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
-                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
+                              <div className="flip-card w-full h-full">
+                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
+                                  <div className="flip-face">
+                                    <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flip-face flip-back">
+                                    {getPosterSrc(event.posterImage) ? (
+                                      <img
+                                        src={getPosterSrc(event.posterImage) as string}
+                                        alt={`${event.title} poster`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                        Poster coming soon
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
                               >
                                 View Details
                               </button>
                             </div>
-                          ))}
+                          );
+                        })}
                           {categorizedEvents.Technical.length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No technical events added yet.</div>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => techScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll technical events left"
-                        >
-                          &lsaquo;
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => techScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll technical events right"
-                        >
-                          &rsaquo;
-                        </button>
+                        {showTechArrows && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => techScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll technical events left"
+                            >
+                              &lsaquo;
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => techScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll technical events right"
+                            >
+                              &rsaquo;
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
@@ -428,43 +547,67 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Non-Technical Events</h3>
                       <div className="relative">
                         <div ref={nonTechScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents['Non-Technical'].map((event) => (
+                          {categorizedEvents['Non-Technical'].map((event, index) => {
+                            const coverImage = nonTechCoverImages[index] || EventCover;
+                            return (
                             <div
                               key={event.id}
-                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                             >
-                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
-                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
+                              <div className="flip-card w-full h-full">
+                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
+                                  <div className="flip-face">
+                                    <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flip-face flip-back">
+                                    {getPosterSrc(event.posterImage) ? (
+                                      <img
+                                        src={getPosterSrc(event.posterImage) as string}
+                                        alt={`${event.title} poster`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                        Poster coming soon
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
                               >
                                 View Details
                               </button>
                             </div>
-                          ))}
+                          );
+                        })}
                           {categorizedEvents['Non-Technical'].length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No non-technical events added yet.</div>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => nonTechScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll non-technical events left"
-                        >
-                          &lsaquo;
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => nonTechScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll non-technical events right"
-                        >
-                          &rsaquo;
-                        </button>
+                        {showNonTechArrows && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => nonTechScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll non-technical events left"
+                            >
+                              &lsaquo;
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => nonTechScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll non-technical events right"
+                            >
+                              &rsaquo;
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
@@ -473,19 +616,36 @@ export default function HomePage() {
                     <div className="space-y-4">
                       <h3 className="text-2xl font-bold text-white text-center">Signature Events</h3>
                       <div className="relative">
-                        <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                        <div ref={workshopScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
                           {categorizedEvents.Signature.map((event) => (
                             <div
                               key={event.id}
-                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                             >
-                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
-                              <h4 className="text-xl font-bold text-white mb-1 font-event-heading">{event.title}</h4>
-                              <p className="text-gray-400 mb-4 font-event-body">{event.subtitle}</p>
+                              <div className="flip-card w-full h-full">
+                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
+                                  <div className="flip-face">
+                                    <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flip-face flip-back">
+                                    {getPosterSrc(event.posterImage) ? (
+                                      <img
+                                        src={getPosterSrc(event.posterImage) as string}
+                                        alt={`${event.title} poster`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                        Poster coming soon
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
                               >
                                 View Details
                               </button>
@@ -495,22 +655,93 @@ export default function HomePage() {
                             <div className="text-gray-400 text-sm">No signature events added yet.</div>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => signatureScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll signature events left"
-                        >
-                          &lsaquo;
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => signatureScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
-                          aria-label="Scroll signature events right"
-                        >
-                          &rsaquo;
-                        </button>
+                        {showSignatureArrows && (
+                          <>
+                            <button
+                              type="button"
+                          onClick={() => workshopScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll signature events left"
+                            >
+                              &lsaquo;
+                            </button>
+                            <button
+                              type="button"
+                          onClick={() => workshopScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll signature events right"
+                            >
+                              &rsaquo;
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeEventTab === 'Workshop' && (
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-bold text-white text-center">Workshops</h3>
+                      <div className="relative">
+                        <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                          {categorizedEvents.Workshop.map((event) => (
+                            <div
+                              key={event.id}
+                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                            >
+                              <div className="flip-card w-full h-full">
+                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
+                                  <div className="flip-face">
+                                    <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flip-face flip-back">
+                                    {getPosterSrc(event.posterImage) ? (
+                                      <img
+                                        src={getPosterSrc(event.posterImage) as string}
+                                        alt={`${event.title} poster`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                        Poster coming soon
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          ))}
+                          {categorizedEvents.Workshop.length === 0 && !isEventsLoading && (
+                            <div className="text-gray-400 text-sm">No workshops added yet.</div>
+                          )}
+                        </div>
+                        {showWorkshopArrows && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => signatureScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll workshops left"
+                            >
+                              &lsaquo;
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => signatureScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                              aria-label="Scroll workshops right"
+                            >
+                              &rsaquo;
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
@@ -599,7 +830,6 @@ export default function HomePage() {
         >
             {selectedEvent && (
               <div className="space-y-3">
-                <p className="text-gold-400 text-xs uppercase tracking-widest">{selectedEvent.tag}</p>
                 <p className="text-gray-300 text-sm font-event-body">{selectedEvent.subtitle}</p>
                 <p className="text-gray-200 font-event-body">{selectedEvent.description}</p>
                 <div className="pt-2">
@@ -634,7 +864,7 @@ export default function HomePage() {
                     <p className="text-lg font-bold">Address: MIT Campus, Chromepet, Chennai</p>
                 </div>
             </div>
-            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - Nation Level Technical Symposium. All Rights Reserved.</p>
+            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - National Level Technical Symposium. All Rights Reserved.</p>
         </footer>
 
         <LoginPage 
@@ -657,8 +887,6 @@ export default function HomePage() {
     </>
   );
 }
-
-
 
 
 

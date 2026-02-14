@@ -407,6 +407,19 @@ async function createTablesIfNotExists() {
     `);
 
     await db.execute(`
+      CREATE TABLE IF NOT EXISTS pass_issues (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId VARCHAR(5) NOT NULL,
+        passId INT NOT NULL,
+        issued TINYINT(1) NOT NULL DEFAULT 1,
+        issuedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_issue (userId, passId),
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (passId) REFERENCES passes(id) ON DELETE CASCADE
+      );
+    `);
+
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS \`accommodation\` (
         \`id\` INT AUTO_INCREMENT,
         \`gender\` ENUM('male', 'female') NOT NULL,
@@ -536,6 +549,7 @@ async function startServer() {
   apiRouter.use('/email', require('./email.cjs')(db, transporter, uploadDocument));
   apiRouter.use('/offer', require('./offer.cjs')(db));
   apiRouter.use('/coupons', require('./coupons.cjs')(db));
+  apiRouter.use('/pass-issues', require('./pass_issues.cjs')(db));
   apiRouter.use('/attendance', require('./attendance.cjs')(db));
 
   app.use('/api', apiRouter);

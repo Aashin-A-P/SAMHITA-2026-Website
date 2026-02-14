@@ -518,18 +518,19 @@ module.exports = function (db, uploadTransactionScreenshot) {
       }
 
       const [allRegistrations] = await db.execute(
-        `SELECT r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium, 
-                IF(r.passId IS NOT NULL, 'pass', 'event') as itemType
+        `SELECT r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium,
+                IF(r.passId IS NOT NULL, 'pass', 'event') as itemType,
+                MAX(vr.verified) as verified
          FROM registrations r
          JOIN users u ON r.userEmail = u.email
-         JOIN verified_registrations vr ON u.id = vr.userId 
+         LEFT JOIN verified_registrations vr ON u.id = vr.userId 
            AND (
              (r.eventId IS NOT NULL AND r.eventId = vr.eventId) 
              OR 
              (r.passId IS NOT NULL AND r.eventId IS NULL AND vr.passId = r.passId AND vr.eventId IS NULL)
            )
-         WHERE u.id = ? AND vr.verified = 1
-         GROUP BY r.id`,
+         WHERE u.id = ?
+         GROUP BY r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium`,
         [userId]
       );
 
@@ -562,11 +563,13 @@ module.exports = function (db, uploadTransactionScreenshot) {
           );
           if (pass) {
             registrationsWithDetails.push({ ...reg, pass });
-            passRegistrations.push({
-              passId: reg.passId,
-              passName: pass.name,
-              rounds: { r1: reg.round1, r2: reg.round2, r3: reg.round3 }
-            });
+            if (Number(reg.verified) === 1) {
+              passRegistrations.push({
+                passId: reg.passId,
+                passName: pass.name,
+                rounds: { r1: reg.round1, r2: reg.round2, r3: reg.round3 }
+              });
+            }
           }
         }
       }
@@ -678,8 +681,8 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
           const [existing] = await connection.execute('SELECT id FROM registrations WHERE userEmail = ? AND passId = ?', [user.email, passId]);
           if (existing.length > 0) {
-            console.warn(`User ${user.email} already registered for pass ${passId}. Skipping.`);
-            continue;
+            await connection.rollback();
+            return res.status(409).json({ message: `Already registered for pass ${passId}.` });
           }
 
           // Use the active symposium for passes (consistent with user payment flow)
@@ -715,6 +718,86 @@ module.exports = function (db, uploadTransactionScreenshot) {
       }
       console.error('Admin registration failed:', error);
       res.status(500).json({ message: error.message || 'Failed to register user.' });
+    }
+  });
+
+  // Get pass registrations (not only verified) for a user
+  router.get('/passes/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+      const [[user]] = await db.execute('SELECT email FROM users WHERE id = ?', [userId]);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+      const [rows] = await db.execute(
+        `SELECT DISTINCT passId FROM (
+           SELECT r.passId FROM registrations r WHERE r.userEmail = ? AND r.passId IS NOT NULL
+           UNION
+           SELECT vr.passId FROM verified_registrations vr WHERE vr.userId = ? AND vr.passId IS NOT NULL
+         ) t`,
+        [user.email, userId]
+      );
+      res.status(200).json(rows.map(r => r.passId));
+    } catch (error) {
+      console.error('Error fetching user pass registrations:', error);
+      res.status(500).json({ message: 'Failed to fetch user pass registrations.' });
+    }
+  });
+
+  // Admin deregister a user from a pass (and exploded pass entries)
+  router.post('/admin-deregister', async (req, res) => {
+    const { userId, passId } = req.body;
+    if (!userId || !passId) {
+      return res.status(400).json({ message: 'Missing userId or passId.' });
+    }
+
+    let connection;
+    try {
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+
+      const [[user]] = await connection.execute('SELECT email FROM users WHERE id = ?', [userId]);
+      if (!user) {
+        throw new Error(`User with ID ${userId} not found.`);
+      }
+
+      // Remove pass registration (any source)
+      const [passDelResult] = await connection.execute(
+        'DELETE FROM registrations WHERE userEmail = ? AND passId = ?',
+        [user.email, passId]
+      );
+
+      // Remove exploded event registrations for this pass (PASS_ENTRY)
+      await connection.execute(
+        `DELETE r FROM registrations r
+         JOIN pass_events pe ON pe.eventId = r.eventId
+         WHERE r.userEmail = ? AND r.transactionId = 'PASS_ENTRY' AND pe.passId = ?`,
+        [user.email, passId]
+      );
+
+      // Remove verified registrations for this pass and related events
+      await connection.execute(
+        'DELETE FROM verified_registrations WHERE userId = ? AND passId = ?',
+        [userId, passId]
+      );
+      await connection.execute(
+        `DELETE vr FROM verified_registrations vr
+         JOIN pass_events pe ON pe.eventId = vr.eventId
+         WHERE vr.userId = ? AND pe.passId = ?`,
+        [userId, passId]
+      );
+
+      await connection.commit();
+      if (passDelResult.affectedRows === 0) {
+        return res.status(200).json({ message: 'No pass registration found to remove.' });
+      }
+      res.status(200).json({ message: 'Pass deregistered.' });
+    } catch (error) {
+      if (connection) await connection.rollback();
+      console.error('Admin deregistration failed:', error);
+      res.status(500).json({ message: error.message || 'Failed to deregister pass.' });
+    } finally {
+      if (connection) connection.release();
     }
   });
 

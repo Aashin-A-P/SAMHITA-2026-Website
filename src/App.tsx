@@ -39,6 +39,7 @@ import SendConfirmationEmailPage from "./pages/SendConfirmationEmailPage.tsx";
 import BulkSendConfirmationEmailPage from "./pages/BulkSendConfirmationEmailPage";
 import ManageOfferPage from "./pages/ManageOfferPage.tsx";
 import ManageCouponsPage from "./pages/ManageCouponsPage.tsx";
+import PassIssuePage from "./pages/PassIssuePage.tsx";
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(sessionStorage.getItem("introSeen") !== "true");
@@ -150,6 +151,7 @@ export default function App() {
             <Route path="bulk-send-confirmation" element={<BulkSendConfirmationEmailPage />} />
             <Route path="manage-offer" element={<ManageOfferPage />} />
             <Route path="manage-coupons" element={<ManageCouponsPage />} />
+            <Route path="pass-issue" element={<PassIssuePage />} />
           </Route>
         </Route>
 

@@ -59,6 +59,8 @@ const EnrolledEventsPage: React.FC = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [attendanceMap, setAttendanceMap] = useState<Record<number, boolean>>({});
+  const [issuedPassIds, setIssuedPassIds] = useState<number[]>([]);
+  const [verifiedPassIds, setVerifiedPassIds] = useState<number[]>([]);
 
   const showModal = (title: string, message: string) => {
     setModal({ isOpen: true, title, message });
@@ -145,6 +147,48 @@ const EnrolledEventsPage: React.FC = () => {
 
     fetchAttendanceForEvents();
   }, [registrations, user]);
+
+  useEffect(() => {
+    const fetchIssuedPasses = async () => {
+      if (!user?.id) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/pass-issues/user/${user.id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch pass issue status');
+        }
+        const data = await response.json();
+        setIssuedPassIds(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load issued passes:', error);
+      }
+    };
+
+    fetchIssuedPasses();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchVerifiedPasses = async () => {
+      if (!user?.id) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/registrations/verified/${user.id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch verified passes');
+        }
+        const data = await response.json();
+        const passIds = Array.isArray(data)
+          ? data
+              .map((item: any) => item.passId)
+              .filter((id: any) => id !== null && id !== undefined)
+              .map((id: any) => Number(id))
+          : [];
+        setVerifiedPassIds(passIds);
+      } catch (error) {
+        console.error('Failed to load verified passes:', error);
+      }
+    };
+
+    fetchVerifiedPasses();
+  }, [user]);
 
   const getStatusText = (status: any, roundDate: Date, roundNumber: number, registration: any) => {
     const numericStatus = Number(status);
@@ -274,9 +318,24 @@ const EnrolledEventsPage: React.FC = () => {
                             <div className="relative z-10 p-6 flex flex-col h-full">
                               <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.pass.name}</h3>
                               <p className="text-gray-300 text-base mb-4 flex-grow">{registration.pass.description}</p>
-                              <div className="mt-auto">
+                              <div className="mt-auto space-y-1">
                                 <p className="text-2xl font-bold text-green-400">{'\u20B9'}{registration.pass.cost}</p>
-                                <p className="text-green-300 text-sm">Verified and Active</p>
+                                <p className="text-sm text-gray-300 font-event-body">
+                                  Verification:{' '}
+                                  {verifiedPassIds.includes(registration.pass.id) ? (
+                                    <span className="text-green-400 font-semibold">Verified</span>
+                                  ) : (
+                                    <span className="text-yellow-400 font-semibold">In Progress</span>
+                                  )}
+                                </p>
+                                <p className="text-sm text-gray-300 font-event-body">
+                                  Status:{' '}
+                                  {issuedPassIds.includes(registration.pass.id) ? (
+                                    <span className="text-green-400 font-semibold">Active</span>
+                                  ) : (
+                                    <span className="text-yellow-400 font-semibold">Not Active</span>
+                                  )}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -361,11 +420,7 @@ const EnrolledEventsPage: React.FC = () => {
                                     <p className="text-white font-bold">{'\u20B9'}{registration.event.registrationFees}</p>
                                   ) : (
                                     <p className="text-green-400 font-bold font-event-body">
-                                      Included in the{' '}
-                                      {registration.event.eventCategory?.toLowerCase().includes('non')
-                                        ? 'Non-Tech'
-                                        : 'Tech'}{' '}
-                                      pass
+                                      Included in pass
                                     </p>
                                   )
                                 )}

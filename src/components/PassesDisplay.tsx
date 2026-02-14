@@ -189,21 +189,6 @@ const PassesDisplay: React.FC = () => {
                     </div>
                 )}
             </ThemedModal>
-            <div className="fixed bottom-4 right-4 flex flex-col items-end gap-3 z-20">
-                {passes.map((pass) => (
-                    <div key={pass.id} className="flex flex-col items-center">
-                        <button
-                            onClick={() => setSelectedPass(pass)}
-                            className="p-3 bg-gradient-to-br from-gold-500 to-indigo-600 text-white rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform hover:scale-125 animate-zoom-in-out"
-                            title={`View details for ${pass.name}`}
-                        >
-                            <FiTag size={24} />
-                        </button>
-                        <span className="text-white text-sm mt-1 bg-black/50 rounded px-2 py-1">{pass.name}</span>
-                    </div>
-                ))}
-            </div>
-
             {selectedPass && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 border border-gold-500/50 rounded-lg shadow-xl max-w-sm w-full relative text-white">
