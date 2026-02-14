@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, Link} from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Header from "./ui/Header";
 import { FaBullseye, FaEye, FaChevronDown } from "react-icons/fa";
+import API_BASE_URL from './Config';
 
 
 import backgroundImage from './Login_Sign/image.png';
@@ -44,6 +45,7 @@ import CsmitLogo from './Photos/Logo.png';
 import RegistrationTimer from './components/RegistrationTimer';
 import OfferBanner from './components/OfferBanner';
 import PassesDisplay from './components/PassesDisplay';
+import ThemedModal from './components/ThemedModal';
 
 // --- Data for different sections ---
 
@@ -103,6 +105,14 @@ export default function HomePage() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [showAllMembers, setShowAllMembers] = useState(false);
+  const [activeEventTab, setActiveEventTab] = useState<'Technical' | 'Non-Technical' | 'Signature'>('Technical');
+  const techScrollRef = useRef<HTMLDivElement | null>(null);
+  const nonTechScrollRef = useRef<HTMLDivElement | null>(null);
+  const signatureScrollRef = useRef<HTMLDivElement | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<{ title: string; subtitle: string; tag: string; description: string } | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
   const location = useLocation();
   const { } = useAuth();
 
@@ -123,6 +133,39 @@ export default function HomePage() {
       }
     }
   }, [location]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/events`);
+        const data = await response.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load events for homepage:', error);
+      } finally {
+        setIsEventsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const categorizedEvents = useMemo(() => {
+    const normalized = events.map((event) => ({
+      id: event.id,
+      title: event.eventName,
+      subtitle: event.teamOrIndividual || 'Event',
+      tag: event.eventCategory || 'Event',
+      description: event.eventDescription || 'Details will be announced soon.',
+      category: (event.eventCategory || '').toLowerCase(),
+    }));
+
+    return {
+      Technical: normalized.filter((e) => e.category.includes('technical') && !e.category.includes('non')),
+      'Non-Technical': normalized.filter((e) => e.category.includes('non-technical') || e.category.includes('non technical') || e.category.includes('nontech')),
+      Signature: normalized.filter((e) => e.category.includes('signature')),
+    };
+  }, [events]);
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -219,47 +262,196 @@ export default function HomePage() {
             
                     <HomePageGallery />
             <section id="events" className="py-20 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">Discover the Battlefields</h2>
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
-                    <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
-                        <h3 className="text-2xl font-bold text-white mb-3">SAMHITA</h3>
-                        <div className="text-gray-300 mb-4 text-left">
-                            <p><span className="font-bold text-gold-400">Type:</span> Annual national-level inter-college technical event.</p>
-                            <p><span className="font-bold text-gold-400">Focus:</span> Open source software, technical competitions, and creative problem-solving.</p>
-                            <p className="font-bold text-gold-400 mt-2">Highlights:</p>
-                            <ul className="list-disc list-inside text-gray-400">
-                                <li>Encourages participants to create their own software or tweak existing ones.</li>
-                                <li>Large participation since its start in 2005.</li>
-                                <li>Huge impact on the free software community in India.</li>
-                                <li>Platform for showcasing budding software computing talent.</li>
-                            </ul>
-                            <p className="mt-2"><span className="font-bold text-gold-400">Purpose:</span> Promote open-source knowledge, inspire innovation, and emphasize open-source importance.</p>
-                        </div>
-                        <div className="flex gap-4 mt-4">
-                            <Link to="/events?symposium=Carteblanche" className="px-5 py-2 rounded-lg text-sm font-semibold gold-outline hover:scale-105 transition-transform">View Events</Link>
-                            
-                        </div>
-                    </div>
+                <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
+                <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
+
+                <div className="flex flex-wrap justify-center gap-4 mb-10">
+                  {['Technical', 'Non-Technical', 'Signature'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveEventTab(tab)}
+                      className={`px-5 py-2 rounded-full text-lg font-bold font-semibold transition-all ${
+                        activeEventTab === tab ? 'bg-samhita-600 text-white' : 'gold-outline'
+                      }`}
+                    >
+                      {tab} Events
+                    </button>
+                  ))}
                 </div>
 
-                <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient">Event Passes</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-5xl mx-auto">
-                    <div className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow">
-                        <h3 className="text-2xl font-bold text-white mb-3">SAMHITA Passes</h3>
-                        <div className="text-gray-300 mb-4 text-left">
-                            <p><span className="font-bold text-gold-400">Access:</span> Unlock multiple events with a single pass.</p>
-                            <p><span className="font-bold text-gold-400">Flexibility:</span> Choose the pass that fits your track and interests.</p>
-                            <p className="font-bold text-gold-400 mt-2">Benefits:</p>
-                            <ul className="list-disc list-inside text-gray-400">
-                                <li>Save more compared to individual registrations.</li>
-                                <li>Seamless entry across eligible events.</li>
-                                <li>Perfect for teams and power participants.</li>
-                            </ul>
+                  {activeEventTab === 'Technical' && (
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-bold text-white text-center">Technical Events</h3>
+                      <div className="relative">
+                        <div ref={techScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                          {categorizedEvents.Technical.map((event) => (
+                            <div
+                              key={event.id}
+                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                            >
+                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
+                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
+                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          ))}
+                          {categorizedEvents.Technical.length === 0 && !isEventsLoading && (
+                            <div className="text-gray-400 text-sm">No technical events added yet.</div>
+                          )}
                         </div>
-                        <div className="flex gap-4 mt-4">
-                            <a href="#passes-details" className="px-5 py-2 rounded-lg text-sm font-semibold gold-outline hover:scale-105 transition-transform">View Passes</a>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => techScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll technical events left"
+                        >
+                          &lsaquo;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => techScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll technical events right"
+                        >
+                          &rsaquo;
+                        </button>
+                      </div>
                     </div>
+                  )}
+
+                  {activeEventTab === 'Non-Technical' && (
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-bold text-white text-center">Non-Technical Events</h3>
+                      <div className="relative">
+                        <div ref={nonTechScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                          {categorizedEvents['Non-Technical'].map((event) => (
+                            <div
+                              key={event.id}
+                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                            >
+                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
+                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
+                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          ))}
+                          {categorizedEvents['Non-Technical'].length === 0 && !isEventsLoading && (
+                            <div className="text-gray-400 text-sm">No non-technical events added yet.</div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => nonTechScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll non-technical events left"
+                        >
+                          &lsaquo;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => nonTechScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll non-technical events right"
+                        >
+                          &rsaquo;
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeEventTab === 'Signature' && (
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-bold text-white text-center">Signature Events</h3>
+                      <div className="relative">
+                        <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                          {categorizedEvents.Signature.map((event) => (
+                            <div
+                              key={event.id}
+                              className="min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg gold-glow flex flex-col"
+                            >
+                              <p className="text-xs text-gold-400 mb-2 uppercase tracking-widest">{event.tag}</p>
+                              <h4 className="text-xl font-bold text-white mb-1">{event.title}</h4>
+                              <p className="text-gray-400 mb-4">{event.subtitle}</p>
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          ))}
+                          {categorizedEvents.Signature.length === 0 && !isEventsLoading && (
+                            <div className="text-gray-400 text-sm">No signature events added yet.</div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => signatureScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll signature events left"
+                        >
+                          &lsaquo;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => signatureScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
+                          aria-label="Scroll signature events right"
+                        >
+                          &rsaquo;
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient scroll-mt-28">Event Passes</h2>
+                <div className="max-w-5xl mx-auto space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+                    {[
+                      { name: 'Tech Pass', desc: 'Best for technical event access.' },
+                      { name: 'Non‑Tech Pass', desc: 'Perfect for creative & strategy tracks.' },
+                      { name: 'Global Pass', desc: 'All‑access pass across categories.' },
+                    ].map((pass) => (
+                      <div
+                        key={pass.name}
+                        className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
+                      >
+                        <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
+                        <p className="text-gray-300 mb-4">{pass.desc}</p>
+                        <a href="#passes-details" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto">View Passes</a>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col md:flex-row justify-center gap-8">
+                    {[
+                      { name: 'Signature Pass', desc: 'Flagship events and elite challenges.' },
+                      { name: 'Workshop Pass', desc: 'Focused access to workshops only.' },
+                    ].map((pass) => (
+                      <div
+                        key={pass.name}
+                        className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
+                      >
+                        <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
+                        <p className="text-gray-300 mb-4">{pass.desc}</p>
+                        <a href="#passes-details" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform mt-auto">View Passes</a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
             </section>
             <section id="why-join" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -279,7 +471,7 @@ export default function HomePage() {
                       Develop teamwork, communication, and leadership skills essential for academic and placement success.
                     </li>
                     <li>
-                      What You Gain at SAMHITA 2026:
+                      What You Gain at SAMHITA'26:
                       <ul className="list-disc list-inside ml-6 text-gray-400">
                         <li>Anna University–affiliated participation certificates</li>
                         <li>Resume-enhancing national-level recognition</li>
@@ -290,11 +482,9 @@ export default function HomePage() {
                 </div>
               </section>
 
-            <section id="passes-details" className="py-20 px-4 sm:px-6 lg:px-8">
-              <PassesDisplay />
-            </section>
+            <PassesDisplay />
 
-            <section id="sponsors" className="py-20">
+            <section id="sponsors" className="py-12">
               <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">The Esteemed Banners of Support</h2>
               <div className="relative w-full overflow-hidden">
                 <div className="flex animate-marquee">
@@ -311,6 +501,24 @@ export default function HomePage() {
               </div>
             </section>
 
+        <ThemedModal
+            isOpen={isEventModalOpen}
+            onClose={() => setIsEventModalOpen(false)}
+            title={selectedEvent ? selectedEvent.title : "Event Details"}
+        >
+            {selectedEvent && (
+              <div className="space-y-3">
+                <p className="text-gold-400 text-xs uppercase tracking-widest">{selectedEvent.tag}</p>
+                <p className="text-gray-300 text-sm">{selectedEvent.subtitle}</p>
+                <p className="text-gray-200">{selectedEvent.description}</p>
+                <div className="pt-2">
+                  <a href="#passes" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform">
+                    View Passes
+                  </a>
+                </div>
+              </div>
+            )}
+        </ThemedModal>
 
         </main>
 
@@ -318,20 +526,21 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-7xl mx-auto text-center md:text-left">
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">SAMHITA</h3>
-                    <p className="text-sm">Fostering the next generation of technologists through innovation and collaboration.</p>
+                    <p className="text-lg font-bold">Fostering the next generation of technologists through innovation and collaboration.</p>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Quick Links</h3>
-                    <ul className="space-y-2 text-sm">
+                    <ul className="space-y-2 text-lg font-bold">
                         <li><a href="#about" className="hover:text-gold-400 transition">About</a></li>
                         <li><a href="#events" className="hover:text-gold-400 transition">Events</a></li>
+                        <li><a href="#passes" className="hover:text-gold-400 transition">Event Passes</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
-                    <p className="text-sm">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
-                    <p className='text-sm'>Phone: <a href="tel:+91 8903402688" className="hover:text-gold-400 transition">+91 89034 02688</a></p>
-                    <p className="text-sm">Address: MIT Campus, Chromepet, Chennai</p>
+                    <p className="text-lg font-bold">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
+                    <p className='text-lg font-bold'>Phone: <a href="tel:+91 8903402688" className="hover:text-gold-400 transition">+91 89034 02688</a></p>
+                    <p className="text-lg font-bold">Address: MIT Campus, Chromepet, Chennai</p>
                 </div>
             </div>
             <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - Nation Level Technical Symposium. All Rights Reserved.</p>
@@ -357,5 +566,8 @@ export default function HomePage() {
     </>
   );
 }
+
+
+
 
 

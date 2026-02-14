@@ -12,7 +12,6 @@ import PlacementsPage from "./placements/PlacementsPage";
 import LoginWrapper from "./Login_Sign/LoginWrapper";
 import SignUpPage from "./Login_Sign/SignUpPage";
 import ForgotPassword from "./Login_Sign/Forgot_Pass";
-import EventsPage from "./pages/EventsPage.tsx";
 import RegistrationPage from "./pages/RegistrationPage.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import UnprotectedRoute from "./UnprotectedRoute.tsx";
@@ -23,6 +22,7 @@ import RegistrationStatusPage from "./pages/RegistrationStatusPage.tsx";
 import EnrolledEventsPage from "./pages/EnrolledEventsPage";
 import OrganizerPage from "./pages/OrganizerPage";
 import UpdateWinnersPage from "./pages/UpdateWinnersPage";
+import OrganizerAttendancePage from "./pages/OrganizerAttendancePage";
 import GalleryPage from "./pages/GalleryPage";
 import Header from "./ui/Header";
 import AdminHeader from "./ui/AdminHeader";
@@ -47,7 +47,7 @@ export default function App() {
   const location = useLocation();
 
   const lines = [
-    "SAMHITA 2026",
+    "SAMHITA'26",
     "Innovation is Coming..."
   ];
 
@@ -158,6 +158,7 @@ export default function App() {
             <Route path="registrations/view" element={<AdminViewRegistrationsOverviewPage />} />
             <Route path="events/registrations/:eventId" element={<ViewEventRegistrationsPage />} />
             <Route path="update-winners" element={<UpdateWinnersPage />} />
+            <Route path="attendance" element={<OrganizerAttendancePage />} />
           </Route>
         </Route>
 
@@ -179,7 +180,6 @@ export default function App() {
 
         {/* Public pages */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/events" element={<EventsPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
 
         {/* Logged-in user routes */}

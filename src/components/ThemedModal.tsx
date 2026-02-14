@@ -32,14 +32,8 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
         </button>
         <h2 className="text-2xl font-bold text-white mb-4">{title}</h2>
         {message && <p className="text-gray-300 mb-4">{message}</p>}
-        <div style={{ background: '#8b0000', color: '#fff', padding: '4px', marginBottom: '6px' }}>
-          MODAL CONTENT START
-        </div>
         <div className="text-white" style={{ minHeight: '80px' }}>
           {children}
-        </div>
-        <div style={{ background: '#8b0000', color: '#fff', padding: '4px', marginTop: '6px' }}>
-          MODAL CONTENT END
         </div>
         {!hideDefaultFooter && ( // Conditionally render default footer
           <div className="flex justify-end space-x-4 mt-6">

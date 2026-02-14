@@ -3,7 +3,7 @@ import API_BASE_URL from '../Config';
 
 // Type definitions
 type User = {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
 };
@@ -11,7 +11,7 @@ type User = {
 type Event = {
   id: number;
   eventName: string;
-  symposiumName: 'Carteblanche';
+  symposiumName: string;
 };
 
 type Pass = {
@@ -33,7 +33,7 @@ const AdminUserRegistrationPage: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [searchUserTerm, setSearchUserTerm] = useState('');
-  const [filterSymposium, setFilterSymposium] = useState<'All' | 'Carteblanche'>('All');
+  const [filterSymposium, setFilterSymposium] = useState<'All' | 'SAMHITA'>('All');
   const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ const AdminUserRegistrationPage: React.FC = () => {
   });
 
   const handleUserSelect = (user: User) => {
-    setSelectedUserId(user.id.toString());
+    setSelectedUserId(user.id);
     setSearchUserTerm(user.fullName);
     setShowResults(false);
   };
@@ -124,7 +124,7 @@ const AdminUserRegistrationPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: parseInt(selectedUserId, 10),
+          userId: selectedUserId,
           eventIds: selectedEventIds,
           passIds: selectedPassIds,
         }),
@@ -218,7 +218,7 @@ const AdminUserRegistrationPage: React.FC = () => {
 
             {selectedUserId && (
               <p className="mt-2 text-xs text-green-400 flex items-center">
-                <span className="mr-1">✓</span> Selected: {users.find(u => u.id.toString() === selectedUserId)?.fullName}
+                <span className="mr-1">✓</span> Selected: {users.find(u => u.id === selectedUserId)?.fullName}
               </p>
             )}
           </div>
@@ -232,7 +232,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                     <input type="radio" checked={filterSymposium === 'All'} onChange={() => setFilterSymposium('All')} className="mr-1" /> All
                   </label>
                   <label className="flex items-center cursor-pointer">
-                    <input type="radio" checked={filterSymposium === 'Carteblanche'} onChange={() => setFilterSymposium('Carteblanche')} className="mr-1" /> SAMHITA
+                    <input type="radio" checked={filterSymposium === 'SAMHITA'} onChange={() => setFilterSymposium('SAMHITA')} className="mr-1" /> SAMHITA
                   </label>
                 </div>
               </div>
@@ -247,7 +247,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                       className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded focus:ring-gold-500"
                     />
                     <label htmlFor={`event-${event.id}`} className="ml-3 text-sm">
-                      {event.eventName} <span className="text-xs text-gray-400">({event.symposiumName === 'Carteblanche' ? 'SAMHITA' : event.symposiumName})</span>
+                      {event.eventName} <span className="text-xs text-gray-400">({event.symposiumName})</span>
                     </label>
                   </div>
                 ))}

@@ -202,7 +202,7 @@ CREATE TABLE `cart` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Rounds table (similar to enigma_rounds)
-DROP TABLE IF EXISTS `rounds`;
+DROP TABLE DIF EXISTS `rounds`;
 CREATE TABLE `rounds` (
   `id` int NOT NULL AUTO_INCREMENT,
   `eventId` int NOT NULL,
@@ -212,6 +212,29 @@ CREATE TABLE `rounds` (
   PRIMARY KEY (`id`),
   KEY `eventId` (`eventId`),
   CONSTRAINT `rounds_ibfk_1` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Registrations table
+ROP TABLE IF EXISTS `registrations`;
+CREATE TABLE `registrations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `symposium` varchar(255) DEFAULT NULL,
+  `eventId` int DEFAULT NULL,
+  `passId` int DEFAULT NULL,
+  `userName` varchar(255) NOT NULL,
+  `userEmail` varchar(255) NOT NULL,
+  `mobileNumber` varchar(20) DEFAULT NULL,
+  `transactionId` varchar(255) DEFAULT NULL,
+  `transactionUsername` varchar(255) DEFAULT NULL,
+  `transactionTime` varchar(255) DEFAULT NULL,
+  `transactionDate` varchar(255) DEFAULT NULL,
+  `transactionAmount` decimal(10,2) DEFAULT NULL,
+  `transactionScreenshot` mediumblob,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `round1` int DEFAULT '0',
+  `round2` int DEFAULT '0',
+  `round3` int DEFAULT '0',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Registration timer table
@@ -250,6 +273,19 @@ CREATE TABLE `verified_registrations` (
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   CONSTRAINT `verified_registrations_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `attendance`;
+CREATE TABLE `attendance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` varchar(5) NOT NULL,
+  `eventId` int NOT NULL,
+  `markedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_attendance` (`userId`,`eventId`),
+  KEY `eventId` (`eventId`),
+  CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `attendance_ibfk_2` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 UPDATE symposium_status

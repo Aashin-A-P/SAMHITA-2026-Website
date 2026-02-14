@@ -23,8 +23,6 @@ const AdminHeader: React.FC = () => {
     { label: 'Manage Events', onClick: () => { navigate('/admin/manage-events'); setIsMobileMenuOpen(false); } },
     { label: 'Manage Accommodation', onClick: () => { navigate('/admin/manage-accommodation'); setIsMobileMenuOpen(false); } },
     { label: 'View Events', onClick: () => { navigate('/admin/events-display'); setIsMobileMenuOpen(false); } },
-    { label: 'Pending Experiences', onClick: () => { navigate('/admin/pending-experiences'); setIsMobileMenuOpen(false); } },
-    { label: 'Approved Experiences', onClick: () => { navigate('/admin/approved-experiences'); setIsMobileMenuOpen(false); } },
     { label: 'Account Details', onClick: () => { navigate('/admin/account-details'); setIsMobileMenuOpen(false); } },
     { label: 'View Registrations', onClick: () => { navigate('/admin/view-registrations'); setIsMobileMenuOpen(false); } },
     { label: 'Registration Status', onClick: () => { navigate('/admin/registration-status'); setIsMobileMenuOpen(false); } },
@@ -38,9 +36,19 @@ const AdminHeader: React.FC = () => {
     { label: 'Manage Offer', onClick: () => { navigate('/admin/manage-offer'); setIsMobileMenuOpen(false); } },
   ];
 
+  const userLabel = user?.name || user?.email || 'User';
+
   const desktopMenu = (
     <div className="hidden md:flex items-center gap-4">
-      <span className="text-sm">Welcome, {user?.name || user?.email}</span>
+      <span className="text-sm">
+        Welcome, {user?.id ? (
+          <span>
+            <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+          </span>
+        ) : (
+          userLabel
+        )}
+      </span>
       {user?.role === 'admin' && (
         <>
           <Dropdown
@@ -81,7 +89,15 @@ const AdminHeader: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="absolute top-16 left-0 right-0 bg-black p-4 z-30">
           <div className="flex flex-col gap-4">
-            <span className="text-sm">Welcome, {user?.name || user?.email}</span>
+            <span className="text-sm">
+              Welcome, {user?.id ? (
+                <span>
+                  <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+                </span>
+              ) : (
+                userLabel
+              )}
+            </span>
             {user?.role === 'admin' && (
               <>
                 <Dropdown

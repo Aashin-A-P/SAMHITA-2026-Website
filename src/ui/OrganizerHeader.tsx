@@ -7,6 +7,7 @@ const OrganizerHeader: React.FC = () => {
   const { logout, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const userLabel = user?.name || user?.email || 'User';
 
   const handleLogout = () => {
     setIsMobileMenuOpen(false);
@@ -17,6 +18,7 @@ const OrganizerHeader: React.FC = () => {
   const navLinks = (
     <>
       <Link to="/organizer/registrations/view" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gold-400 block py-2 md:py-0">View Registrations</Link>
+      <Link to="/organizer/attendance" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gold-400 block py-2 md:py-0">Mark Attendance</Link>
       <Link to="/organizer/update-winners" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gold-400 block py-2 md:py-0">Update Winners</Link>
     </>
   );
@@ -34,7 +36,15 @@ const OrganizerHeader: React.FC = () => {
           {navLinks}
         </nav>
         <div className="hidden md:flex items-center">
-          <span className="mr-4">Welcome, {user?.name}</span>
+          <span className="mr-4">
+            Welcome, {user?.id ? (
+              <span>
+                <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+              </span>
+            ) : (
+              userLabel
+            )}
+          </span>
           <button onClick={handleLogout} className="flex items-center px-4 py-2 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">
             <FiLogOut className="mr-2" />
             Logout
@@ -52,7 +62,15 @@ const OrganizerHeader: React.FC = () => {
             {navLinks}
           </nav>
           <div className="border-t border-gray-700 pt-4">
-            <span className="block mb-2">Welcome, {user?.name}</span>
+            <span className="block mb-2">
+              Welcome, {user?.id ? (
+                <span>
+                  <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+                </span>
+              ) : (
+                userLabel
+              )}
+            </span>
             <button onClick={handleLogout} className="flex items-center px-4 py-2 w-full text-left text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">
               <FiLogOut className="mr-2" />
               Logout

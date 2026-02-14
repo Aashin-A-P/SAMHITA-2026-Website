@@ -7,6 +7,7 @@ import API_BASE_URL from '../Config'; // adjust path if needed
 
 interface Registration {
   id: number;
+  userId: string;
   userName: string;
   email: string;
   college: string;
@@ -29,8 +30,11 @@ const ViewEventRegistrationsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const symposium = searchParams.get('symposium');
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [presentSet, setPresentSet] = useState<Set<string>>(new Set());
   const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPresentOnly, setShowPresentOnly] = useState(false);
+  const [presentEmailSet, setPresentEmailSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -40,6 +44,43 @@ const ViewEventRegistrationsPage: React.FC = () => {
         setRegistrations(data);
       } catch (err) {
         console.error('Error fetching registrations:', err);
+      }
+    };
+
+    const fetchAttendance = async () => {
+      if (!eventId) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/attendance/event/${eventId}`);
+        if (!response.ok) {
+          throw new Error(`Attendance fetch failed: ${response.status}`);
+        }
+        const data = await response.json();
+        const normalizeArray = (arr: any[]) => {
+          const userIds: string[] = [];
+          const emails: string[] = [];
+          arr.forEach((item) => {
+            if (!item) return;
+            if (typeof item === 'string') {
+              userIds.push(item);
+            } else {
+              if (item.userId) userIds.push(item.userId);
+              if (item.email) emails.push(String(item.email).toLowerCase());
+            }
+          });
+          return { userIds, emails };
+        };
+
+        const source = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+
+        const { userIds, emails } = normalizeArray(source);
+        setPresentSet(new Set(userIds.filter(Boolean)));
+        setPresentEmailSet(new Set(emails.filter(Boolean)));
+      } catch (err) {
+        console.error('Error fetching attendance:', err);
       }
     };
 
@@ -58,7 +99,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
       }
     };
 
-    Promise.all([fetchRegistrations(), fetchEventDetails()]).finally(() => setIsLoading(false));
+    Promise.all([fetchRegistrations(), fetchAttendance(), fetchEventDetails()]).finally(() => setIsLoading(false));
   }, [eventId, symposium]); // Added symposium to dependency array
 
   const handleDelete = async (registrationId: number) => {
@@ -95,8 +136,14 @@ const ViewEventRegistrationsPage: React.FC = () => {
 
     autoTable(doc, {
       startY: 30,
-      head: [['Name', 'Email', 'College', 'Mobile Number']],
-      body: registrations.map(r => [r.userName, r.email, r.college, r.mobileNumber]),
+      head: [['Name', 'Email', 'College', 'Mobile Number', 'Attendance']],
+      body: filteredRegistrations.map(r => [
+        r.userName,
+        r.email,
+        r.college,
+        r.mobileNumber,
+        presentSet.has(r.userId) ? 'Present' : 'Not Marked'
+      ]),
     });
 
     doc.save(`event_${eventDetails.eventName}_registrations.pdf`);
@@ -106,6 +153,16 @@ const ViewEventRegistrationsPage: React.FC = () => {
     return <Loader />;
   }
 
+  const isPresent = (registration: Registration) => {
+    if (registration.userId && presentSet.has(registration.userId)) return true;
+    if (registration.email && presentEmailSet.has(registration.email.toLowerCase())) return true;
+    return false;
+  };
+
+  const filteredRegistrations = showPresentOnly
+    ? registrations.filter(isPresent)
+    : registrations;
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 pt-20">
       <div className="container mx-auto">
@@ -113,6 +170,15 @@ const ViewEventRegistrationsPage: React.FC = () => {
           {eventDetails?.eventName} Registrations
         </h1>
         <div className="flex justify-end mb-4">
+          <label className="mr-4 text-sm text-gray-300 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showPresentOnly}
+              onChange={(e) => setShowPresentOnly(e.target.checked)}
+              className="h-4 w-4 text-samhita-600 bg-gray-700 border-gray-600 rounded"
+            />
+            Show Present Only
+          </label>
           <button
             onClick={downloadPdf}
             className="bg-samhita-600 hover:bg-samhita-700 text-white font-bold py-2 px-4 rounded"
@@ -128,16 +194,24 @@ const ViewEventRegistrationsPage: React.FC = () => {
                 <th className="py-3 px-4 text-left">Email</th>
                 <th className="py-3 px-4 text-left">College</th>
                 <th className="py-3 px-4 text-left">Mobile Number</th>
+                <th className="py-3 px-4 text-left">Attendance</th>
                 <th className="py-3 px-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {registrations.map((registration, index) => (
+              {filteredRegistrations.map((registration, index) => (
                 <tr key={index} className="border-b border-gray-700">
                   <td className="py-3 px-4">{registration.userName}</td>
                   <td className="py-3 px-4">{registration.email}</td>
                   <td className="py-3 px-4">{registration.college}</td>
                   <td className="py-3 px-4">{registration.mobileNumber}</td>
+                  <td className="py-3 px-4">
+                    {isPresent(registration) ? (
+                      <span className="text-green-400 font-semibold">Present</span>
+                    ) : (
+                      <span className="text-gray-400">Not Marked</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => handleDelete(registration.id)}

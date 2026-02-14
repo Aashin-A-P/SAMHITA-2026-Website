@@ -22,16 +22,15 @@ interface Event {
   coordinatorContactNo: string;
   coordinatorMail: string;
   lastDateForRegistration: string;
-  symposiumName: 'Carteblanche';
+  symposiumName: string;
   rounds?: Round[];
   posterImage?: string;
 }
 
 const AdminEventsDisplayPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [activeSymposium, setActiveSymposium] = useState<'Carteblanche'>('Carteblanche');
   const [showMenuForEventId, setShowMenuForEventId] = useState<number | null>(null);
-  const [selectedEventForPoster, setSelectedEventForPoster] = useState<{ id: number; symposiumName: 'Carteblanche' } | null>(null);
+  const [selectedEventForPoster, setSelectedEventForPoster] = useState<{ id: number; symposiumName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [registrationsVisibleForEventId, setRegistrationsVisibleForEventId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,9 +57,8 @@ const AdminEventsDisplayPage: React.FC = () => {
     fetchEvents();
   }, []);
 
-  const filteredEvents = events.filter(event => event.symposiumName === activeSymposium);
 
-  const handleAddPosterClick = (eventId: number, symposiumName: 'Carteblanche') => {
+  const handleAddPosterClick = (eventId: number, symposiumName: string) => {
     setSelectedEventForPoster({ id: eventId, symposiumName });
     setShowMenuForEventId(null);
     fileInputRef.current?.click();
@@ -94,7 +92,7 @@ const AdminEventsDisplayPage: React.FC = () => {
     }
   };
 
-  const handleRemovePoster = async (eventId: number, symposiumName: 'Carteblanche') => {
+  const handleRemovePoster = async (eventId: number, symposiumName: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/events/${eventId}/poster`, {
         method: 'DELETE',
@@ -113,7 +111,7 @@ const AdminEventsDisplayPage: React.FC = () => {
     setShowMenuForEventId(null);
   };
 
-  const handleDeleteEvent = async (eventId: number, symposiumName: 'Carteblanche') => {
+  const handleDeleteEvent = async (eventId: number, symposiumName: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
         method: 'DELETE',
@@ -152,23 +150,10 @@ const AdminEventsDisplayPage: React.FC = () => {
         <Loader />
       ) : (
         <div className="container mx-auto p-4 pt-20">
-          <h1 className="text-3xl font-bold text-white mb-6 text-center">All Events</h1>
-
-          <div className="flex justify-center items-center gap-4 mb-8">
-            <button
-              onClick={() => setActiveSymposium('Carteblanche')}
-              className={`px-6 py-3 font-semibold rounded-lg transition-all duration-300 ${
-                activeSymposium === 'Carteblanche'
-                  ? 'bg-samhita-600 text-white scale-105 shadow-lg'
-                  : 'bg-gray-800/60 text-gray-300 hover:bg-gold-500/50'
-              }`}
-            >
-              SAMHITA
-            </button>
-          </div>
+          <h1 className="text-3xl font-bold text-gold-gradient mb-6 text-center">All Events</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map(event => (
+            {events.map(event => (
               <div key={event.id} className="relative bg-gray-900/70 p-5 rounded-lg border border-gray-700 shadow-lg">
                 <div className="absolute top-3 right-3">
                   <button
@@ -225,7 +210,7 @@ const AdminEventsDisplayPage: React.FC = () => {
                   <p><strong>Rounds:</strong> {event.numberOfRounds}</p>
                   <p><strong>Type:</strong> {event.teamOrIndividual}</p>
                   <p><strong>Location:</strong> {event.location}</p>
-                  <p><strong>Registration Fees:</strong> ${event.registrationFees}</p>
+                  <p><strong>Registration Fees:</strong> ₹{event.registrationFees}</p>
                   <p><strong>Coordinator:</strong> {event.coordinatorName} ({event.coordinatorContactNo})</p>
                   <p><strong>Coordinator Email:</strong> {event.coordinatorMail}</p>
                   <p><strong>Last Date for Registration:</strong> {new Date(event.lastDateForRegistration).toLocaleString()}</p>

@@ -284,7 +284,10 @@ async function createTablesIfNotExists() {
         transactionDate VARCHAR(255),
         transactionAmount DECIMAL(10, 2),
         transactionScreenshot MEDIUMBLOB,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        round1 INT DEFAULT 0,
+        round2 INT DEFAULT 0,
+        round3 INT DEFAULT 0
       );
     `);
 
@@ -308,6 +311,10 @@ async function createTablesIfNotExists() {
     if (symposiumCol && symposiumCol.IS_NULLABLE === 'NO') {
       await db.execute(`ALTER TABLE registrations MODIFY COLUMN symposium VARCHAR(255) NULL`);
     }
+
+    await addColumnIfNotExists('registrations', 'round1', 'INT DEFAULT 0');
+    await addColumnIfNotExists('registrations', 'round2', 'INT DEFAULT 0');
+    await addColumnIfNotExists('registrations', 'round3', 'INT DEFAULT 0');
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS cart (
@@ -371,6 +378,18 @@ async function createTablesIfNotExists() {
     if (!hasTransactionId) {
       await db.execute(`ALTER TABLE verified_registrations ADD COLUMN transactionId VARCHAR(255) NULL`);
     }
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS attendance (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId VARCHAR(5) NOT NULL,
+        eventId INT NOT NULL,
+        markedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_attendance (userId, eventId),
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
+      );
+    `);
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS \`accommodation\` (
@@ -491,6 +510,7 @@ async function startServer() {
   apiRouter.use('/accommodation', require('./accommodation.cjs')(db));
   apiRouter.use('/email', require('./email.cjs')(db, transporter, uploadDocument));
   apiRouter.use('/offer', require('./offer.cjs')(db));
+  apiRouter.use('/attendance', require('./attendance.cjs')(db));
 
   app.use('/api', apiRouter);
 

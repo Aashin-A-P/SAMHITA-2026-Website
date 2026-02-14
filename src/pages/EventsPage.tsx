@@ -419,7 +419,7 @@ const EventsPage: React.FC = () => {
                 return (
                   <div
                     key={event.id}
-                    className="relative group overflow-hidden rounded-xl shadow-lg border border-gray-700 bg-gray-800/70 backdrop-blur-md cursor-pointer transition-all duration-500 hover:scale-105 hover:border-blue-400 w-full sm:w-96"
+                    className="relative group overflow-hidden rounded-xl shadow-lg border border-gray-700 bg-gray-800/70 backdrop-blur-md cursor-pointer transition-all duration-500 hover:scale-105 hover:border-blue-400 w-[280px] h-[420px] mx-auto"
                     onClick={() => handleViewDetails(event)}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-samhita-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>

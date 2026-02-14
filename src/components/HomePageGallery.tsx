@@ -29,7 +29,7 @@ export default function HomePageGallery() {
 
   return (
     <section id="gallery" className="py-20 px-4 sm:px-6 lg:px-8">
-      <h2 className="text-3xl font-bold text-center mb-12 text-white">The Hall of Memories</h2>
+      <h2 className="text-3xl font-bold text-center mb-12 text-gold-gradient">The Hall of Memories</h2>
       <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto text-center">
       Stories of valor, unity, and ingenuity - captured as legends in the realm of SAMHITA.
       </p>

@@ -28,7 +28,6 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
       try {
         const response = await fetch(`${API_BASE_URL}/symposium/status`);
         const data = await response.json();
-        console.log("Symposium status response:", data);
         if (data.success) {
           setSymposiumStatus(data.data);
         } else {
@@ -129,7 +128,6 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
     return symposium ? symposium.isOpen === 1 : false;
   };
 
-  const hasSymposiumStatus = Array.isArray(symposiumStatus) && symposiumStatus.length > 0;
   const samhitaIsOpen = getSymposiumStatus("SAMHITA");
 
   const navLinks = (
@@ -232,6 +230,8 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
     </>
   );
 
+  const userLabel = user?.role === "admin" ? "Admin" : (user?.name || user?.email || "User");
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md border-b border-gold-500/20 z-30">
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -263,7 +263,13 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                 }}
                 className="px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform"
               >
-                {user.role === "admin" ? "Admin" : user.name || user.email}
+                {user?.id ? (
+                  <span>
+                    <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+                  </span>
+                ) : (
+                  userLabel
+                )}
               </button>
               <button
                 onClick={handleLogout}
@@ -322,7 +328,13 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
                     }}
                     className="px-4 py-2 text-sm rounded-md gold-outline hover:scale-105 transition-transform text-left"
                   >
-                    {user.role === "admin" ? "Admin" : user.name || user.email}
+                    {user?.id ? (
+                      <span>
+                        <span className="font-display font-bold text-gold-300 tracking-widest text-base">{user.id}</span> - {userLabel}
+                      </span>
+                    ) : (
+                      userLabel
+                    )}
                   </button>
                   <button
                     onClick={handleLogout}
@@ -362,20 +374,9 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
         title="Symposium Control"
         hideDefaultFooter={true}
       >
-        <div style={{ color: '#fff', border: '1px solid #fff', padding: '8px', marginBottom: '8px' }}>
-          Debug visible
-        </div>
-        <div className="mb-3 p-2 text-xs text-gray-300 bg-black/40 rounded border border-gold-500/20">
-          Debug symposiumStatus: {JSON.stringify(symposiumStatus)}
-        </div>
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-bold text-white">SAMHITA</h3>
-            {!hasSymposiumStatus && (
-              <p className="text-sm text-gray-300">
-                No symposium status found. Ensure a `symposium_status` row exists for SAMHITA.
-              </p>
-            )}
             <p className="text-sm text-gray-300">Status: {samhitaIsOpen ? "Open" : "Closed"}</p>
             {samhitaIsOpen ? (
               <button
