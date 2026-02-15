@@ -43,6 +43,7 @@ import aravinth from './Photos/aravinth.jpeg';
 import HomePageGallery from './components/HomePageGallery';
 import CsmitLogo from './Photos/Logo.png';
 import EventCover from './Photos/event_cover.png';
+import { FaWhatsapp } from 'react-icons/fa';
 import RobertBaratheon from './Photos/Robert Baratheon.png';
 import CerseiLannister from './Photos/Cersei Lannister.png';
 import TywinLannister from './Photos/Tywin Lannister.png';
@@ -117,6 +118,7 @@ const sponsors = [
 ];
 
 export default function HomePage() {
+  const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
@@ -127,7 +129,7 @@ export default function HomePage() {
   const signatureScrollRef = useRef<HTMLDivElement | null>(null);
   const workshopScrollRef = useRef<HTMLDivElement | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<{ title: string; subtitle: string; tag: string; description: string } | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [selectedPass, setSelectedPass] = useState<any | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -220,7 +222,7 @@ export default function HomePage() {
           setShouldFlipEvents(false);
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
     );
 
     observer.observe(section);
@@ -231,7 +233,7 @@ export default function HomePage() {
         flipTimerRef.current = null;
       }
     };
-  }, []);
+  }, [activeEventTab, events]);
 
 
   useEffect(() => {
@@ -327,12 +329,11 @@ export default function HomePage() {
 
   const categorizedEvents = useMemo(() => {
     const normalized = events.map((event) => ({
-      id: event.id,
+      ...event,
       title: event.eventName,
       subtitle: event.teamOrIndividual || 'Event',
       tag: event.passName || event.eventCategory || 'Event',
       description: event.eventDescription || 'Details will be announced soon.',
-      posterImage: event.posterImage,
       passName: ((event.passName || '') as string).toLowerCase(),
       category: (event.eventCategory || '') as string,
     }));
@@ -706,24 +707,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Technical Events</h3>
                       <div className="relative">
                         <div ref={techScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Technical.map((event) => {
+                          {categorizedEvents.Technical.map((event, index) => {
+                            const coverImage = techCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
                               <div
                                 key={event.id}
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                {hasPoster ? (
-                                  <img
-                                    src={getPosterSrc(event.posterImage) as string}
-                                    alt={`${event.title} poster`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                    Poster coming soon
+                                <div className="flip-card w-full h-full">
+                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                    <div className="flip-face">
+                                      <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flip-face flip-back">
+                                      {hasPoster ? (
+                                        <img
+                                          src={getPosterSrc(event.posterImage) as string}
+                                          alt={`${event.title} poster`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                          Poster coming soon
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -767,24 +778,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Non-Technical Events</h3>
                       <div className="relative">
                         <div ref={nonTechScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents['Non-Technical'].map((event) => {
+                          {categorizedEvents['Non-Technical'].map((event, index) => {
+                            const coverImage = nonTechCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
                               <div
                                 key={event.id}
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                {hasPoster ? (
-                                  <img
-                                    src={getPosterSrc(event.posterImage) as string}
-                                    alt={`${event.title} poster`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                    Poster coming soon
+                                <div className="flip-card w-full h-full">
+                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                    <div className="flip-face">
+                                      <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flip-face flip-back">
+                                      {hasPoster ? (
+                                        <img
+                                          src={getPosterSrc(event.posterImage) as string}
+                                          alt={`${event.title} poster`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                          Poster coming soon
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -835,17 +856,26 @@ export default function HomePage() {
                                 key={event.id}
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                {hasPoster ? (
-                                  <img
-                                    src={getPosterSrc(event.posterImage) as string}
-                                    alt={`${event.title} poster`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                    Poster coming soon
+                                <div className="flip-card w-full h-full">
+                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                    <div className="flip-face">
+                                      <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flip-face flip-back">
+                                      {hasPoster ? (
+                                        <img
+                                          src={getPosterSrc(event.posterImage) as string}
+                                          alt={`${event.title} poster`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                          Poster coming soon
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -896,17 +926,26 @@ export default function HomePage() {
                                 key={event.id}
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                {hasPoster ? (
-                                  <img
-                                    src={getPosterSrc(event.posterImage) as string}
-                                    alt={`${event.title} poster`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                    Poster coming soon
+                                <div className="flip-card w-full h-full">
+                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                    <div className="flip-face">
+                                      <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flip-face flip-back">
+                                      {hasPoster ? (
+                                        <img
+                                          src={getPosterSrc(event.posterImage) as string}
+                                          alt={`${event.title} poster`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                          Poster coming soon
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
@@ -1086,16 +1125,36 @@ export default function HomePage() {
             isOpen={isEventModalOpen}
             onClose={() => setIsEventModalOpen(false)}
             title={selectedEvent ? selectedEvent.title : "Event Details"}
+            hideDefaultFooter
         >
             {selectedEvent && (
-              <div className="space-y-3">
-                <p className="text-gray-300 text-sm font-event-body">{selectedEvent.subtitle}</p>
-                <p className="text-gray-200 font-event-body">{selectedEvent.description}</p>
-                <div className="pt-2">
-                  <a href="#passes" className="inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform">
-                    View Passes
-                  </a>
-                </div>
+              <div className="space-y-3 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                <p className="text-gray-300 font-event-body">{selectedEvent.eventDescription}</p>
+                <p className="text-gray-300 text-sm font-event-body">
+                  <span className="font-semibold text-gold-200">Pass:</span> {selectedEvent.passName ? selectedEvent.passName : 'N/A'}
+                </p>
+                <p className="text-gray-300 text-sm font-event-body">
+                  <span className="font-semibold text-gold-200">Type:</span> {selectedEvent.teamOrIndividual || 'N/A'}
+                </p>
+                <p className="text-gray-300 text-sm font-event-body">
+                  <span className="font-semibold text-gold-200">Location:</span> {selectedEvent.location || 'N/A'}
+                </p>
+                <p className="text-gray-300 text-sm font-event-body">
+                  <span className="font-semibold text-gold-200">Coordinator:</span> {selectedEvent.coordinatorName || 'N/A'}
+                </p>
+                <p className="text-gray-300 text-sm font-event-body">
+                  <span className="font-semibold text-gold-200">Contact:</span> {selectedEvent.coordinatorContactNo || 'N/A'}
+                </p>
+                {selectedEvent.rounds && selectedEvent.rounds.length > 0 && (
+                  <div className="space-y-2">
+                    {selectedEvent.rounds.map((round: any) => (
+                      <div key={`round-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
+                        <p>Round {round.roundNumber}: {round.roundDetails}</p>
+                        <p>Date & Time: {new Date(round.roundDateTime).toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
         </ThemedModal>
@@ -1107,7 +1166,7 @@ export default function HomePage() {
             hideDefaultFooter
         >
             {selectedPass && (
-              <div className="space-y-4">
+              <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
                 <p className="text-gray-200 font-event-body">
                   <span className="text-gold-300 font-semibold">Pass Cost:</span> {'\u20B9'}{selectedPass.cost}
                 </p>
@@ -1178,7 +1237,7 @@ export default function HomePage() {
             title="Hackathon Team Details"
             hideDefaultFooter
         >
-            <div className="space-y-4">
+            <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
               <p className="text-sm text-gold-300">
                 Note: All team members must be registered on the website.
               </p>
@@ -1274,6 +1333,13 @@ export default function HomePage() {
                     <p className="text-lg font-bold">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
                     <p className='text-lg font-bold'>Phone: <a href="tel:+91 8903402688" className="hover:text-gold-400 transition">+91 89034 02688</a></p>
                     <p className="text-lg font-bold">Address: MIT Campus, Chromepet, Chennai</p>
+                    <button
+                      type="button"
+                      onClick={() => window.open(whatsappLink, '_blank')}
+                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+                    >
+                      <FaWhatsapp /> Join SAMHITA WhatsApp
+                    </button>
                 </div>
             </div>
             <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - National Level Technical Symposium. All Rights Reserved.</p>

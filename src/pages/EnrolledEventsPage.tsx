@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../ui/Header';
+import { FaWhatsapp } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import backgroundImage from '../Login_Sign/image1.png';
@@ -52,6 +53,7 @@ interface Registration {
 }
 
 const EnrolledEventsPage: React.FC = () => {
+  const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isLoggedIn, loading: authLoading } = useAuth();
@@ -300,7 +302,16 @@ const EnrolledEventsPage: React.FC = () => {
       <Header setIsLoginModalOpen={() => { }} setIsSignUpModalOpen={() => { }} />
       <main className="relative z-10 pt-16">
         <div className="container mx-auto p-4 pt-20">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">My Enrollments</h2>
+          <div className="flex flex-col items-center gap-4 mb-8">
+            <h2 className="text-3xl font-bold text-white text-center">My Enrollments</h2>
+            <button
+              type="button"
+              onClick={() => window.open(whatsappLink, '_blank')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+            >
+              <FaWhatsapp /> Join SAMHITA WhatsApp
+            </button>
+          </div>
           {registrations.length === 0 ? (
             <p className="text-center text-xl text-gray-400 mt-10">You have not enrolled in any events or purchased any passes yet, or they have not been verified.</p>
           ) : (
@@ -321,7 +332,7 @@ const EnrolledEventsPage: React.FC = () => {
                               <div className="mt-auto space-y-1">
                                 <p className="text-2xl font-bold text-green-400">{'\u20B9'}{registration.pass.cost}</p>
                                 <p className="text-sm text-gray-300 font-event-body">
-                                  Verification:{' '}
+                                  Transaction Status:{' '}
                                   {verifiedPassIds.includes(registration.pass.id) ? (
                                     <span className="text-green-400 font-semibold">Verified</span>
                                   ) : (
@@ -329,7 +340,7 @@ const EnrolledEventsPage: React.FC = () => {
                                   )}
                                 </p>
                                 <p className="text-sm text-gray-300 font-event-body">
-                                  Status:{' '}
+                                  Pass Status:{' '}
                                   {issuedPassIds.includes(registration.pass.id) ? (
                                     <span className="text-green-400 font-semibold">Active</span>
                                   ) : (

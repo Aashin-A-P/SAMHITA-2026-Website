@@ -8,6 +8,7 @@ import ForgotPassword from '../Login_Sign/Forgot_Pass';
 import backgroundImage from '../Login_Sign/3.png';
 import WorkshopRegistrationForm from './WorkshopRegistrationForm';
 import ThemedModal from '../components/ThemedModal';
+import { FaWhatsapp } from 'react-icons/fa';
 import API_BASE_URL from '../Config'; // adjust path if needed
 
 const CartPage: React.FC = () => {
@@ -19,6 +20,8 @@ const CartPage: React.FC = () => {
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
+  const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -178,6 +181,7 @@ const CartPage: React.FC = () => {
     setShowRegistrationForm(false);
     window.dispatchEvent(new CustomEvent('registrationComplete'));
     showModal('Success', 'Registration successful for all items!');
+    setShowWhatsappModal(true);
 
     try {
       for (const item of itemsToRemove) {
@@ -369,6 +373,35 @@ const CartPage: React.FC = () => {
           title={modal.title}
         >
           <p>{modal.message}</p>
+        </ThemedModal>
+
+        <ThemedModal
+          isOpen={showWhatsappModal}
+          onClose={() => setShowWhatsappModal(false)}
+          title="Join the SAMHITA WhatsApp Group"
+          hideDefaultFooter
+        >
+          <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+            <p className="text-gray-200 text-sm">
+              Stay updated with announcements, schedules, and important info.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowWhatsappModal(false)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+              >
+                Later
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open(whatsappLink, '_blank')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+              >
+                <FaWhatsapp /> Join WhatsApp
+              </button>
+            </div>
+          </div>
         </ThemedModal>
 
         <LoginPage

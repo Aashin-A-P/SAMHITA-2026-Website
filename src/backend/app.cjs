@@ -529,6 +529,7 @@ async function createTablesIfNotExists() {
       );
     `);
 
+
   } catch (err) {
     process.exit(1);
   }

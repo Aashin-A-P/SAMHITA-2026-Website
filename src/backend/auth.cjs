@@ -190,9 +190,17 @@ module.exports = function (db, transporter) {
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
+      const safeDob = dob ?? null;
+      const safeMobile = mobile ?? null;
+      const safeCollege = college ?? null;
+      const safeDepartment = department ?? null;
+      const safeYear = yearofPassing ?? null;
+      const safeState = state ?? null;
+      const safeDistrict = district ?? null;
+
       const [result] = await db.execute(
         'INSERT INTO users (fullName, email, password, dob, mobile, college, department, yearofPassing, state, district) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [fullName, email, hashedPassword, dob, mobile, college, department, yearofPassing, state, district]
+        [fullName, email, hashedPassword, safeDob, safeMobile, safeCollege, safeDepartment, safeYear, safeState, safeDistrict]
       );
 
 

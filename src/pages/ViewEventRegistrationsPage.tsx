@@ -25,6 +25,24 @@ interface EventDetails {
   coordinatorContactNo: string;
 }
 
+interface Team {
+  id: number;
+  teamName: string;
+  createdBy: string;
+  member1Id: string;
+  member2Id: string;
+  member3Id?: string;
+  member4Id?: string;
+  member1Name?: string;
+  member1Email?: string;
+  member2Name?: string;
+  member2Email?: string;
+  member3Name?: string;
+  member3Email?: string;
+  member4Name?: string;
+  member4Email?: string;
+}
+
 const ViewEventRegistrationsPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [searchParams] = useSearchParams();
@@ -35,6 +53,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showPresentOnly, setShowPresentOnly] = useState(false);
   const [presentEmailSet, setPresentEmailSet] = useState<Set<string>>(new Set());
+  const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -100,6 +119,25 @@ const ViewEventRegistrationsPage: React.FC = () => {
     };
 
     Promise.all([fetchRegistrations(), fetchAttendance(), fetchEventDetails()]).finally(() => setIsLoading(false));
+
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/pass-teams/by-event/${eventId}`);
+        if (!response.ok) {
+          setTeams([]);
+          return;
+        }
+        const data = await response.json();
+        setTeams(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+        setTeams([]);
+      }
+    };
+
+    if (eventId) {
+      fetchTeams();
+    }
   }, [eventId, symposium]); // Added symposium to dependency array
 
   const handleDelete = async (registrationId: number) => {
@@ -169,6 +207,40 @@ const ViewEventRegistrationsPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-white mb-6 text-center">
           {eventDetails?.eventName} Registrations
         </h1>
+
+        {teams.length > 0 && (
+          <div className="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <h2 className="text-xl font-bold text-gold-300 mb-3">Hackathon Teams</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-gray-900 rounded-lg">
+                <thead className="bg-gray-700">
+                  <tr>
+                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Team Name</th>
+                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Member IDs</th>
+                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Member Names</th>
+                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Emails</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teams.map((team) => (
+                    <tr key={team.id} className="border-b border-gray-700">
+                      <td className="py-2 px-3">{team.teamName}</td>
+                      <td className="py-2 px-3 text-sm">
+                        {[team.member1Id, team.member2Id, team.member3Id, team.member4Id].filter(Boolean).join(', ')}
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        {[team.member1Name, team.member2Name, team.member3Name, team.member4Name].filter(Boolean).join(', ')}
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        {[team.member1Email, team.member2Email, team.member3Email, team.member4Email].filter(Boolean).join(', ')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <div className="flex justify-end mb-4">
           <label className="mr-4 text-sm text-gray-300 flex items-center gap-2">
             <input

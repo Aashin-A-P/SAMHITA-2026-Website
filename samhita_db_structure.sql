@@ -170,6 +170,7 @@ CREATE TABLE `pass_teams` (
   CONSTRAINT `pass_teams_ibfk_6` FOREIGN KEY (`member4Id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
 -- Pass to Events mapping
 DROP TABLE IF EXISTS `pass_events`;
 CREATE TABLE `pass_events` (
