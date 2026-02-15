@@ -1,8 +1,6 @@
 const express = require('express');
 
-
-
-module.exports = function (db) {
+module.exports = function (db, uploadPassPoster) {
     const router = express.Router();
 
     // Get all passes
@@ -10,7 +8,11 @@ module.exports = function (db) {
 
         try {
             const [passes] = await db.execute('SELECT * FROM passes');
-            res.json(passes);
+            const normalized = passes.map((pass) => ({
+                ...pass,
+                posterImage: pass.posterImage ? pass.posterImage.toString('base64') : null,
+            }));
+            res.json(normalized);
         } catch (error) {
             console.error('Error fetching passes:', error);
             res.status(500).json({ message: 'Internal server error' });
@@ -96,6 +98,44 @@ module.exports = function (db) {
         } catch (error) {
             console.error('Error updating pass:', error);
             res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+
+    // Upload or replace pass poster
+    router.post('/:id/poster', uploadPassPoster.single('posterImage'), async (req, res) => {
+        const { id } = req.params;
+        if (!req.file) {
+            return res.status(400).json({ message: 'No poster file provided.' });
+        }
+        try {
+            const [result] = await db.execute(
+                'UPDATE passes SET posterImage = ? WHERE id = ?',
+                [req.file.buffer, id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Pass not found.' });
+            }
+            res.json({ message: 'Poster uploaded successfully.' });
+        } catch (error) {
+            console.error('Error uploading pass poster:', error);
+            res.status(500).json({ message: 'Failed to upload poster.' });
+        }
+    });
+
+    router.delete('/:id/poster', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const [result] = await db.execute(
+                'UPDATE passes SET posterImage = NULL WHERE id = ?',
+                [id]
+            );
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Pass not found.' });
+            }
+            res.json({ message: 'Poster removed successfully.' });
+        } catch (error) {
+            console.error('Error removing pass poster:', error);
+            res.status(500).json({ message: 'Failed to remove poster.' });
         }
     });
 

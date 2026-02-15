@@ -34,6 +34,7 @@ const eventPosterDir = path.join(uploadBaseDir, 'event_posters');
 /* -------------------- Multer -------------------- */
 const uploadDocument = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 const uploadEventPoster = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadPassPoster = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadTransactionScreenshot = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.use('/uploads', express.static(uploadBaseDir));
@@ -111,6 +112,7 @@ async function createTablesIfNotExists() {
         cost INT NOT NULL,
         pass_limit INT NOT NULL,
         description TEXT,
+        posterImage LONGBLOB,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -141,6 +143,8 @@ async function createTablesIfNotExists() {
         ADD FOREIGN KEY (accountId) REFERENCES accounts(id) ON DELETE SET NULL;
       `);
     }
+
+    await addColumnIfNotExists('passes', 'posterImage', 'LONGBLOB');
 
     // Check if discountPercentage column exists and add it if not
     const [discountCol] = await db.execute(`
@@ -505,6 +509,26 @@ async function createTablesIfNotExists() {
       );
     `);
 
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS pass_teams (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        passId INT NOT NULL,
+        teamName VARCHAR(255) NOT NULL,
+        createdBy VARCHAR(5) NOT NULL,
+        member1Id VARCHAR(5) NOT NULL,
+        member2Id VARCHAR(5) NOT NULL,
+        member3Id VARCHAR(5) DEFAULT NULL,
+        member4Id VARCHAR(5) DEFAULT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (passId) REFERENCES passes(id) ON DELETE CASCADE,
+        FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (member1Id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (member2Id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (member3Id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (member4Id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
   } catch (err) {
     process.exit(1);
   }
@@ -544,13 +568,15 @@ async function startServer() {
   apiRouter.use('/symposium', require('./symposium.cjs')(db));
   apiRouter.use('/organizers', require('./organizer.cjs')(db));
   apiRouter.use('/timer', require('./timer.cjs')(db));
-  apiRouter.use('/passes', require('./passes.cjs')(db));
+  apiRouter.use('/passes', require('./passes.cjs')(db, uploadPassPoster));
   apiRouter.use('/accommodation', require('./accommodation.cjs')(db));
   apiRouter.use('/email', require('./email.cjs')(db, transporter, uploadDocument));
   apiRouter.use('/offer', require('./offer.cjs')(db));
   apiRouter.use('/coupons', require('./coupons.cjs')(db));
   apiRouter.use('/pass-issues', require('./pass_issues.cjs')(db));
   apiRouter.use('/attendance', require('./attendance.cjs')(db));
+  apiRouter.use('/users', require('./users.cjs')(db));
+  apiRouter.use('/pass-teams', require('./pass_teams.cjs')(db));
 
   app.use('/api', apiRouter);
 

@@ -128,14 +128,27 @@ export default function HomePage() {
   const workshopScrollRef = useRef<HTMLDivElement | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{ title: string; subtitle: string; tag: string; description: string } | null>(null);
+  const [isPassModalOpen, setIsPassModalOpen] = useState(false);
+  const [selectedPass, setSelectedPass] = useState<any | null>(null);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [teamName, setTeamName] = useState('');
+  const [memberCount, setMemberCount] = useState(2);
+  const [memberIds, setMemberIds] = useState<string[]>(['', '']);
+  const [memberDetails, setMemberDetails] = useState<Record<string, { name: string; email: string }>>({});
+  const [teamError, setTeamError] = useState<string | null>(null);
+  const memberLookupTimers = useRef<Record<number, number>>({});
   const [events, setEvents] = useState<any[]>([]);
   const [isEventsLoading, setIsEventsLoading] = useState(true);
   const [passes, setPasses] = useState<any[]>([]);
   const [isPassesLoading, setIsPassesLoading] = useState(true);
+  const [passCartItems, setPassCartItems] = useState<{ id: number; passId: number }[]>([]);
+  const [purchasedPassIds, setPurchasedPassIds] = useState<number[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
   const toastTimeoutRef = useRef<number | null>(null);
   const [eventsInView, setEventsInView] = useState(false);
+  const [shouldFlipEvents, setShouldFlipEvents] = useState(false);
+  const flipTimerRef = useRef<number | null>(null);
   const eventsSectionRef = useRef<HTMLElement | null>(null);
   const [showTechArrows, setShowTechArrows] = useState(false);
   const [showNonTechArrows, setShowNonTechArrows] = useState(false);
@@ -193,13 +206,33 @@ export default function HomePage() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setEventsInView(entry.isIntersecting);
+        if (flipTimerRef.current) {
+          window.clearTimeout(flipTimerRef.current);
+          flipTimerRef.current = null;
+        }
+        if (entry.isIntersecting) {
+          setShouldFlipEvents(false);
+          flipTimerRef.current = window.setTimeout(() => {
+            setShouldFlipEvents(true);
+            flipTimerRef.current = null;
+          }, 750);
+        } else {
+          setShouldFlipEvents(false);
+        }
       },
       { threshold: 0.4 }
     );
 
     observer.observe(section);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (flipTimerRef.current) {
+        window.clearTimeout(flipTimerRef.current);
+        flipTimerRef.current = null;
+      }
+    };
   }, []);
+
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -223,6 +256,14 @@ export default function HomePage() {
   }, [events, activeEventTab, eventsInView]);
 
   useEffect(() => {
+    setMemberIds((prev) => {
+      const next = [...prev];
+      while (next.length < memberCount) next.push('');
+      return next.slice(0, memberCount);
+    });
+  }, [memberCount]);
+
+  useEffect(() => {
     const fetchPasses = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/passes`);
@@ -237,6 +278,52 @@ export default function HomePage() {
 
     fetchPasses();
   }, []);
+
+  const fetchPassCart = async (userId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pass-cart/${userId}`);
+      if (!response.ok) {
+        setPassCartItems([]);
+        return;
+      }
+      const data = await response.json();
+      const items = Array.isArray(data)
+        ? data.map((item: any) => ({ id: Number(item.id), passId: Number(item.passId) }))
+        : [];
+      setPassCartItems(items);
+    } catch (error) {
+      console.error('Failed to load pass cart:', error);
+      setPassCartItems([]);
+    }
+  };
+
+  const fetchPurchasedPasses = async (userId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/registrations/passes/${userId}`);
+      if (!response.ok) {
+        setPurchasedPassIds([]);
+        return;
+      }
+      const data = await response.json();
+      const ids = Array.isArray(data)
+        ? data.map((id: any) => Number(id)).filter((id: any) => !Number.isNaN(id))
+        : [];
+      setPurchasedPassIds(ids);
+    } catch (error) {
+      console.error('Failed to load purchased passes:', error);
+      setPurchasedPassIds([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setPassCartItems([]);
+      setPurchasedPassIds([]);
+      return;
+    }
+    fetchPassCart(user.id);
+    fetchPurchasedPasses(user.id);
+  }, [user]);
 
   const categorizedEvents = useMemo(() => {
     const normalized = events.map((event) => ({
@@ -268,6 +355,18 @@ export default function HomePage() {
     const isJpeg = posterImage.startsWith('/9j/');
     const mime = isPng ? 'image/png' : isJpeg ? 'image/jpeg' : 'image/*';
     return `data:${mime};base64,${posterImage}`;
+  };
+
+  const getEventsForPass = (pass: any) => {
+    if (!pass) return [];
+    const name = String(pass.name || '').toLowerCase();
+    if (name.includes('global')) {
+      return events.filter((e) => {
+        const passName = String(e.passName || '').toLowerCase();
+        return passName.includes('tech pass') || passName.includes('non-tech') || passName.includes('non tech') || passName.includes('nontech');
+      });
+    }
+    return events.filter((e) => Number(e.passId) === Number(pass.id));
   };
 
   const techCoverImages = [
@@ -306,7 +405,14 @@ export default function HomePage() {
     setIsForgotPasswordModalOpen(true);
   };
 
-  const handleAddPassToCart = async (passId: number, passName: string) => {
+  const isHackathonPass = (passName: string) => passName.toLowerCase().includes('hackathon');
+
+  const normalizeUserId = (value: string) => {
+    const cleaned = value.trim().split(/\s|-/)[0].toUpperCase();
+    return cleaned;
+  };
+
+  const addPassToCartDirect = async (passId: number, passName: string) => {
     if (!user) {
       setIsLoginModalOpen(true);
       return;
@@ -322,6 +428,9 @@ export default function HomePage() {
       if (!response.ok) {
         const err = await response.json();
         console.error(err?.message || 'Failed to add pass to cart.');
+        if ((err?.message || '').toLowerCase().includes('purchased')) {
+          await fetchPurchasedPasses(user.id);
+        }
         setToastVariant('error');
         setToastMessage(err?.message || 'Could not add to cart');
         if (toastTimeoutRef.current) {
@@ -334,6 +443,7 @@ export default function HomePage() {
         return;
       }
 
+      await fetchPassCart(user.id);
       setToastVariant('success');
       setToastMessage(`${passName} added to cart`);
       if (toastTimeoutRef.current) {
@@ -357,6 +467,125 @@ export default function HomePage() {
     }
   };
 
+  const handleAddPassToCart = async (passId: number, passName: string) => {
+    if (isHackathonPass(passName)) {
+      setSelectedPass({ id: passId, name: passName });
+      setTeamName('');
+      setMemberCount(2);
+      setMemberIds(['', '']);
+      setMemberDetails({});
+      setTeamError(null);
+      setIsPassModalOpen(false);
+      setIsTeamModalOpen(true);
+      return;
+    }
+    await addPassToCartDirect(passId, passName);
+  };
+
+  const handleMemberIdChange = (index: number, value: string) => {
+    const next = [...memberIds];
+    next[index] = value;
+    setMemberIds(next);
+    if (memberLookupTimers.current[index]) {
+      window.clearTimeout(memberLookupTimers.current[index]);
+    }
+    memberLookupTimers.current[index] = window.setTimeout(() => {
+      const normalized = normalizeUserId(value);
+      if (normalized && normalized.length === 5) {
+        fetchMemberName(normalized);
+      }
+    }, 400);
+  };
+
+  const fetchMemberName = async (rawValue: string) => {
+    const id = normalizeUserId(rawValue);
+    if (!id) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`);
+      if (!response.ok) {
+        setMemberDetails((prev) => ({ ...prev, [id]: { name: '', email: '' } }));
+        return;
+      }
+      const data = await response.json();
+      setMemberDetails((prev) => ({ ...prev, [id]: { name: data.fullName || '', email: data.email || '' } }));
+    } catch (error) {
+      console.error('Failed to lookup member:', error);
+    }
+  };
+
+  const submitHackathonTeam = async () => {
+    if (!selectedPass || !user?.id) return;
+    const cleanedIds = memberIds.map(normalizeUserId).filter(Boolean);
+    if (memberCount < 2 || memberCount > 4) {
+      setTeamError('Team must have 2 to 4 members.');
+      return;
+    }
+    if (cleanedIds.length !== memberCount) {
+      setTeamError('Please fill all member IDs.');
+      return;
+    }
+    const unique = new Set(cleanedIds);
+    if (unique.size !== cleanedIds.length) {
+      setTeamError('Duplicate member IDs are not allowed.');
+      return;
+    }
+    if (!teamName.trim()) {
+      setTeamError('Please enter a team name.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/pass-teams`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          passId: selectedPass.id,
+          teamName: teamName.trim(),
+          members: cleanedIds,
+          createdBy: user.id,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setTeamError(data.message || 'Failed to save team.');
+        return;
+      }
+      setIsTeamModalOpen(false);
+      await addPassToCartDirect(selectedPass.id, selectedPass.name);
+    } catch (error) {
+      console.error('Failed to create team:', error);
+      setTeamError('Failed to save team.');
+    }
+  };
+  const handleRemovePassFromCart = async (cartId: number, passName: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/pass-cart/${cartId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        setToastVariant('error');
+        setToastMessage(err?.message || 'Could not remove from cart');
+      } else {
+        await fetchPassCart(user.id);
+        setToastVariant('success');
+        setToastMessage(`${passName} removed from cart`);
+      }
+    } catch (error) {
+      console.error('Failed to remove pass from cart:', error);
+      setToastVariant('error');
+      setToastMessage('Network error while removing from cart');
+    } finally {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+      toastTimeoutRef.current = window.setTimeout(() => {
+        setToastMessage(null);
+        toastTimeoutRef.current = null;
+      }, 2200);
+    }
+  };
   
 
   
@@ -466,7 +695,7 @@ export default function HomePage() {
                         activeEventTab === tab ? 'bg-samhita-600 text-white' : 'gold-outline'
                       }`}
                     >
-                      {tab} Events
+                      {tab === 'Workshop' ? 'Workshops' : `${tab} Events`}
                     </button>
                   ))}
                 </div>
@@ -477,43 +706,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Technical Events</h3>
                       <div className="relative">
                         <div ref={techScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Technical.map((event, index) => {
-                            const coverImage = techCoverImages[index] || EventCover;
+                          {categorizedEvents.Technical.map((event) => {
+                            const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
-                            <div
-                              key={event.id}
-                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
-                            >
-                              <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
-                                  <div className="flip-face">
-                                    <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flip-face flip-back">
-                                    {getPosterSrc(event.posterImage) ? (
-                                      <img
-                                        src={getPosterSrc(event.posterImage) as string}
-                                        alt={`${event.title} poster`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                        Poster coming soon
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                              <div
+                                key={event.id}
+                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                View Details
-                              </button>
-                            </div>
-                          );
-                        })}
+                                {hasPoster ? (
+                                  <img
+                                    src={getPosterSrc(event.posterImage) as string}
+                                    alt={`${event.title} poster`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                    Poster coming soon
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                  className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            );
+                          })}
                           {categorizedEvents.Technical.length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No technical events added yet.</div>
                           )}
@@ -547,43 +767,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Non-Technical Events</h3>
                       <div className="relative">
                         <div ref={nonTechScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents['Non-Technical'].map((event, index) => {
-                            const coverImage = nonTechCoverImages[index] || EventCover;
+                          {categorizedEvents['Non-Technical'].map((event) => {
+                            const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
-                            <div
-                              key={event.id}
-                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
-                            >
-                              <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
-                                  <div className="flip-face">
-                                    <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flip-face flip-back">
-                                    {getPosterSrc(event.posterImage) ? (
-                                      <img
-                                        src={getPosterSrc(event.posterImage) as string}
-                                        alt={`${event.title} poster`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                        Poster coming soon
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                              <div
+                                key={event.id}
+                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                View Details
-                              </button>
-                            </div>
-                          );
-                        })}
+                                {hasPoster ? (
+                                  <img
+                                    src={getPosterSrc(event.posterImage) as string}
+                                    alt={`${event.title} poster`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                    Poster coming soon
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                  className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            );
+                          })}
                           {categorizedEvents['Non-Technical'].length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No non-technical events added yet.</div>
                           )}
@@ -617,40 +828,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Signature Events</h3>
                       <div className="relative">
                         <div ref={workshopScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Signature.map((event) => (
-                            <div
-                              key={event.id}
-                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
-                            >
-                              <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
-                                  <div className="flip-face">
-                                    <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flip-face flip-back">
-                                    {getPosterSrc(event.posterImage) ? (
-                                      <img
-                                        src={getPosterSrc(event.posterImage) as string}
-                                        alt={`${event.title} poster`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                        Poster coming soon
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                          {categorizedEvents.Signature.map((event) => {
+                            const hasPoster = Boolean(getPosterSrc(event.posterImage));
+                            return (
+                              <div
+                                key={event.id}
+                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                View Details
-                              </button>
-                            </div>
-                          ))}
+                                {hasPoster ? (
+                                  <img
+                                    src={getPosterSrc(event.posterImage) as string}
+                                    alt={`${event.title} poster`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                    Poster coming soon
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                  className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            );
+                          })}
                           {categorizedEvents.Signature.length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No signature events added yet.</div>
                           )}
@@ -684,40 +889,34 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Workshops</h3>
                       <div className="relative">
                         <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Workshop.map((event) => (
-                            <div
-                              key={event.id}
-                              className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
-                            >
-                              <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${eventsInView ? ' is-flipped' : ''}`}>
-                                  <div className="flip-face">
-                                    <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flip-face flip-back">
-                                    {getPosterSrc(event.posterImage) ? (
-                                      <img
-                                        src={getPosterSrc(event.posterImage) as string}
-                                        alt={`${event.title} poster`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                        Poster coming soon
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                          {categorizedEvents.Workshop.map((event) => {
+                            const hasPoster = Boolean(getPosterSrc(event.posterImage));
+                            return (
+                              <div
+                                key={event.id}
+                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
-                                View Details
-                              </button>
-                            </div>
-                          ))}
+                                {hasPoster ? (
+                                  <img
+                                    src={getPosterSrc(event.posterImage) as string}
+                                    alt={`${event.title} poster`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                    Poster coming soon
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                  className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            );
+                          })}
                           {categorizedEvents.Workshop.length === 0 && !isEventsLoading && (
                             <div className="text-gray-400 text-sm">No workshops added yet.</div>
                           )}
@@ -758,18 +957,78 @@ export default function HomePage() {
                       {passes.map((pass) => (
                         <div
                           key={pass.id}
-                          className="bg-black/70 backdrop-blur-md border border-gold-500/30 p-6 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[420px] flex flex-col"
+                          className="bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[480px] flex flex-col overflow-hidden"
                         >
-                          <h3 className="text-xl font-bold text-white mb-2">{pass.name}</h3>
-                          <p className="text-2xl font-bold text-gold-400 mb-3">₹{pass.cost}</p>
-                          <p className="text-gray-300 mb-4">{pass.description || 'Pass details will be announced soon.'}</p>
-                          <button
-                            type="button"
-                            onClick={() => handleAddPassToCart(pass.id, pass.name)}
-                            className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform mt-auto"
-                          >
-                            Add to Cart
-                          </button>
+                          <div className="w-full h-[420px]">
+                            {pass.posterImage ? (
+                              <img
+                                src={`data:image/jpeg;base64,${pass.posterImage}`}
+                                alt={`${pass.name} poster`}
+                                className="w-full h-full object-cover bg-black"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                Poster coming soon
+                              </div>
+                            )}
+                          </div>
+                          {(() => {
+                            const isPurchased = purchasedPassIds.includes(Number(pass.id));
+                            const cartItem = passCartItems.find((item) => item.passId === Number(pass.id));
+
+                            const renderDetailsButton = (extraClass = '') => (
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedPass(pass); setIsPassModalOpen(true); }}
+                                className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform ${extraClass}`}
+                              >
+                                View Details
+                              </button>
+                            );
+
+                            if (isPurchased) {
+                              return (
+                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
+                                  {renderDetailsButton('flex-1 h-10')}
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 cursor-not-allowed flex-1 h-10"
+                                  >
+                                    Purchased
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            if (cartItem) {
+                              return (
+                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
+                                  {renderDetailsButton('flex-1 h-10')}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemovePassFromCart(cartItem.id, pass.name)}
+                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-gray-100 hover:bg-gray-500 transition flex-1 h-10"
+                                  >
+                                    Remove from Cart
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
+                                {renderDetailsButton('flex-1 h-10')}
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddPassToCart(pass.id, pass.name)}
+                                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform flex-1 h-10"
+                                >
+                                  Add to Cart
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </div>
                       ))}
                     </div>
@@ -841,6 +1100,159 @@ export default function HomePage() {
             )}
         </ThemedModal>
 
+        <ThemedModal
+            isOpen={isPassModalOpen}
+            onClose={() => setIsPassModalOpen(false)}
+            title={selectedPass ? selectedPass.name : "Pass Details"}
+            hideDefaultFooter
+        >
+            {selectedPass && (
+              <div className="space-y-4">
+                <p className="text-gray-200 font-event-body">
+                  <span className="text-gold-300 font-semibold">Pass Cost:</span> {'\u20B9'}{selectedPass.cost}
+                </p>
+                <div>
+                  <p className="text-gold-300 font-semibold mb-2">Events included in this pass:</p>
+                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">
+                    {getEventsForPass(selectedPass).length === 0 ? (
+                      <li>No events mapped yet.</li>
+                    ) : (
+                      getEventsForPass(selectedPass).map((evt: any) => (
+                        <li key={evt.id}>{evt.eventName}</li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  {(() => {
+                    const isPurchased = purchasedPassIds.includes(Number(selectedPass.id));
+                    const cartItem = passCartItems.find((item) => item.passId === Number(selectedPass.id));
+                    const inCart = Boolean(cartItem);
+                    if (isPurchased) {
+                      return (
+                        <button
+                          type="button"
+                          disabled
+                          className="px-5 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 cursor-not-allowed"
+                        >
+                          Purchased
+                        </button>
+                      );
+                    }
+                    if (inCart && cartItem) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePassFromCart(cartItem.id, selectedPass.name)}
+                          className="px-5 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+                        >
+                          Remove from Cart
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleAddPassToCart(selectedPass.id, selectedPass.name)}
+                        className="px-5 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform"
+                      >
+                        Add to Cart
+                      </button>
+                    );
+                  })()}
+                  <button
+                    type="button"
+                    onClick={() => setIsPassModalOpen(false)}
+                    className="px-5 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            )}
+        </ThemedModal>
+
+        <ThemedModal
+            isOpen={isTeamModalOpen}
+            onClose={() => setIsTeamModalOpen(false)}
+            title="Hackathon Team Details"
+            hideDefaultFooter
+        >
+            <div className="space-y-4">
+              <p className="text-sm text-gold-300">
+                Note: All team members must be registered on the website.
+              </p>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Team Name</label>
+                <input
+                  type="text"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700/60 border border-gray-600 text-white"
+                  placeholder="Enter team name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Number of Members (2-4)</label>
+                <select
+                  value={memberCount}
+                  onChange={(e) => setMemberCount(Number(e.target.value))}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700/60 border border-gray-600 text-white"
+                >
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                {memberIds.map((value, idx) => {
+                  const normalized = normalizeUserId(value);
+                  const details = normalized ? memberDetails[normalized] : null;
+                  return (
+                    <div key={`member-${idx}`}>
+                      <label className="block text-sm text-gray-300 mb-1">
+                        Member {idx + 1} ID
+                      </label>
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => handleMemberIdChange(idx, e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-700/60 border border-gray-600 text-white"
+                        placeholder="Enter User ID like S0001 (as shown on the website)"
+                      />
+                      {details?.name && (
+                        <p className="text-xs text-green-400 mt-1">
+                          {normalized} - {details.name} {details.email ? `(${details.email})` : ''}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {teamError && <p className="text-sm text-red-400">{teamError}</p>}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTeamModalOpen(false)}
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={submitHackathonTeam}
+                  className="px-5 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform"
+                >
+                  Save Team & Add to Cart
+                </button>
+              </div>
+            </div>
+        </ThemedModal>
+
         </main>
 
         <footer id="contact" className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
@@ -887,6 +1299,3 @@ export default function HomePage() {
     </>
   );
 }
-
-
-

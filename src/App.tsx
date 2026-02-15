@@ -31,6 +31,7 @@ import OrganizerProtectedRoute from "./OrganizerProtectedRoute.tsx";
 import RegisteredUsers from "./pages/ViewActiveUsersPage.tsx";
 import ViewOrganizersPage from "./pages/ViewOrganizersPage";
 import ManagePassesPage from "./pages/ManagePassesPage.tsx";
+import AdminPassesDisplayPage from "./pages/AdminPassesDisplayPage.tsx";
 import ManageAccommodationPage from "./pages/ManageAccommodationPage.tsx";
 import AccommodationPage from "./pages/AccommodationPage.tsx";
 import AdminUserRegistrationPage from "./pages/AdminUserRegistrationPage.tsx";
@@ -145,6 +146,7 @@ export default function App() {
             <Route path="registered-users" element={<RegisteredUsers />} />
             <Route path="view-organizers" element={<ViewOrganizersPage />} />
             <Route path="manage-passes" element={<ManagePassesPage />} />
+            <Route path="passes-display" element={<AdminPassesDisplayPage />} />
             <Route path="register-user" element={<AdminUserRegistrationPage />} />
             <Route path="verify-transaction" element={<VerifyTransactionPage />} />
             <Route path="send-confirmation-email/:userId" element={<SendConfirmationEmailPage />} />

@@ -138,12 +138,36 @@ CREATE TABLE `passes` (
   `pass_limit` int NOT NULL,
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `description` text,
+  `posterImage` longblob,
   `accountId` int DEFAULT NULL,
   `discountPercentage` int DEFAULT '0',
   `discountReason` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `accountId` (`accountId`),
   CONSTRAINT `passes_ibfk_1` FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Hackathon pass teams
+DROP TABLE IF EXISTS `pass_teams`;
+CREATE TABLE `pass_teams` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `passId` int NOT NULL,
+  `teamName` varchar(255) NOT NULL,
+  `createdBy` varchar(5) NOT NULL,
+  `member1Id` varchar(5) NOT NULL,
+  `member2Id` varchar(5) NOT NULL,
+  `member3Id` varchar(5) DEFAULT NULL,
+  `member4Id` varchar(5) DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `passId` (`passId`),
+  KEY `createdBy` (`createdBy`),
+  CONSTRAINT `pass_teams_ibfk_1` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_teams_ibfk_2` FOREIGN KEY (`createdBy`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_teams_ibfk_3` FOREIGN KEY (`member1Id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_teams_ibfk_4` FOREIGN KEY (`member2Id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_teams_ibfk_5` FOREIGN KEY (`member3Id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_teams_ibfk_6` FOREIGN KEY (`member4Id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Pass to Events mapping

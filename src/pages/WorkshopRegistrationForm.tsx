@@ -257,6 +257,19 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
     }
   };
 
+  const payAmount = couponDiscount > 0 ? discountedTotal : totalAmount;
+  const upiId = 'apaashin@okicici';
+  const upiNote = user?.id ? `SAMHITA-${user.id}` : 'SAMHITA';
+  const upiParams = new URLSearchParams({
+    pa: upiId,
+    pn: 'SAMHITA',
+    am: payAmount.toString(),
+    cu: 'INR',
+    tn: upiNote,
+  });
+  const upiUri = `upi://pay?${upiParams.toString()}`;
+  const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+
   return (
     <div className="p-8 rounded-2xl">
       <h2 className="text-3xl font-bold text-white text-center mb-8">Registration</h2>
@@ -341,7 +354,21 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                   <p><strong>UPI ID:</strong> {accountDetails.upiId}</p>
                 )}
               </div>
-              
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={dynamicQrUrl}
+                  alt="UPI QR Code"
+                  className="w-44 h-44 object-contain rounded-lg border border-gray-700 bg-black/30 p-2"
+                />
+              </div>
+              <div className="mt-2 text-center">
+                <a
+                  href={upiUri}
+                  className="text-gold-400 hover:underline text-sm"
+                >
+                  Pay via UPI
+                </a>
+              </div>
               <div className="mt-4">
                 <label htmlFor="couponCode" className="block text-sm font-medium text-gray-400 mb-2">Coupon Code (Optional)</label>
                 <div className="flex gap-2">
