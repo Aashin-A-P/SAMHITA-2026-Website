@@ -135,35 +135,46 @@ module.exports = function (db) {
         return res.status(404).json({ message: 'Registration with this Transaction ID not found.' });
       }
 
-      // 2. Get User ID (Assuming all items in one transaction belong to the same user)
-      const userEmail = registrations[0].userEmail;
-      const [users] = await connection.execute(
-        'SELECT id FROM users WHERE email = ?',
-        [userEmail]
-      );
-
-      if (users.length === 0) {
+      // 2. Build a map of userEmail -> userId for all registrations in this transaction
+      const uniqueEmails = Array.from(new Set(registrations.map(r => r.userEmail).filter(Boolean)));
+      const emailToUserId = new Map();
+      if (uniqueEmails.length > 0) {
+        const placeholders = uniqueEmails.map(() => '?').join(',');
+        const [userRows] = await connection.execute(
+          `SELECT id, email FROM users WHERE email IN (${placeholders})`,
+          uniqueEmails
+        );
+        userRows.forEach((u) => {
+          if (u?.email) {
+            emailToUserId.set(u.email, u.id);
+          }
+        });
+      }
+      if (emailToUserId.size === 0) {
         await connection.rollback();
         return res.status(404).json({ message: 'User associated with this transaction not found.' });
       }
-      const userId = users[0].id;
       let itemsVerified = 0;
 
       // 3. Iterate through ALL items in the transaction
       for (const reg of registrations) {
+        const regUserId = emailToUserId.get(reg.userEmail);
+        if (!regUserId) {
+          continue;
+        }
 
         // --- CASE A: ACCOMMODATION ---
         if (reg.symposium === 'Accommodation') {
           // (Accommodation logic unchanged)
           let [bookings] = await connection.execute(
             'SELECT * FROM accommodation_bookings WHERE userId = ? AND transactionId = ?',
-            [userId, transactionId]
+            [regUserId, transactionId]
           );
 
           if (bookings.length === 0) {
             [bookings] = await connection.execute(
               'SELECT * FROM accommodation_bookings WHERE userId = ? AND status IN ("pending", "rejected") ORDER BY id DESC LIMIT 1',
-              [userId]
+              [regUserId]
             );
           }
           if (bookings.length > 0) {
@@ -192,20 +203,20 @@ module.exports = function (db) {
 
           // CLEAN UP AND INSERT (Enforce Unique Status)
           if (eventId) {
-            await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND eventId = ?', [userId, eventId]);
+            await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND eventId = ?', [regUserId, eventId]);
           } else if (passId) {
-            await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND passId = ?', [userId, passId]);
+            await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND passId = ?', [regUserId, passId]);
           }
 
           // Insert new verified record
           await connection.execute(
             'INSERT INTO verified_registrations (userId, eventId, passId, verified, transactionId) VALUES (?, ?, ?, ?, ?)',
-            [userId, eventId, passId, 1, transactionId]
+            [regUserId, eventId, passId, 1, transactionId]
           );
 
           // [EXPLODE PASS] If verifying a pass, explode it!
           if (passId) {
-            await explodePassRegistration(connection, userId, passId, transactionId);
+            await explodePassRegistration(connection, regUserId, passId, transactionId);
           }
 
           itemsVerified++;

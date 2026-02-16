@@ -59,6 +59,8 @@ import SansaStark from './Photos/Sansa Stark.png';
 import AryaStark from './Photos/Arya Stark.png';
 import BranStark from './Photos/Bran Stark.png';
 import RickonStark from './Photos/Rickon Stark.png';
+import JohnSnow from './Photos/John Snow.png';
+import DaenerysTargaryen from './Photos/Daenarys Targaryen.png';
 import RegistrationTimer from './components/RegistrationTimer';
 import OfferBanner from './components/OfferBanner';
 import PassesDisplay from './components/PassesDisplay';
@@ -148,6 +150,7 @@ export default function HomePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
   const toastTimeoutRef = useRef<number | null>(null);
+  const [showMitRegisterModal, setShowMitRegisterModal] = useState(false);
   const [eventsInView, setEventsInView] = useState(false);
   const [shouldFlipEvents, setShouldFlipEvents] = useState(false);
   const flipTimerRef = useRef<number | null>(null);
@@ -389,6 +392,10 @@ export default function HomePage() {
     BranStark,
     RickonStark,
   ];
+  const signatureCoverImages = [
+    JohnSnow,
+    DaenerysTargaryen,
+  ];
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -406,7 +413,43 @@ export default function HomePage() {
     setIsForgotPasswordModalOpen(true);
   };
 
+  const isMITStudentHelper = (collegeName?: string) => {
+    if (!collegeName) return false;
+    const normalized = collegeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return normalized.includes('madrasinstituteoftechnology') || normalized === 'mit';
+  };
+
   const isHackathonPass = (passName: string) => passName.toLowerCase().includes('hackathon');
+  const isPaperPresentationPass = (passName: string) =>
+    passName.toLowerCase().includes('paper') && passName.toLowerCase().includes('presentation');
+  const isTeamPass = (passName: string) => isHackathonPass(passName) || isPaperPresentationPass(passName);
+  const isTechPassName = (passName: string) =>
+    passName.toLowerCase().includes('tech pass') &&
+    !passName.toLowerCase().includes('non-tech') &&
+    !passName.toLowerCase().includes('non tech') &&
+    !passName.toLowerCase().includes('nontech');
+  const isNonTechPassName = (passName: string) =>
+    passName.toLowerCase().includes('non-tech') ||
+    passName.toLowerCase().includes('non tech') ||
+    passName.toLowerCase().includes('nontech');
+  const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
+  const isMitEligiblePass = (passName: string) => {
+    const name = passName.toLowerCase();
+    const isTech = name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
+    const isNonTech = name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
+    const isGlobal = name.includes('global');
+    return isTech || isNonTech || isGlobal;
+  };
+
+  const getTeamConfig = (passName: string) => {
+    if (isPaperPresentationPass(passName)) {
+      return { min: 2, max: 3, title: 'Paper Presentation Team Details' };
+    }
+    if (isHackathonPass(passName)) {
+      return { min: 2, max: 4, title: 'Hackathon Team Details' };
+    }
+    return { min: 2, max: 4, title: 'Team Details' };
+  };
 
   const normalizeUserId = (value: string) => {
     const cleaned = value.trim().split(/\s|-/)[0].toUpperCase();
@@ -468,18 +511,153 @@ export default function HomePage() {
     }
   };
 
+  const removePassFromCartByPassId = async (passId: number) => {
+    if (!user) return;
+    const cartItem = passCartItems.find((item) => item.passId === Number(passId));
+    if (!cartItem) return;
+    await fetch(`${API_BASE_URL}/pass-cart/${cartItem.id}`, { method: 'DELETE' });
+  };
+
+  const showToast = (message: string, variant: 'success' | 'error' = 'success') => {
+    setToastVariant(variant);
+    setToastMessage(message);
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, 2400);
+  };
+
+  const registerMitPass = async (passId: number, passName: string) => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/registrations/admin-register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, passIds: [passId] }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        showToast(data?.message || 'Could not register for pass', 'error');
+      } else {
+        await fetchPurchasedPasses(user.id);
+        await fetchPassCart(user.id);
+        showToast(`${passName} registered successfully`, 'success');
+        setShowMitRegisterModal(true);
+      }
+    } catch (error) {
+      console.error('Failed to register MIT pass:', error);
+      showToast('Network error while registering', 'error');
+    }
+  };
+
+  const deregisterMitPass = async (passId: number) => {
+    if (!user) return;
+    try {
+      await fetch(`${API_BASE_URL}/registrations/admin-deregister`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, passId }),
+      });
+      await fetchPurchasedPasses(user.id);
+    } catch (error) {
+      console.error('Failed to deregister pass:', error);
+    }
+  };
+
   const handleAddPassToCart = async (passId: number, passName: string) => {
-    if (isHackathonPass(passName)) {
+    if (isTeamPass(passName)) {
+      const teamConfig = getTeamConfig(passName);
       setSelectedPass({ id: passId, name: passName });
       setTeamName('');
-      setMemberCount(2);
-      setMemberIds(['', '']);
+      setMemberCount(teamConfig.min);
+      setMemberIds(Array.from({ length: teamConfig.min }, () => ''));
       setMemberDetails({});
       setTeamError(null);
       setIsPassModalOpen(false);
       setIsTeamModalOpen(true);
       return;
     }
+    const globalPass = passes.find((p) => isGlobalPassName(p.name));
+    const globalPassId = globalPass ? Number(globalPass.id) : null;
+    const hasGlobalInCart = globalPassId
+      ? passCartItems.some((item) => item.passId === globalPassId)
+      : false;
+    const techPass = passes.find((p) => isTechPassName(p.name));
+    const nonTechPass = passes.find((p) => isNonTechPassName(p.name));
+    const techPassId = techPass ? Number(techPass.id) : null;
+    const nonTechPassId = nonTechPass ? Number(nonTechPass.id) : null;
+    const hasTechInCart = techPassId ? passCartItems.some((i) => i.passId === techPassId) : false;
+    const hasNonTechInCart = nonTechPassId ? passCartItems.some((i) => i.passId === nonTechPassId) : false;
+    const hasGlobalPurchased = globalPassId
+      ? purchasedPassIds.includes(globalPassId)
+      : false;
+    const hasTechPurchased = techPassId ? purchasedPassIds.includes(techPassId) : false;
+    const hasNonTechPurchased = nonTechPassId ? purchasedPassIds.includes(nonTechPassId) : false;
+
+    if (user && isMITStudentHelper(user.college) && isMitEligiblePass(passName)) {
+      if (isGlobalPassName(passName)) {
+        if (techPassId && hasTechPurchased) await deregisterMitPass(techPassId);
+        if (nonTechPassId && hasNonTechPurchased) await deregisterMitPass(nonTechPassId);
+        await registerMitPass(passId, passName);
+        showToast('Global pass is added', 'success');
+        return;
+      }
+      if (hasGlobalPurchased && (isTechPassName(passName) || isNonTechPassName(passName))) {
+        showToast('Global pass is added', 'success');
+        return;
+      }
+      if (isTechPassName(passName) && hasNonTechPurchased && globalPassId) {
+        if (nonTechPassId) await deregisterMitPass(nonTechPassId);
+        await registerMitPass(globalPassId, globalPass.name);
+        showToast('Global pass is added', 'success');
+        return;
+      }
+      if (isNonTechPassName(passName) && hasTechPurchased && globalPassId) {
+        if (techPassId) await deregisterMitPass(techPassId);
+        await registerMitPass(globalPassId, globalPass.name);
+        showToast('Global pass is added', 'success');
+        return;
+      }
+      await registerMitPass(passId, passName);
+      return;
+    }
+
+    if (isGlobalPassName(passName)) {
+      if (techPassId) await removePassFromCartByPassId(techPassId);
+      if (nonTechPassId) await removePassFromCartByPassId(nonTechPassId);
+      await addPassToCartDirect(passId, passName);
+      showToast('Global pass is added', 'success');
+      await fetchPassCart(user?.id || '');
+      return;
+    }
+
+    if (hasGlobalInCart && (isTechPassName(passName) || isNonTechPassName(passName))) {
+      showToast('Global pass is added', 'success');
+      return;
+    }
+
+    if (isTechPassName(passName) && hasNonTechInCart && globalPassId) {
+      if (nonTechPassId) await removePassFromCartByPassId(nonTechPassId);
+      await addPassToCartDirect(globalPassId, globalPass.name);
+      showToast('Global pass is added', 'success');
+      await fetchPassCart(user?.id || '');
+      return;
+    }
+
+    if (isNonTechPassName(passName) && hasTechInCart && globalPassId) {
+      if (techPassId) await removePassFromCartByPassId(techPassId);
+      await addPassToCartDirect(globalPassId, globalPass.name);
+      showToast('Global pass is added', 'success');
+      await fetchPassCart(user?.id || '');
+      return;
+    }
+
     await addPassToCartDirect(passId, passName);
   };
 
@@ -516,9 +694,10 @@ export default function HomePage() {
 
   const submitHackathonTeam = async () => {
     if (!selectedPass || !user?.id) return;
+    const teamConfig = getTeamConfig(selectedPass.name || '');
     const cleanedIds = memberIds.map(normalizeUserId).filter(Boolean);
-    if (memberCount < 2 || memberCount > 4) {
-      setTeamError('Team must have 2 to 4 members.');
+    if (memberCount < teamConfig.min || memberCount > teamConfig.max) {
+      setTeamError(`Team must have ${teamConfig.min} to ${teamConfig.max} members.`);
       return;
     }
     if (cleanedIds.length !== memberCount) {
@@ -642,8 +821,8 @@ export default function HomePage() {
                 Forging the next generation of technocrats through trials of skill, arenas of competition, and a kingdom where innovation rules.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                  <a href="#about" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-button">Explore More</a>
-                  <a href="#events" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-outline">Learn More</a>
+                  <a href="#about" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-button">Explore Realm</a>
+                  <a href="#events" className="px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-300 gold-outline">Step Into Battle</a>
               </div>
             </section>
 
@@ -654,35 +833,10 @@ export default function HomePage() {
                     SAMHITA, the flagship national-level technical symposium organized by the Information Technology Association, stands as a premier platform for innovation, collaboration, and technical excellence. Designed to bring together aspiring technocrats from across institutions, SAMHITA features a diverse array of competitions, workshops, and knowledge-sharing sessions that challenge creativity and problem-solving skills. Over the years, it has evolved into more than just an event - it is a dynamic forum that nurtures talent, encourages industry interaction, and empowers students to transform their ideas into impactful solutions, shaping them into confident and future-ready professionals.
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                    <div className="bg-black/60 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300 gold-glow">
-                      <FaBullseye className="text-gold-400 text-3xl flex-shrink-0 mt-1" />
-                      <div>
-                        <h3 className="text-xl font-bold text-gold-400 mb-2">Our Mission</h3>
-                        <p className="text-gray-300">
-                          To cultivate technical excellence, innovation, and collaborative
-                          learning by empowering students with the skills and mindset to thrive
-                          in the ever-evolving tech landscape.
-                        </p>
-                      </div>
-                    </div>
-
-                  <div className="bg-black/60 p-6 rounded-lg flex items-start space-x-4 hover:scale-105 transition-transform duration-300 gold-glow">
-                    <FaEye className="text-gold-400 text-3xl flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="text-xl font-bold text-gold-400 mb-2">Our Vision</h3>
-                      <p className="text-gray-300">
-                        To be the leading society shaping the next generation of tech
-                        innovators.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </section>
 
             
-                    <HomePageGallery />
             <section id="events" ref={eventsSectionRef} className="py-20 px-4 sm:px-6 lg:px-8">
                 <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
                 <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
@@ -849,7 +1003,8 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Signature Events</h3>
                       <div className="relative">
                         <div ref={workshopScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Signature.map((event) => {
+                          {categorizedEvents.Signature.map((event, index) => {
+                            const coverImage = signatureCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
                               <div
@@ -859,7 +1014,7 @@ export default function HomePage() {
                                 <div className="flip-card w-full h-full">
                                   <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
-                                      <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                      <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flip-face flip-back">
                                       {hasPoster ? (
@@ -993,7 +1148,13 @@ export default function HomePage() {
                     <div className="text-center text-gray-400">No passes available yet.</div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
-                      {passes.map((pass) => (
+                      {passes
+                        .filter((pass) => {
+                          const isMit = user && isMITStudentHelper(user.college);
+                          if (!isMit) return true;
+                          return !(isTechPassName(pass.name) || isNonTechPassName(pass.name));
+                        })
+                        .map((pass) => (
                         <div
                           key={pass.id}
                           className="bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-[480px] flex flex-col overflow-hidden"
@@ -1014,6 +1175,19 @@ export default function HomePage() {
                           {(() => {
                             const isPurchased = purchasedPassIds.includes(Number(pass.id));
                             const cartItem = passCartItems.find((item) => item.passId === Number(pass.id));
+                            const isMit = user && isMITStudentHelper(user.college);
+                            const mitEligible = isMit && isMitEligiblePass(pass.name);
+                            const globalPass = passes.find((p) => isGlobalPassName(p.name));
+                            const globalPassId = globalPass ? Number(globalPass.id) : null;
+                            const hasGlobalInCart = globalPassId
+                              ? passCartItems.some((item) => item.passId === globalPassId)
+                              : false;
+                            const hasGlobalPurchased = globalPassId
+                              ? purchasedPassIds.includes(globalPassId)
+                              : false;
+                            const disableForGlobal =
+                              (hasGlobalInCart || hasGlobalPurchased) &&
+                              (isTechPassName(pass.name) || isNonTechPassName(pass.name));
 
                             const renderDetailsButton = (extraClass = '') => (
                               <button
@@ -1055,13 +1229,38 @@ export default function HomePage() {
                               );
                             }
 
+                            if (mitEligible) {
+                              return (
+                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
+                                  {renderDetailsButton('flex-1 h-10')}
+                                  <button
+                                    type="button"
+                                    onClick={() => registerMitPass(pass.id, pass.name)}
+                                    disabled={disableForGlobal}
+                                    className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
+                                      disableForGlobal
+                                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                        : 'gold-button hover:scale-105 transition-transform'
+                                    }`}
+                                  >
+                                    Register
+                                  </button>
+                                </div>
+                              );
+                            }
+
                             return (
                               <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
                                 {renderDetailsButton('flex-1 h-10')}
                                 <button
                                   type="button"
                                   onClick={() => handleAddPassToCart(pass.id, pass.name)}
-                                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform flex-1 h-10"
+                                  disabled={disableForGlobal}
+                                  className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
+                                    disableForGlobal
+                                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                      : 'gold-button hover:scale-105 transition-transform'
+                                  }`}
                                 >
                                   Add to Cart
                                 </button>
@@ -1103,6 +1302,8 @@ export default function HomePage() {
               </section>
 
             <PassesDisplay />
+
+            <HomePageGallery />
 
             <section id="sponsors" className="py-12">
               <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">The Esteemed Banners of Support</h2>
@@ -1187,6 +1388,19 @@ export default function HomePage() {
                     const isPurchased = purchasedPassIds.includes(Number(selectedPass.id));
                     const cartItem = passCartItems.find((item) => item.passId === Number(selectedPass.id));
                     const inCart = Boolean(cartItem);
+                    const isMit = user && isMITStudentHelper(user.college);
+                    const mitEligible = isMit && isMitEligiblePass(selectedPass.name);
+                    const globalPass = passes.find((p) => isGlobalPassName(p.name));
+                    const globalPassId = globalPass ? Number(globalPass.id) : null;
+                    const hasGlobalInCart = globalPassId
+                      ? passCartItems.some((item) => item.passId === globalPassId)
+                      : false;
+                    const hasGlobalPurchased = globalPassId
+                      ? purchasedPassIds.includes(globalPassId)
+                      : false;
+                    const disableForGlobal =
+                      (hasGlobalInCart || hasGlobalPurchased) &&
+                      (isTechPassName(selectedPass.name) || isNonTechPassName(selectedPass.name));
                     if (isPurchased) {
                       return (
                         <button
@@ -1195,6 +1409,22 @@ export default function HomePage() {
                           className="px-5 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 cursor-not-allowed"
                         >
                           Purchased
+                        </button>
+                      );
+                    }
+                    if (mitEligible) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => registerMitPass(selectedPass.id, selectedPass.name)}
+                          disabled={disableForGlobal}
+                          className={`px-5 py-2 rounded-lg text-xs font-semibold ${
+                            disableForGlobal
+                              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                              : 'gold-button hover:scale-105 transition-transform'
+                          }`}
+                        >
+                          Register
                         </button>
                       );
                     }
@@ -1213,7 +1443,12 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={() => handleAddPassToCart(selectedPass.id, selectedPass.name)}
-                        className="px-5 py-2 rounded-lg text-xs font-semibold gold-button hover:scale-105 transition-transform"
+                        disabled={disableForGlobal}
+                        className={`px-5 py-2 rounded-lg text-xs font-semibold ${
+                          disableForGlobal
+                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            : 'gold-button hover:scale-105 transition-transform'
+                        }`}
                       >
                         Add to Cart
                       </button>
@@ -1234,7 +1469,7 @@ export default function HomePage() {
         <ThemedModal
             isOpen={isTeamModalOpen}
             onClose={() => setIsTeamModalOpen(false)}
-            title="Hackathon Team Details"
+            title={selectedPass ? getTeamConfig(selectedPass.name || '').title : 'Team Details'}
             hideDefaultFooter
         >
             <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
@@ -1253,15 +1488,26 @@ export default function HomePage() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-300 mb-2">Number of Members (2-4)</label>
+                <label className="block text-sm text-gray-300 mb-2">
+                  Number of Members ({selectedPass ? `${getTeamConfig(selectedPass.name || '').min}-${getTeamConfig(selectedPass.name || '').max}` : '2-4'})
+                </label>
                 <select
                   value={memberCount}
                   onChange={(e) => setMemberCount(Number(e.target.value))}
                   className="w-full px-4 py-2 rounded-lg bg-gray-700/60 border border-gray-600 text-white"
                 >
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
+                  {(() => {
+                    const cfg = selectedPass ? getTeamConfig(selectedPass.name || '') : { min: 2, max: 4 };
+                    const options = [];
+                    for (let i = cfg.min; i <= cfg.max; i += 1) {
+                      options.push(
+                        <option key={i} value={i}>
+                          {i}
+                        </option>
+                      );
+                    }
+                    return options;
+                  })()}
                 </select>
               </div>
 
@@ -1310,6 +1556,38 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
+        </ThemedModal>
+
+        <ThemedModal
+          isOpen={showMitRegisterModal}
+          onClose={() => setShowMitRegisterModal(false)}
+          title="Join the SAMHITA WhatsApp Group"
+          hideDefaultFooter
+        >
+          <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+            <p className="text-gray-300 text-sm">
+              You are registered! Please join the official WhatsApp group for updates and announcements.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(whatsappLink, '_blank');
+                  setShowMitRegisterModal(false);
+                }}
+                className="px-5 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+              >
+                Join WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowMitRegisterModal(false)}
+                className="px-5 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </ThemedModal>
 
         </main>

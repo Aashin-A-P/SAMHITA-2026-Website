@@ -391,7 +391,7 @@ const CartPage: React.FC = () => {
                 onClick={() => setShowWhatsappModal(false)}
                 className="px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
               >
-                Later
+                Back
               </button>
               <button
                 type="button"

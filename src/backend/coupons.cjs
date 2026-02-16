@@ -6,7 +6,7 @@ module.exports = function (db) {
   router.get('/', async (_req, res) => {
     try {
       const [rows] = await db.execute(
-        'SELECT id, name, `limit`, discountPercent, createdAt FROM coupons ORDER BY id DESC'
+        'SELECT id, name, `limit`, discountPercent, onlyForMit, createdAt FROM coupons ORDER BY id DESC'
       );
       res.json(rows);
     } catch (error) {
@@ -18,13 +18,14 @@ module.exports = function (db) {
   // Validate coupon by code
   router.get('/validate', async (req, res) => {
     const code = (req.query.code || '').toString().trim();
+    const college = (req.query.college || '').toString();
     if (!code) {
       return res.status(400).json({ message: 'Coupon code is required.' });
     }
 
     try {
       const [rows] = await db.execute(
-        'SELECT id, name, `limit`, discountPercent FROM coupons WHERE name = ?',
+        'SELECT id, name, `limit`, discountPercent, onlyForMit FROM coupons WHERE name = ?',
         [code]
       );
       if (rows.length === 0) {
@@ -34,11 +35,19 @@ module.exports = function (db) {
       if (coupon.limit <= 0) {
         return res.status(400).json({ message: 'Coupon expired.' });
       }
+      if (coupon.onlyForMit) {
+        const normalized = college.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const isMit = normalized.includes('madrasinstituteoftechnology') || normalized === 'mit';
+        if (!isMit) {
+          return res.status(403).json({ message: 'Invalid coupon.' });
+        }
+      }
       res.json({
         valid: true,
         code: coupon.name,
         discountPercent: coupon.discountPercent,
-        remaining: coupon.limit
+        remaining: coupon.limit,
+        onlyForMit: coupon.onlyForMit === 1
       });
     } catch (error) {
       console.error('Error validating coupon:', error);
@@ -48,14 +57,14 @@ module.exports = function (db) {
 
   // Create coupon
   router.post('/', async (req, res) => {
-    const { name, limit, discountPercent } = req.body;
+    const { name, limit, discountPercent, onlyForMit } = req.body;
     if (!name || limit === undefined || discountPercent === undefined) {
       return res.status(400).json({ message: 'Missing name, limit, or discountPercent.' });
     }
     try {
       await db.execute(
-        'INSERT INTO coupons (name, `limit`, discountPercent) VALUES (?, ?, ?)',
-        [name, Number(limit), Number(discountPercent)]
+        'INSERT INTO coupons (name, `limit`, discountPercent, onlyForMit) VALUES (?, ?, ?, ?)',
+        [name, Number(limit), Number(discountPercent), onlyForMit ? 1 : 0]
       );
       res.status(201).json({ message: 'Coupon created.' });
     } catch (error) {
@@ -67,11 +76,11 @@ module.exports = function (db) {
   // Update coupon
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, limit, discountPercent } = req.body;
+    const { name, limit, discountPercent, onlyForMit } = req.body;
     try {
       await db.execute(
-        'UPDATE coupons SET name = ?, `limit` = ?, discountPercent = ? WHERE id = ?',
-        [name, Number(limit), Number(discountPercent), id]
+        'UPDATE coupons SET name = ?, `limit` = ?, discountPercent = ?, onlyForMit = ? WHERE id = ?',
+        [name, Number(limit), Number(discountPercent), onlyForMit ? 1 : 0, id]
       );
       res.json({ message: 'Coupon updated.' });
     } catch (error) {

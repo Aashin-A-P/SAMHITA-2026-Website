@@ -35,12 +35,28 @@ interface Team {
   member4Id?: string;
   member1Name?: string;
   member1Email?: string;
+  member1Mobile?: string;
+  member1College?: string;
+  member1Department?: string;
+  member1YearOfPassing?: number;
   member2Name?: string;
   member2Email?: string;
+  member2Mobile?: string;
+  member2College?: string;
+  member2Department?: string;
+  member2YearOfPassing?: number;
   member3Name?: string;
   member3Email?: string;
+  member3Mobile?: string;
+  member3College?: string;
+  member3Department?: string;
+  member3YearOfPassing?: number;
   member4Name?: string;
   member4Email?: string;
+  member4Mobile?: string;
+  member4College?: string;
+  member4Department?: string;
+  member4YearOfPassing?: number;
 }
 
 const ViewEventRegistrationsPage: React.FC = () => {
@@ -172,16 +188,30 @@ const ViewEventRegistrationsPage: React.FC = () => {
     doc.text(`Registrations for ${eventDetails.eventName}`, 14, 16);
     doc.text(`Coordinator: ${eventDetails.coordinatorName} (${eventDetails.coordinatorContactNo})`, 14, 24);
 
+    const useTeamRows = teams.length > 0;
+    const rowsForPdf = useTeamRows ? filteredTeamRows : filteredRegistrations;
+
     autoTable(doc, {
       startY: 30,
-      head: [['Name', 'Email', 'College', 'Mobile Number', 'Attendance']],
-      body: filteredRegistrations.map(r => [
-        r.userName,
-        r.email,
-        r.college,
-        r.mobileNumber,
-        presentSet.has(r.userId) ? 'Present' : 'Not Marked'
-      ]),
+      head: useTeamRows
+        ? [['Team Name', 'Name', 'Email', 'College', 'Mobile Number', 'Attendance']]
+        : [['Name', 'Email', 'College', 'Mobile Number', 'Attendance']],
+      body: useTeamRows
+        ? rowsForPdf.map((r) => [
+            r.teamName,
+            r.name,
+            r.email,
+            r.college,
+            r.mobile,
+            isUserPresent(r.userId, r.email) ? 'Present' : 'Not Marked',
+          ])
+        : rowsForPdf.map((r) => [
+            r.userName,
+            r.email,
+            r.college,
+            r.mobileNumber,
+            presentSet.has(r.userId) ? 'Present' : 'Not Marked',
+          ]),
     });
 
     doc.save(`event_${eventDetails.eventName}_registrations.pdf`);
@@ -197,9 +227,98 @@ const ViewEventRegistrationsPage: React.FC = () => {
     return false;
   };
 
+  const isUserPresent = (userId?: string, email?: string) => {
+    if (userId && presentSet.has(userId)) return true;
+    if (email && presentEmailSet.has(email.toLowerCase())) return true;
+    return false;
+  };
+
+  const toggleTeamAttendance = async (userId: string, email?: string) => {
+    if (!eventId) return;
+    const currentlyPresent = isUserPresent(userId, email);
+    const endpoint = currentlyPresent ? 'unmark' : 'mark';
+    try {
+      const response = await fetch(`${API_BASE_URL}/attendance/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, userId }),
+      });
+      if (!response.ok) {
+        throw new Error(`Attendance ${endpoint} failed`);
+      }
+      setPresentSet((prev) => {
+        const next = new Set(prev);
+        if (currentlyPresent) {
+          next.delete(userId);
+        } else {
+          next.add(userId);
+        }
+        return next;
+      });
+      if (email) {
+        setPresentEmailSet((prev) => {
+          const next = new Set(prev);
+          const key = email.toLowerCase();
+          if (currentlyPresent) {
+            next.delete(key);
+          } else {
+            next.add(key);
+          }
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Error updating attendance:', err);
+      alert('Failed to update attendance.');
+    }
+  };
+
+  const getTeamMembers = (team: Team) => {
+    const members = [
+      { id: team.member1Id, name: team.member1Name, email: team.member1Email, mobile: team.member1Mobile, college: team.member1College },
+      { id: team.member2Id, name: team.member2Name, email: team.member2Email, mobile: team.member2Mobile, college: team.member2College },
+      { id: team.member3Id, name: team.member3Name, email: team.member3Email, mobile: team.member3Mobile, college: team.member3College },
+      { id: team.member4Id, name: team.member4Name, email: team.member4Email, mobile: team.member4Mobile, college: team.member4College },
+    ];
+    return members.filter((m) => m.id);
+  };
+
+  const handleDeleteTeam = async (teamId: number) => {
+    if (!window.confirm('Delete this team?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/pass-teams/${teamId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete team.');
+      }
+      setTeams((prev) => prev.filter((t) => t.id !== teamId));
+    } catch (err) {
+      console.error('Error deleting team:', err);
+      alert('Failed to delete team.');
+    }
+  };
+
   const filteredRegistrations = showPresentOnly
     ? registrations.filter(isPresent)
     : registrations;
+
+  const teamRows = teams.flatMap((team) =>
+    getTeamMembers(team).map((member) => ({
+      teamName: team.teamName,
+      userId: member.id,
+      name: member.name || 'N/A',
+      email: member.email || 'N/A',
+      college: member.college || 'N/A',
+      mobile: member.mobile || 'N/A',
+    }))
+  );
+
+  const filteredTeamRows = showPresentOnly
+    ? teamRows.filter((row) => isUserPresent(row.userId, row.email))
+    : teamRows;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 pt-20">
@@ -209,36 +328,12 @@ const ViewEventRegistrationsPage: React.FC = () => {
         </h1>
 
         {teams.length > 0 && (
-          <div className="mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <h2 className="text-xl font-bold text-gold-300 mb-3">Hackathon Teams</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-gray-900 rounded-lg">
-                <thead className="bg-gray-700">
-                  <tr>
-                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Team Name</th>
-                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Member IDs</th>
-                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Member Names</th>
-                    <th className="py-2 px-3 text-left text-xs font-semibold text-gray-200">Emails</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teams.map((team) => (
-                    <tr key={team.id} className="border-b border-gray-700">
-                      <td className="py-2 px-3">{team.teamName}</td>
-                      <td className="py-2 px-3 text-sm">
-                        {[team.member1Id, team.member2Id, team.member3Id, team.member4Id].filter(Boolean).join(', ')}
-                      </td>
-                      <td className="py-2 px-3 text-sm">
-                        {[team.member1Name, team.member2Name, team.member3Name, team.member4Name].filter(Boolean).join(', ')}
-                      </td>
-                      <td className="py-2 px-3 text-sm">
-                        {[team.member1Email, team.member2Email, team.member3Email, team.member4Email].filter(Boolean).join(', ')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gold-300 mb-3">
+              {eventDetails?.eventName?.toLowerCase().includes('paper')
+                ? 'Paper Presentation Teams'
+                : 'Hackathon Teams'}
+            </h2>
           </div>
         )}
         <div className="flex justify-end mb-4">
@@ -262,6 +357,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
           <table className="min-w-full bg-gray-800 rounded-lg">
             <thead>
               <tr className="bg-gray-700">
+                {teams.length > 0 && <th className="py-3 px-4 text-left">Team Name</th>}
                 <th className="py-3 px-4 text-left">Name</th>
                 <th className="py-3 px-4 text-left">Email</th>
                 <th className="py-3 px-4 text-left">College</th>
@@ -271,29 +367,74 @@ const ViewEventRegistrationsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRegistrations.map((registration, index) => (
-                <tr key={index} className="border-b border-gray-700">
-                  <td className="py-3 px-4">{registration.userName}</td>
-                  <td className="py-3 px-4">{registration.email}</td>
-                  <td className="py-3 px-4">{registration.college}</td>
-                  <td className="py-3 px-4">{registration.mobileNumber}</td>
-                  <td className="py-3 px-4">
-                    {isPresent(registration) ? (
-                      <span className="text-green-400 font-semibold">Present</span>
-                    ) : (
-                      <span className="text-gray-400">Not Marked</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => handleDelete(registration.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors duration-200"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {teams.length > 0 ? (
+                filteredTeamRows.map((row, index) => {
+                  const present = isUserPresent(row.userId, row.email);
+                  const team = teams.find((t) => t.teamName === row.teamName);
+                  return (
+                    <tr key={`${row.teamName}-${row.userId}-${index}`} className="border-b border-gray-700">
+                      <td className="py-3 px-4">{row.teamName}</td>
+                      <td className="py-3 px-4">{row.name}</td>
+                      <td className="py-3 px-4">{row.email}</td>
+                      <td className="py-3 px-4">{row.college}</td>
+                      <td className="py-3 px-4">{row.mobile}</td>
+                      <td className="py-3 px-4">
+                        {present ? (
+                          <span className="text-green-400 font-semibold">Present</span>
+                        ) : (
+                          <span className="text-gray-400">Not Marked</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => toggleTeamAttendance(row.userId, row.email)}
+                            className={`px-3 py-1 rounded text-xs font-semibold ${
+                              present
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-samhita-600 hover:bg-samhita-700 text-white'
+                            }`}
+                          >
+                            {present ? 'Revert' : 'Mark Present'}
+                          </button>
+                          {team && (
+                            <button
+                              onClick={() => handleDeleteTeam(team.id)}
+                              className="px-3 py-1 rounded text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-white"
+                            >
+                              Delete Team
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                filteredRegistrations.map((registration, index) => (
+                  <tr key={index} className="border-b border-gray-700">
+                    <td className="py-3 px-4">{registration.userName}</td>
+                    <td className="py-3 px-4">{registration.email}</td>
+                    <td className="py-3 px-4">{registration.college}</td>
+                    <td className="py-3 px-4">{registration.mobileNumber}</td>
+                    <td className="py-3 px-4">
+                      {isPresent(registration) ? (
+                        <span className="text-green-400 font-semibold">Present</span>
+                      ) : (
+                        <span className="text-gray-400">Not Marked</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleDelete(registration.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors duration-200"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

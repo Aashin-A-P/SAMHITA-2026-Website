@@ -65,6 +65,21 @@ module.exports = function (db, uploadTransactionScreenshot) {
     }
   }
 
+  async function getTeamMemberIds(executor, passId, createdBy) {
+    const [rows] = await executor.execute(
+      `SELECT member1Id, member2Id, member3Id, member4Id
+       FROM pass_teams
+       WHERE passId = ? AND createdBy = ?
+       ORDER BY id DESC
+       LIMIT 1`,
+      [passId, createdBy]
+    );
+    if (rows.length === 0) return null;
+    const row = rows[0];
+    const ids = [row.member1Id, row.member2Id, row.member3Id, row.member4Id].filter(Boolean);
+    return ids.length > 0 ? ids : null;
+  }
+
   router.get('/all', async (req, res) => {
     try {
       const [registrations] = await db.execute(`
@@ -179,7 +194,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         let couponDiscount = 0;
         if (couponCode && couponCode.trim().length > 0) {
           const [couponRows] = await connection.execute(
-            'SELECT id, name, `limit`, discountPercent FROM coupons WHERE name = ? FOR UPDATE',
+            'SELECT id, name, `limit`, discountPercent, onlyForMit FROM coupons WHERE name = ? FOR UPDATE',
             [couponCode.trim()]
           );
           if (couponRows.length === 0) {
@@ -190,6 +205,18 @@ module.exports = function (db, uploadTransactionScreenshot) {
           if (coupon.limit <= 0) {
             await connection.rollback();
             return res.status(400).json({ message: 'Coupon expired.' });
+          }
+          // check MIT-only coupon
+          const [[couponUser]] = await connection.execute(
+            'SELECT college FROM users WHERE id = ?',
+            [userId]
+          );
+          const collegeName = String(couponUser?.college || '');
+          const normalized = collegeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const isMit = normalized.includes('madrasinstituteoftechnology') || normalized === 'mit';
+          if (coupon.onlyForMit && !isMit) {
+            await connection.rollback();
+            return res.status(403).json({ message: 'Invalid coupon.' });
           }
           couponDiscount = Number(coupon.discountPercent) || 0;
           await connection.execute('UPDATE coupons SET `limit` = `limit` - 1 WHERE id = ?', [coupon.id]);
@@ -208,7 +235,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
         // --- Get User Details ---
         const [[user]] = await connection.execute(
-          'SELECT fullName, email FROM users WHERE id = ?',
+          'SELECT fullName, email, college FROM users WHERE id = ?',
           [userId]
         );
         if (!user) {
@@ -229,14 +256,6 @@ module.exports = function (db, uploadTransactionScreenshot) {
             continue;
           }
 
-          const [existing] = await connection.execute(
-            'SELECT id FROM registrations WHERE userEmail = ? AND passId = ?',
-            [user.email, passId]
-          );
-          if (existing.length > 0) {
-            console.warn(`Already registered for pass ${pass.name}. Skipping.`);
-            continue;
-          }
           const [symposiumStatus] = await connection.execute(
             'SELECT symposiumName FROM symposium_status WHERE isOpen = 1'
           );
@@ -245,24 +264,56 @@ module.exports = function (db, uploadTransactionScreenshot) {
           const symposium = activeSymposium;
 
           const discountedPassCost = Math.floor(pass.cost * (1 - couponDiscount / 100));
-          await connection.execute(
-            `INSERT INTO registrations 
-                 (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              symposium,
-              passId,
-              user.fullName,
-              user.email,
-              mobileNumber,
-              transactionId,
-              transactionUsername || user.fullName,
-              transactionTime,
-              transactionDate,
-              discountedPassCost,
-              transactionScreenshot,
-            ]
-          );
+
+          const passNameLower = String(pass.name || '').toLowerCase();
+          const isHackathonPass = passNameLower.includes('hackathon');
+          const isPaperPresentationPass = passNameLower.includes('paper') && passNameLower.includes('presentation');
+          const isTeamPass = isHackathonPass || isPaperPresentationPass;
+          const teamMemberIds = isTeamPass
+            ? await getTeamMemberIds(connection, passId, userId)
+            : null;
+
+          const targetUserIds = teamMemberIds && teamMemberIds.length > 0 ? teamMemberIds : [userId];
+
+          for (const memberId of targetUserIds) {
+            const [[member]] = await connection.execute(
+              'SELECT fullName, email, mobile FROM users WHERE id = ?',
+              [memberId]
+            );
+            if (!member) {
+              console.warn(`Member with ID ${memberId} not found. Skipping.`);
+              continue;
+            }
+
+            const [existing] = await connection.execute(
+              'SELECT id FROM registrations WHERE userEmail = ? AND passId = ?',
+              [member.email, passId]
+            );
+            if (existing.length > 0) {
+              console.warn(`Already registered for pass ${pass.name} (user ${memberId}). Skipping.`);
+              continue;
+            }
+
+            const isPayer = memberId === userId;
+            await connection.execute(
+              `INSERT INTO registrations 
+                   (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                symposium,
+                passId,
+                member.fullName,
+                member.email,
+                member.mobile || mobileNumber || null,
+                transactionId,
+                transactionUsername || user.fullName,
+                transactionTime,
+                transactionDate,
+                isPayer ? discountedPassCost : 0,
+                transactionScreenshot,
+              ]
+            );
+          }
         }
 
         // --- Process Accommodation Booking ---

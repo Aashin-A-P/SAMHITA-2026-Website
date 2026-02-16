@@ -7,6 +7,7 @@ interface Coupon {
   name: string;
   limit: number;
   discountPercent: number;
+  onlyForMit: number;
   createdAt: string;
 }
 
@@ -15,6 +16,7 @@ const ManageCouponsPage: React.FC = () => {
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
   const [discountPercent, setDiscountPercent] = useState('');
+  const [onlyForMit, setOnlyForMit] = useState(false);
   const [editing, setEditing] = useState<Coupon | null>(null);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
@@ -44,7 +46,7 @@ const ManageCouponsPage: React.FC = () => {
       const response = await fetch(`${API_BASE_URL}/coupons`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, limit: Number(limit), discountPercent: Number(discountPercent) }),
+        body: JSON.stringify({ name, limit: Number(limit), discountPercent: Number(discountPercent), onlyForMit }),
       });
       if (!response.ok) {
         const err = await response.json();
@@ -54,6 +56,7 @@ const ManageCouponsPage: React.FC = () => {
       setName('');
       setLimit('');
       setDiscountPercent('');
+      setOnlyForMit(false);
       fetchCoupons();
       showModal('Success', 'Coupon created successfully.');
     } catch (error) {
@@ -73,6 +76,7 @@ const ManageCouponsPage: React.FC = () => {
           name: editing.name,
           limit: Number(editing.limit),
           discountPercent: Number(editing.discountPercent),
+          onlyForMit: !!editing.onlyForMit,
         }),
       });
       if (!response.ok) {
@@ -150,6 +154,17 @@ const ManageCouponsPage: React.FC = () => {
               required
             />
           </div>
+          <div className="flex items-center gap-2 mt-6">
+            <input
+              type="checkbox"
+              id="onlyForMit"
+              checked={onlyForMit}
+              onChange={(e) => setOnlyForMit(e.target.checked)}
+            />
+            <label htmlFor="onlyForMit" className="text-sm font-medium text-gray-700">
+              Only for MIT students
+            </label>
+          </div>
           <div className="md:col-span-3 flex justify-end">
             <button
               type="submit"
@@ -170,6 +185,7 @@ const ManageCouponsPage: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Limit</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MIT Only</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -179,6 +195,7 @@ const ManageCouponsPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">{coupon.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{coupon.limit}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{coupon.discountPercent}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{coupon.onlyForMit ? 'Yes' : 'No'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => setEditing({ ...coupon })}
@@ -197,7 +214,7 @@ const ManageCouponsPage: React.FC = () => {
               ))}
               {coupons.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-6 text-center text-gray-400">
+                  <td colSpan={5} className="px-6 py-6 text-center text-gray-400">
                     No coupons created yet.
                   </td>
                 </tr>
@@ -240,6 +257,17 @@ const ManageCouponsPage: React.FC = () => {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm text-gray-900 bg-white"
                   required
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="editOnlyForMit"
+                  checked={!!editing.onlyForMit}
+                  onChange={(e) => setEditing({ ...editing, onlyForMit: e.target.checked ? 1 : 0 })}
+                />
+                <label htmlFor="editOnlyForMit" className="text-sm font-medium text-gray-700">
+                  Only for MIT students
+                </label>
               </div>
               <div className="flex justify-end gap-4">
                 <button type="button" onClick={() => setEditing(null)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400">

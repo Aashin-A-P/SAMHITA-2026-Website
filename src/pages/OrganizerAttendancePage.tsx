@@ -19,6 +19,39 @@ interface Registration {
   college: string;
 }
 
+interface Team {
+  id: number;
+  teamName: string;
+  member1Id: string;
+  member2Id: string;
+  member3Id?: string;
+  member4Id?: string;
+  member1Name?: string;
+  member1Email?: string;
+  member1Mobile?: string;
+  member1College?: string;
+  member1Department?: string;
+  member1YearOfPassing?: number;
+  member2Name?: string;
+  member2Email?: string;
+  member2Mobile?: string;
+  member2College?: string;
+  member2Department?: string;
+  member2YearOfPassing?: number;
+  member3Name?: string;
+  member3Email?: string;
+  member3Mobile?: string;
+  member3College?: string;
+  member3Department?: string;
+  member3YearOfPassing?: number;
+  member4Name?: string;
+  member4Email?: string;
+  member4Mobile?: string;
+  member4College?: string;
+  member4Department?: string;
+  member4YearOfPassing?: number;
+}
+
 const OrganizerAttendancePage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
@@ -28,6 +61,7 @@ const OrganizerAttendancePage: React.FC = () => {
   const [isLoadingRegs, setIsLoadingRegs] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
   const [searchNumber, setSearchNumber] = useState('');
+  const [teams, setTeams] = useState<Team[]>([]);
 
   const showModal = (title: string, message: string) => {
     setModal({ isOpen: true, title, message });
@@ -53,6 +87,7 @@ const OrganizerAttendancePage: React.FC = () => {
     if (!selectedEventId) {
       setRegistrations([]);
       setPresentSet(new Set());
+      setTeams([]);
       return;
     }
 
@@ -67,7 +102,78 @@ const OrganizerAttendancePage: React.FC = () => {
         const regsData = await regsRes.json();
         const attendanceData = await attendanceRes.json();
 
-        setRegistrations(regsData);
+        let mergedRegs: Registration[] = Array.isArray(regsData) ? regsData : [];
+
+        const selectedEvent = events.find(e => String(e.id) === String(selectedEventId));
+        const eventNameLower = selectedEvent?.eventName?.toLowerCase() || '';
+        const isTeamEvent = eventNameLower.includes('hackathon') || (eventNameLower.includes('paper') && eventNameLower.includes('presentation'));
+        if (isTeamEvent) {
+          try {
+            const teamsRes = await fetch(`${API_BASE_URL}/pass-teams/by-event/${selectedEventId}`);
+            const teamsData = teamsRes.ok ? await teamsRes.json() : [];
+            setTeams(Array.isArray(teamsData) ? teamsData : []);
+
+            const teamMembers: Registration[] = (Array.isArray(teamsData) ? teamsData : []).flatMap((team: Team) => {
+              const members = [
+                {
+                  userId: team.member1Id,
+                  name: team.member1Name || 'N/A',
+                  email: team.member1Email || 'N/A',
+                  mobile: team.member1Mobile || 'N/A',
+                  department: team.member1Department || 'N/A',
+                  yearofPassing: team.member1YearOfPassing || 0,
+                  college: team.member1College || 'N/A',
+                },
+                {
+                  userId: team.member2Id,
+                  name: team.member2Name || 'N/A',
+                  email: team.member2Email || 'N/A',
+                  mobile: team.member2Mobile || 'N/A',
+                  department: team.member2Department || 'N/A',
+                  yearofPassing: team.member2YearOfPassing || 0,
+                  college: team.member2College || 'N/A',
+                },
+                team.member3Id
+                  ? {
+                      userId: team.member3Id,
+                      name: team.member3Name || 'N/A',
+                      email: team.member3Email || 'N/A',
+                      mobile: team.member3Mobile || 'N/A',
+                      department: team.member3Department || 'N/A',
+                      yearofPassing: team.member3YearOfPassing || 0,
+                      college: team.member3College || 'N/A',
+                    }
+                  : null,
+                team.member4Id
+                  ? {
+                      userId: team.member4Id,
+                      name: team.member4Name || 'N/A',
+                      email: team.member4Email || 'N/A',
+                      mobile: team.member4Mobile || 'N/A',
+                      department: team.member4Department || 'N/A',
+                      yearofPassing: team.member4YearOfPassing || 0,
+                      college: team.member4College || 'N/A',
+                    }
+                  : null,
+              ].filter(Boolean) as Registration[];
+
+              return members;
+            });
+
+            const seen = new Set<string>();
+            mergedRegs = [...mergedRegs, ...teamMembers].filter((r) => {
+              if (seen.has(r.userId)) return false;
+              seen.add(r.userId);
+              return true;
+            });
+          } catch (err) {
+            setTeams([]);
+          }
+        } else {
+          setTeams([]);
+        }
+
+        setRegistrations(mergedRegs);
         const presentIds = Array.isArray(attendanceData)
           ? attendanceData.map((row: any) => row.userId)
           : [];
@@ -80,7 +186,7 @@ const OrganizerAttendancePage: React.FC = () => {
     };
 
     fetchRegistrationsAndAttendance();
-  }, [selectedEventId]);
+  }, [selectedEventId, events]);
 
   const handleMarkPresent = async (userId: string) => {
     if (!selectedEventId) {

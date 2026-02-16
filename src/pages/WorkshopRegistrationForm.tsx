@@ -195,7 +195,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       setIsApplyingCoupon(true);
       setCouponMessage(null);
       const response = await axios.get(`${API_BASE_URL}/coupons/validate`, {
-        params: { code }
+        params: { code, college: user?.college || '' }
       });
       setCouponDiscount(Number(response.data.discountPercent || 0));
       setCouponMessage(`Coupon applied: ${response.data.discountPercent}% off`);
@@ -360,6 +360,16 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                   alt="UPI QR Code"
                   className="w-44 h-44 object-contain rounded-lg border border-gray-700 bg-black/30 p-2"
                 />
+              </div>
+              <div className="mt-3 rounded-lg border border-gold-500/30 bg-black/40 p-3 text-center">
+                <p className="text-gold-200 text-sm font-semibold">Scan the QR using any UPI app</p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-200">
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">GPay</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">PhonePe</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">Paytm</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">BHIM</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">Any UPI</span>
+                </div>
               </div>
               <div className="mt-2 text-center">
                 <a

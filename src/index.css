@@ -81,18 +81,24 @@
   }
 }
 
-@keyframes marquee {
+@keyframes marquee-loop {
   0% {
-    transform: translateX(100vw);
+    transform: translateX(0);
   }
 
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
+.marquee-track {
+  width: max-content;
+  animation: marquee-loop 60s linear infinite;
+}
+
 .animate-marquee {
-  animation: marquee 20s linear infinite;
+  width: max-content;
+  animation: marquee-loop 24s linear infinite;
 }
 
 /* Terminal vibe cursor */

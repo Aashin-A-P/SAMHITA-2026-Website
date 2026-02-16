@@ -140,10 +140,20 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
             <p className="text-gray-200"><strong className="text-gold-400">IFSC Code:</strong> {accountDetails.ifscCode}</p>
           </div>
           {qrCodeUrl && (
-            <div className="mt-4">
-                <a href={qrCodeUrl} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">
-                    View QR Code PDF
-                </a>
+            <div className="mt-4 space-y-3">
+              <a href={qrCodeUrl} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">
+                View QR Code PDF
+              </a>
+              <div className="rounded-lg border border-gold-500/30 bg-black/40 p-3">
+                <p className="text-gold-200 text-sm font-semibold">Scan the QR using any UPI app</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-200">
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">GPay</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">PhonePe</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">Paytm</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">BHIM</span>
+                  <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">Any UPI</span>
+                </div>
+              </div>
             </div>
           )}
           <p className="text-gray-300 mt-4 text-sm italic">Please make the payment to the above account and enter the transaction details below.</p>

@@ -9,9 +9,6 @@ module.exports = function (db) {
     if (!passId || !teamName || !Array.isArray(members) || !createdBy) {
       return res.status(400).json({ message: 'Missing required fields.' });
     }
-    if (members.length < 2 || members.length > 4) {
-      return res.status(400).json({ message: 'Team must have 2 to 4 members.' });
-    }
 
     const uniqueMembers = Array.from(new Set(members.filter(Boolean)));
     if (uniqueMembers.length !== members.length) {
@@ -23,6 +20,16 @@ module.exports = function (db) {
       connection = await db.getConnection();
       await connection.beginTransaction();
 
+      const [[pass]] = await connection.execute('SELECT name FROM passes WHERE id = ?', [passId]);
+      const passName = String(pass?.name || '').toLowerCase();
+      const isHackathon = passName.includes('hackathon');
+      const isPaper = passName.includes('paper') && passName.includes('presentation');
+      const minMembers = 2;
+      const maxMembers = isPaper ? 3 : 4;
+      if (members.length < minMembers || members.length > maxMembers) {
+        return res.status(400).json({ message: `Team must have ${minMembers} to ${maxMembers} members.` });
+      }
+
       const [users] = await connection.execute(
         `SELECT id FROM users WHERE id IN (${members.map(() => '?').join(',')})`,
         members
@@ -30,6 +37,15 @@ module.exports = function (db) {
       if (users.length !== members.length) {
         await connection.rollback();
         return res.status(400).json({ message: 'One or more member IDs are invalid.' });
+      }
+
+      const [existingTeam] = await connection.execute(
+        'SELECT id FROM pass_teams WHERE passId = ? AND teamName = ? LIMIT 1',
+        [passId, teamName]
+      );
+      if (existingTeam.length > 0) {
+        await connection.rollback();
+        return res.status(409).json({ message: 'Team name already taken.' });
       }
 
       const [result] = await connection.execute(
@@ -76,24 +92,37 @@ module.exports = function (db) {
           'SELECT eventName FROM events WHERE id = ?',
           [eventId]
         );
-        if (!eventRow || !String(eventRow.eventName || '').toLowerCase().includes('hackathon')) {
+        const eventNameLower = String(eventRow.eventName || '').toLowerCase();
+        const isHackathonEvent = eventNameLower.includes('hackathon');
+        const isPaperEvent = eventNameLower.includes('paper') && eventNameLower.includes('presentation');
+        if (!isHackathonEvent && !isPaperEvent) {
           return res.status(404).json({ message: 'No pass mapped to this event.' });
         }
-        const [[hackathonPass]] = await db.execute(
-          "SELECT id FROM passes WHERE LOWER(name) LIKE '%hackathon%' LIMIT 1"
-        );
-        if (!hackathonPass) {
-          return res.status(404).json({ message: 'Hackathon pass not found.' });
+        if (isHackathonEvent) {
+          const [[hackathonPass]] = await db.execute(
+            "SELECT id FROM passes WHERE LOWER(name) LIKE '%hackathon%' LIMIT 1"
+          );
+          if (!hackathonPass) {
+            return res.status(404).json({ message: 'Hackathon pass not found.' });
+          }
+          passId = hackathonPass.id;
+        } else {
+          const [[paperPass]] = await db.execute(
+            "SELECT id FROM passes WHERE LOWER(name) LIKE '%paper%presentation%' LIMIT 1"
+          );
+          if (!paperPass) {
+            return res.status(404).json({ message: 'Paper presentation pass not found.' });
+          }
+          passId = paperPass.id;
         }
-        passId = hackathonPass.id;
       }
       const [teams] = await db.execute(
         `SELECT 
            pt.id, pt.teamName, pt.createdBy, pt.member1Id, pt.member2Id, pt.member3Id, pt.member4Id,
-           u1.fullName as member1Name, u1.email as member1Email,
-           u2.fullName as member2Name, u2.email as member2Email,
-           u3.fullName as member3Name, u3.email as member3Email,
-           u4.fullName as member4Name, u4.email as member4Email
+           u1.fullName as member1Name, u1.email as member1Email, u1.mobile as member1Mobile, u1.college as member1College, u1.department as member1Department, u1.yearofPassing as member1YearOfPassing,
+           u2.fullName as member2Name, u2.email as member2Email, u2.mobile as member2Mobile, u2.college as member2College, u2.department as member2Department, u2.yearofPassing as member2YearOfPassing,
+           u3.fullName as member3Name, u3.email as member3Email, u3.mobile as member3Mobile, u3.college as member3College, u3.department as member3Department, u3.yearofPassing as member3YearOfPassing,
+           u4.fullName as member4Name, u4.email as member4Email, u4.mobile as member4Mobile, u4.college as member4College, u4.department as member4Department, u4.yearofPassing as member4YearOfPassing
          FROM pass_teams pt
          LEFT JOIN users u1 ON u1.id = pt.member1Id
          LEFT JOIN users u2 ON u2.id = pt.member2Id
@@ -106,6 +135,20 @@ module.exports = function (db) {
     } catch (error) {
       console.error('Error fetching teams by event:', error);
       res.status(500).json({ message: 'Failed to fetch teams.' });
+    }
+  });
+
+  router.delete('/:teamId', async (req, res) => {
+    const { teamId } = req.params;
+    try {
+      const [result] = await db.execute('DELETE FROM pass_teams WHERE id = ?', [teamId]);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Team not found.' });
+      }
+      res.json({ message: 'Team deleted.' });
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      res.status(500).json({ message: 'Failed to delete team.' });
     }
   });
 

@@ -505,9 +505,11 @@ async function createTablesIfNotExists() {
         name VARCHAR(255) NOT NULL UNIQUE,
         \`limit\` INT NOT NULL DEFAULT 0,
         discountPercent INT NOT NULL DEFAULT 0,
+        onlyForMit TINYINT(1) NOT NULL DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await addColumnIfNotExists('coupons', 'onlyForMit', 'TINYINT(1) NOT NULL DEFAULT 0');
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS pass_teams (

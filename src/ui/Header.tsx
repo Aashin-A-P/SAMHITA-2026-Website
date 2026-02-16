@@ -140,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({ setIsLoginModalOpen, setIsSignUpModalOp
           <a href="#about" onClick={(e) => handleNavClick(e, "#about")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             About
           </a>
-          <a href="/gallery" onClick={(e) => { e.preventDefault(); navigate("/gallery"); if (isMobileMenuOpen) setIsMobileMenuOpen(false); }} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
+          <a href="#gallery" onClick={(e) => handleNavClick(e, "#gallery")} className="text-white hover:text-gold-400 transition block py-2 md:py-0">
             Gallery
           </a>
         </>
