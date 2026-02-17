@@ -207,6 +207,11 @@ module.exports = function (db, transporter) {
       res.status(201).json({ message: 'User created successfully', userId: result.insertId });
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
+        const message = typeof error.message === 'string' ? error.message : '';
+        if (message.includes('mobile_UNIQUE')) {
+          console.warn(`Signup failed: Mobile already exists: ${mobile}`);
+          return res.status(409).json({ message: 'Mobile number already exists.' });
+        }
         console.warn(`Signup failed: Email already exists: ${email}`);
         return res.status(409).json({ message: 'Email already exists.' });
       }
