@@ -210,7 +210,7 @@ const AdminEventsDisplayPage: React.FC = () => {
                   <p><strong>Rounds:</strong> {event.numberOfRounds}</p>
                   <p><strong>Type:</strong> {event.teamOrIndividual}</p>
                   <p><strong>Location:</strong> {event.location}</p>
-                  <p><strong>Registration Fees:</strong> ₹{event.registrationFees}</p>
+                  <p><strong>Registration Fees:</strong> {'\u20B9'}{event.registrationFees}</p>
                   <p><strong>Coordinator:</strong> {event.coordinatorName} ({event.coordinatorContactNo})</p>
                   <p><strong>Coordinator Email:</strong> {event.coordinatorMail}</p>
                   <p><strong>Last Date for Registration:</strong> {new Date(event.lastDateForRegistration).toLocaleString()}</p>
@@ -240,5 +240,8 @@ const AdminEventsDisplayPage: React.FC = () => {
 };
 
 export default AdminEventsDisplayPage;
+
+
+
 
 

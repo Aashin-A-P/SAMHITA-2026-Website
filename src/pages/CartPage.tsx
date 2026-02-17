@@ -309,9 +309,9 @@ const CartPage: React.FC = () => {
                                   if (discountToShow > 0) {
                                     return (
                                       <span>
-                                        <span className="line-through text-red-400 mr-2">₹{item.eventDetails.registrationFees}</span>
+                                        <span className="line-through text-red-400 mr-2">{'\u20B9'}{item.eventDetails.registrationFees}</span>
                                         <span className="text-green-400 font-bold text-lg">
-                                          ₹{Math.floor(item.eventDetails.registrationFees * (1 - discountToShow / 100))}
+                                          {'\u20B9'}{Math.floor(item.eventDetails.registrationFees * (1 - discountToShow / 100))}
                                         </span>
                                         <div className="text-xs text-yellow-500 mt-1">
                                           {discountToShow}% OFF: {reasonToShow}
@@ -319,7 +319,7 @@ const CartPage: React.FC = () => {
                                       </span>
                                     );
                                   }
-                                  return <span>₹{item.eventDetails.registrationFees}</span>;
+                                  return <span>{'\u20B9'}{item.eventDetails.registrationFees}</span>;
                                 })()}
                               </div>
                             </>
@@ -328,14 +328,14 @@ const CartPage: React.FC = () => {
                             <>
                               <h2 className="text-xl font-semibold">{item.passDetails.name}</h2>
                               <p>{item.passDetails.description}</p>
-                              <p className="mt-2"><strong>Cost:</strong> ₹{item.passDetails.cost}</p>
+                              <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{item.passDetails.cost}</p>
                             </>
                           )}
                           {item.type === 'accommodation' && item.accommodationDetails && (
                             <>
                               <h2 className="text-xl font-semibold">{item.accommodationDetails.name}</h2>
                               <p className="mt-2"><strong>Quantity:</strong> {item.accommodationDetails.quantity}</p>
-                              <p className="mt-2"><strong>Cost:</strong> ₹{item.accommodationDetails.cost * item.accommodationDetails.quantity} (₹{item.accommodationDetails.cost} each)</p>
+                              <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{item.accommodationDetails.cost * item.accommodationDetails.quantity} ({'\u20B9'}{item.accommodationDetails.cost} each)</p>
                             </>
                           )}
                           <button
@@ -350,7 +350,7 @@ const CartPage: React.FC = () => {
 
                     <div className="flex flex-col items-center mt-8">
                       <div className="text-xl font-bold mb-4 p-4 bg-gray-800 rounded-lg border border-gold-500/50">
-                        Total Amount: <span className="text-green-400">₹{totalAmount}</span>
+                        Total Amount: <span className="text-green-400">{'\u20B9'}{totalAmount}</span>
                       </div>
 
                       <button
@@ -426,6 +426,10 @@ const CartPage: React.FC = () => {
 };
 
 export default CartPage;
+
+
+
+
 
 
 

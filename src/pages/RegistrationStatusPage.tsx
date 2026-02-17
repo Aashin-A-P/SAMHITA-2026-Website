@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Papa from 'papaparse';
 import API_BASE_URL from '../Config'; // adjust path if needed
+import ThemedModal from '../components/ThemedModal';
 
 interface Registration {
   id: number;
@@ -30,6 +31,7 @@ const RegistrationStatusPage: React.FC = () => {
   const [csvData, setCsvData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   const fetchRegistrations = useCallback(async () => {
     try {
@@ -61,7 +63,7 @@ const RegistrationStatusPage: React.FC = () => {
   const handleVerify = async (registration: Registration, isBulk = false) => {
     if (!registration) return false;
     if (!registration.id) {
-      alert('Invalid registration: ID is missing.');
+      setModal({ isOpen: true, title: 'Error', message: 'Invalid registration: ID is missing.' });
       return false;
     }
     try {
@@ -74,7 +76,7 @@ const RegistrationStatusPage: React.FC = () => {
       }
 
       if (!isBulk) {
-        alert('User verified successfully!');
+        setModal({ isOpen: true, title: 'Success', message: 'User verified successfully!' });
         fetchRegistrations();
       }
       setSelectedRegistration(null);
@@ -82,7 +84,7 @@ const RegistrationStatusPage: React.FC = () => {
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to verify user.';
       if (!isBulk) {
-        alert(errorMessage);
+        setModal({ isOpen: true, title: 'Error', message: errorMessage });
       }
       return false;
     }
@@ -91,7 +93,7 @@ const RegistrationStatusPage: React.FC = () => {
   const handleReject = async (registration: Registration) => {
     if (!registration) return;
     if (!registration.id) {
-      alert('Invalid registration: ID is missing.');
+      setModal({ isOpen: true, title: 'Error', message: 'Invalid registration: ID is missing.' });
       return;
     }
     try {
@@ -110,13 +112,13 @@ const RegistrationStatusPage: React.FC = () => {
         }
         await axios.post(`${API_BASE_URL}/verification`, payload);
       }
-      alert('User rejected successfully!');
+      setModal({ isOpen: true, title: 'Success', message: 'User rejected successfully!' });
       setSelectedRegistration(null);
       fetchRegistrations();
     } catch (error: any) {
       console.error('Error rejecting user:', error);
       const errorMessage = error.response?.data?.message || 'Failed to reject user.';
-      alert(errorMessage);
+      setModal({ isOpen: true, title: 'Error', message: errorMessage });
     }
   };
 
@@ -212,6 +214,13 @@ const RegistrationStatusPage: React.FC = () => {
           </div>
         </div>
       )}
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </div>
   );
 };

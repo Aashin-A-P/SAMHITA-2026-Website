@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Loader from '../components/Loader';
 import API_BASE_URL from '../Config'; // adjust path if needed
+import ThemedModal from '../components/ThemedModal';
 
 interface Registration {
   id: number;
@@ -70,6 +71,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
   const [showPresentOnly, setShowPresentOnly] = useState(false);
   const [presentEmailSet, setPresentEmailSet] = useState<Set<string>>(new Set());
   const [teams, setTeams] = useState<Team[]>([]);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -168,14 +170,14 @@ const ViewEventRegistrationsPage: React.FC = () => {
 
       if (response.ok) {
         setRegistrations((prev) => prev.filter((r) => r.id !== registrationId));
-        alert('Registration deleted successfully.');
+        setModal({ isOpen: true, title: 'Success', message: 'Registration deleted successfully.' });
       } else {
         const errorData = await response.json();
-        alert(`Failed to delete: ${errorData.message || 'Unknown error'}`);
+        setModal({ isOpen: true, title: 'Error', message: `Failed to delete: ${errorData.message || 'Unknown error'}` });
       }
     } catch (err) {
       console.error('Error deleting registration:', err);
-      alert('An error occurred while deleting the registration.');
+      setModal({ isOpen: true, title: 'Error', message: 'An error occurred while deleting the registration.' });
     }
   };
 
@@ -269,7 +271,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating attendance:', err);
-      alert('Failed to update attendance.');
+      setModal({ isOpen: true, title: 'Error', message: 'Failed to update attendance.' });
     }
   };
 
@@ -297,7 +299,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
       setTeams((prev) => prev.filter((t) => t.id !== teamId));
     } catch (err) {
       console.error('Error deleting team:', err);
-      alert('Failed to delete team.');
+      setModal({ isOpen: true, title: 'Error', message: 'Failed to delete team.' });
     }
   };
 
@@ -439,6 +441,13 @@ const ViewEventRegistrationsPage: React.FC = () => {
           </table>
         </div>
       </div>
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </div>
   );
 };

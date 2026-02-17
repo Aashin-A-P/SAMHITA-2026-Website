@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Papa from 'papaparse'; // npm install papaparse @types/papaparse
 import API_BASE_URL from '../Config';
 import AdminHeader from '../ui/AdminHeader';
+import ThemedModal from '../components/ThemedModal';
 
 interface VerificationResult {
   id: string;
@@ -22,6 +23,7 @@ const VerifyTransactionPage: React.FC = () => {
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [bulkResults, setBulkResults] = useState<VerificationResult[]>([]);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   // ------------------------------------------
   // Helper: Reusable API Call
@@ -148,7 +150,7 @@ const VerifyTransactionPage: React.FC = () => {
       error: (err) => {
         console.error("CSV Parse Error:", err);
         setIsBulkLoading(false);
-        alert("Failed to parse CSV file");
+        setModal({ isOpen: true, title: 'Error', message: 'Failed to parse CSV file' });
       }
     });
   };
@@ -275,6 +277,13 @@ const VerifyTransactionPage: React.FC = () => {
           )}
         </div>
       </div>
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </div>
   );
 };

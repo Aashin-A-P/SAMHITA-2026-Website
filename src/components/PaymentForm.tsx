@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ThemedModal from './ThemedModal';
 
 interface PaymentFormProps {
   totalAmount: number;
@@ -9,18 +10,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ totalAmount, onPaymentSuccess
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Payment Details:', { cardNumber, expiry, cvc, totalAmount });
-    alert('Payment Successful!');
+    setModal({ isOpen: true, title: 'Success', message: 'Payment Successful!' });
     onPaymentSuccess();
   };
 
   return (
     <div className="bg-gray-800/80 p-6 rounded-lg w-full max-w-md">
       <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
-      <p className="mb-4">Total Amount: <strong>₹{totalAmount}</strong></p>
+      <p className="mb-4">Total Amount: <strong>{'\u20B9'}{totalAmount}</strong></p>
       <form onSubmit={handlePayment}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-400 mb-2">Card Number</label>
@@ -58,11 +60,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ totalAmount, onPaymentSuccess
           Pay Now
         </button>
       </form>
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </div>
   );
 };
 
 export default PaymentForm;
+
+
+
 
 
 

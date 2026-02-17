@@ -256,7 +256,7 @@ const ManagePassesPage: React.FC = () => {
                             {passes.map((pass) => (
                                 <tr key={pass.id} className="text-gray-900">
                                     <td className="px-6 py-4 whitespace-nowrap">{pass.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">₹{pass.cost}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{'\u20B9'}{pass.cost}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{pass.pass_limit}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{accounts.find(acc => acc.id === pass.accountId)?.accountName || 'N/A'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap max-w-xs truncate">{pass.description}</td>
@@ -346,5 +346,8 @@ const ManagePassesPage: React.FC = () => {
 };
 
 export default ManagePassesPage;
+
+
+
 
 

@@ -52,9 +52,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
       if (existing.length === 0) {
         await executor.execute(`
           INSERT INTO registrations 
-          (symposium, eventId, userName, userEmail, mobileNumber, transactionId, transactionAmount, round1, round2, round3)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
-        `, [event.symposium, event.id, user.fullName, user.email, user.mobile || null, 'PASS_ENTRY']);
+          (symposium, eventId, userId, userName, userEmail, mobileNumber, transactionId, transactionAmount, round1, round2, round3)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
+        `, [event.symposium, event.id, userId, user.fullName, user.email, user.mobile || null, 'PASS_ENTRY']);
       }
 
       await executor.execute('DELETE FROM verified_registrations WHERE userId = ? AND eventId = ?', [userId, event.id]);
@@ -297,11 +297,12 @@ module.exports = function (db, uploadTransactionScreenshot) {
             const isPayer = memberId === userId;
             await connection.execute(
               `INSERT INTO registrations 
-                   (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                   (symposium, passId, userId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 symposium,
                 passId,
+                memberId,
                 member.fullName,
                 member.email,
                 member.mobile || mobileNumber || null,
@@ -337,10 +338,11 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
           await connection.execute(
             `INSERT INTO registrations 
-             (symposium, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (symposium, userId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               'Accommodation',
+              userId,
               user.fullName,
               user.email,
               mobileNumber,
@@ -526,6 +528,11 @@ module.exports = function (db, uploadTransactionScreenshot) {
         return res.status(400).json({ message: 'This endpoint is only for free events.' });
       }
 
+      const [[userRow]] = await db.execute('SELECT id FROM users WHERE email = ?', [userEmail]);
+      if (!userRow) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
       const [existing] = await db.execute(
         'SELECT id FROM registrations WHERE userEmail = ? AND eventId = ?',
         [userEmail, eventId]
@@ -539,11 +546,12 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
       await db.execute(
         `INSERT INTO registrations 
-         (symposium, eventId, userName, userEmail, transactionAmount, round1, round2, round3) 
-         VALUES (?, ?, ?, ?, ?, 0, 0, 0)`,
+         (symposium, eventId, userId, userName, userEmail, transactionAmount, round1, round2, round3) 
+         VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0)`,
         [
           event.symposium,
           eventId,
+          userRow.id,
           userName,
           userEmail,
           0,
@@ -743,8 +751,8 @@ module.exports = function (db, uploadTransactionScreenshot) {
           const symposium = symposiumStatus.length > 0 ? symposiumStatus[0].symposiumName : 'SAMHITA';
 
           await connection.execute(
-            `INSERT INTO registrations (symposium, passId, userName, userEmail, mobileNumber, transactionId, transactionAmount) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [symposium, passId, user.fullName, user.email, user.mobile || null, 'ADMIN_REG', 0]
+            `INSERT INTO registrations (symposium, passId, userId, userName, userEmail, mobileNumber, transactionId, transactionAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [symposium, passId, userId, user.fullName, user.email, user.mobile || null, 'ADMIN_REG', 0]
           );
 
           await connection.execute(

@@ -174,8 +174,8 @@ const AccommodationBooking: React.FC = () => {
               if (!details) return null;
               return (
                 <div className="text-gray-300 space-y-2">
-                  <p><strong>Fees per room:</strong> <span className="text-gold-300">₹{details.fees}</span></p>
-                  <p><strong>Total Fees:</strong> <span className="font-bold text-green-400">₹{details.fees * quantity}</span></p>
+                  <p><strong>Fees per room:</strong> <span className="text-gold-300">{'\u20B9'}{details.fees}</span></p>
+                  <p><strong>Total Fees:</strong> <span className="font-bold text-green-400">{'\u20B9'}{details.fees * quantity}</span></p>
                   <p><strong>Available Rooms:</strong> {details.available_rooms}</p>
                 </div>
               );
@@ -206,6 +206,9 @@ const AccommodationBooking: React.FC = () => {
 
 
 export default AccommodationBooking;
+
+
+
 
 
 

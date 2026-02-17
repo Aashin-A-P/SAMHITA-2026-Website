@@ -76,7 +76,7 @@ const WorkshopRegistrationModal: React.FC<WorkshopRegistrationModalProps> = ({ /
     }
 
     if (Number(transactionAmount) !== event.registrationFees) {
-      setError(`The entered amount (₹${transactionAmount}) does not match the registration fees (₹${event.registrationFees}).`);
+      setError(`The entered amount (\u20B9${transactionAmount}) does not match the registration fees (\u20B9${event.registrationFees}).`);
       return;
     }
 
@@ -169,7 +169,7 @@ const WorkshopRegistrationModal: React.FC<WorkshopRegistrationModalProps> = ({ /
       {!loading && !error && accountDetails && (
         <div className="mb-6 p-5 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg border border-samhita-700">
           <h3 className="text-2xl font-bold text-gold-300 mb-4 border-b border-samhita-600 pb-2">Payment Details</h3>
-          <p className="text-gray-200 text-xl mb-4"><strong className="text-gold-400">Amount to Transfer:</strong> ₹{event.registrationFees}</p>
+          <p className="text-gray-200 text-xl mb-4"><strong className="text-gold-400">Amount to Transfer:</strong> {'\u20B9'}{event.registrationFees}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
             <p className="text-gray-200"><strong className="text-gold-400">Bank Name:</strong> {accountDetails.bankName}</p>
             <p className="text-gray-200"><strong className="text-gold-400">Account Name:</strong> {accountDetails.accountName}</p>

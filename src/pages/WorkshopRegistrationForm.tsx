@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API_BASE_URL from '../Config'; // adjust path if needed
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import ThemedModal from '../components/ThemedModal';
 
 interface CartItem {
   cartId: number;
@@ -67,6 +68,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   // Calculate Total Amount with Discount
   const totalAmount = (cartItems || []).reduce((sum, item) => {
@@ -211,12 +213,12 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transactionScreenshot) {
-      alert('Please upload a transaction screenshot.');
+      setModal({ isOpen: true, title: 'Error', message: 'Please upload a transaction screenshot.' });
       return;
     }
 
     if (!user || !user.id) {
-      alert('You must be logged in to register.');
+      setModal({ isOpen: true, title: 'Error', message: 'You must be logged in to register.' });
       return;
     }
 
@@ -253,7 +255,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       onRegistrationSuccess();
     } catch (error) {
       console.error('Registration failed:', error);
-      alert(`An error occurred during registration. Please try again.`);
+      setModal({ isOpen: true, title: 'Error', message: 'An error occurred during registration. Please try again.' });
     }
   };
 
@@ -296,11 +298,11 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                     <div className="text-right">
                       {discount > 0 ? (
                         <>
-                          <span className="block text-xs line-through text-red-400">₹{originalPrice}</span>
-                          <span className="block text-green-400 font-bold">₹{discountedPrice}</span>
+                          <span className="block text-xs line-through text-red-400">{'\u20B9'}{originalPrice}</span>
+                          <span className="block text-green-400 font-bold">{'\u20B9'}{discountedPrice}</span>
                         </>
                       ) : (
-                        <span>₹{originalPrice}</span>
+                        <span>{'\u20B9'}{originalPrice}</span>
                       )}
                     </div>
                   </div>
@@ -309,7 +311,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 return (
                   <div key={item.cartId} className="flex justify-between items-center text-gray-300 border-b border-gray-700 pb-2 last:border-0">
                     <span className="font-medium">{item.passDetails.name}</span>
-                    <span>₹{item.passDetails.cost}</span>
+                    <span>{'\u20B9'}{item.passDetails.cost}</span>
                   </div>
                 );
               } else if (item.type === 'accommodation' && item.accommodationDetails) {
@@ -319,7 +321,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                       <span className="font-medium">{item.accommodationDetails.name}</span>
                       <span className="block text-xs text-gray-400">Quantity: {item.accommodationDetails.quantity}</span>
                     </div>
-                    <span>₹{item.accommodationDetails.cost * item.accommodationDetails.quantity}</span>
+                    <span>{'\u20B9'}{item.accommodationDetails.cost * item.accommodationDetails.quantity}</span>
                   </div>
                 );
               }
@@ -355,11 +357,13 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 )}
               </div>
               <div className="mt-4 flex justify-center">
-                <img
-                  src={dynamicQrUrl}
-                  alt="UPI QR Code"
-                  className="w-44 h-44 object-contain rounded-lg border border-gray-700 bg-black/30 p-2"
-                />
+                <div className="p-2 rounded-2xl bg-gradient-to-br from-gold-500/40 via-samhita-700/40 to-gold-500/20 border border-gold-500/60 shadow-[0_0_24px_rgba(212,175,55,0.35)]">
+                  <img
+                    src={dynamicQrUrl}
+                    alt="UPI QR Code"
+                    className="w-44 h-44 object-contain rounded-xl bg-black/50 p-2"
+                  />
+                </div>
               </div>
               <div className="mt-3 rounded-lg border border-gold-500/30 bg-black/40 p-3 text-center">
                 <p className="text-gold-200 text-sm font-semibold">Scan the QR using any UPI app</p>
@@ -370,14 +374,6 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                   <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">BHIM</span>
                   <span className="px-2 py-1 rounded-full bg-gray-800/70 border border-gray-700">Any UPI</span>
                 </div>
-              </div>
-              <div className="mt-2 text-center">
-                <a
-                  href={upiUri}
-                  className="text-gold-400 hover:underline text-sm"
-                >
-                  Pay via UPI
-                </a>
               </div>
               <div className="mt-4">
                 <label htmlFor="couponCode" className="block text-sm font-medium text-gray-400 mb-2">Coupon Code (Optional)</label>
@@ -491,11 +487,21 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
           </form>
         </div>
       </div>
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </div>
   );
 };
 
 export default WorkshopRegistrationForm;
+
+
+
 
 
 

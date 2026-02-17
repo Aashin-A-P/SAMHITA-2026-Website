@@ -9,6 +9,7 @@ import { useSearchParams } from 'react-router-dom';
 import GeneralRegistrationForm from './GeneralRegistrationForm';
 import WorkshopRegistrationForm from './WorkshopRegistrationForm';
 import API_BASE_URL from '../Config'; // adjust path if needed
+import ThemedModal from '../components/ThemedModal';
 
 import axios from 'axios';
 
@@ -22,6 +23,7 @@ const RegistrationPage: React.FC = () => {
   const symposium = searchParams.get('symposium');
   const [event, setEvent] = useState<any>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -70,7 +72,7 @@ const RegistrationPage: React.FC = () => {
 
   const handleRegistrationSuccess = () => {
     setIsRegistered(true);
-    alert('Registration successful!');
+    setModal({ isOpen: true, title: 'Success', message: 'Registration successful!' });
   };
 
   const handleCancel = () => {
@@ -182,6 +184,13 @@ const RegistrationPage: React.FC = () => {
             onClose={() => setIsForgotPasswordModalOpen(false)} 
             onSwitchToLogin={handleSwitchToLogin} 
         />
+        <ThemedModal
+          isOpen={modal.isOpen}
+          onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+          title={modal.title}
+        >
+          <p>{modal.message}</p>
+        </ThemedModal>
       </div>
     </>
   );

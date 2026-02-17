@@ -266,17 +266,17 @@ const EnrolledEventsPage: React.FC = () => {
               {selectedEvent.discountPercentage && selectedEvent.discountPercentage > 0 ? (
                 <span className="inline-block ml-1">
                   <span className="line-through text-red-400 mr-2">
-                    ₹{selectedEvent.registrationFees}
+                    {'\u20B9'}{selectedEvent.registrationFees}
                   </span>
                   <span className="text-green-400 font-bold text-lg mr-2">
-                    ₹{Math.floor(selectedEvent.registrationFees * (1 - selectedEvent.discountPercentage / 100))}
+                    {'\u20B9'}{Math.floor(selectedEvent.registrationFees * (1 - selectedEvent.discountPercentage / 100))}
                   </span>
                   <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">
                     {selectedEvent.discountPercentage}% OFF: {selectedEvent.discountReason}
                   </span>
                 </span>
               ) : (
-                <span>₹{selectedEvent.registrationFees}</span>
+                <span>{'\u20B9'}{selectedEvent.registrationFees}</span>
               )}
             </div>
             <p><strong>Coordinator:</strong> {selectedEvent.coordinatorName} ({selectedEvent.coordinatorContactNo})</p>
@@ -472,3 +472,6 @@ const EnrolledEventsPage: React.FC = () => {
 };
 
 export default EnrolledEventsPage;
+
+
+

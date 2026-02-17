@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import API_BASE_URL from '../Config'; // adjust path if needed
+import ThemedModal from '../components/ThemedModal';
 
 
 interface GeneralRegistrationFormProps {
@@ -25,6 +26,7 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
   useEffect(() => {
     if (eventId) {
@@ -76,7 +78,7 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
     }
 
     if (Number(transactionAmount) !== registrationFees) {
-      setError(`The entered amount (₹${transactionAmount}) does not match the registration fees (₹${registrationFees}).`);
+      setError(`The entered amount (\u20B9${transactionAmount}) does not match the registration fees (\u20B9${registrationFees}).`);
       return;
     }
 
@@ -108,10 +110,10 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
       setTransactionTime('');
       setTransactionDate('');
       setTransactionAmount(0);
-      alert(response.data.message);
+      setModal({ isOpen: true, title: 'Success', message: response.data.message || 'Registration successful.' });
     } catch (err: any) {
       setError(err.response?.data?.message || err.message);
-      alert('An error occurred during registration. Please try again.');
+      setModal({ isOpen: true, title: 'Error', message: err.response?.data?.message || 'An error occurred during registration. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
       {!loading && !error && accountDetails && (
         <div className="mb-6 p-5 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg border border-samhita-700">
           <h3 className="text-2xl font-bold text-gold-300 mb-4 border-b border-samhita-600 pb-2">Payment Details</h3>
-          <p className="text-gray-200 text-xl mb-4"><strong className="text-gold-400">Amount to Transfer:</strong> ₹{registrationFees}</p>
+          <p className="text-gray-200 text-xl mb-4"><strong className="text-gold-400">Amount to Transfer:</strong> {'\u20B9'}{registrationFees}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
             <p className="text-gray-200"><strong className="text-gold-400">Bank Name:</strong> {accountDetails.bankName}</p>
             <p className="text-gray-200"><strong className="text-gold-400">Account Name:</strong> {accountDetails.accountName}</p>
@@ -240,6 +242,13 @@ const GeneralRegistrationForm: React.FC<GeneralRegistrationFormProps> = ({ event
       <button type="submit" className="px-4 py-2 bg-samhita-600 text-white rounded-md hover:bg-samhita-700 transition mt-4">
         Register
       </button>
+      <ThemedModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, title: '', message: '' })}
+        title={modal.title}
+      >
+        <p>{modal.message}</p>
+      </ThemedModal>
     </form>
   );
 };

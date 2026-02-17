@@ -54,9 +54,9 @@ module.exports = function (db) {
       if (existing.length === 0) {
         await executor.execute(`
                 INSERT INTO registrations 
-                (symposium, eventId, userName, userEmail, mobileNumber, transactionId, transactionAmount, round1, round2, round3)
-                VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
-             `, [event.symposium, event.id, user.fullName, user.email, user.mobile || null, 'PASS_ENTRY']);
+                (symposium, eventId, userId, userName, userEmail, mobileNumber, transactionId, transactionAmount, round1, round2, round3)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)
+             `, [event.symposium, event.id, userId, user.fullName, user.email, user.mobile || null, 'PASS_ENTRY']);
       }
 
       // B. Ensure 'verified_registrations' row exists 

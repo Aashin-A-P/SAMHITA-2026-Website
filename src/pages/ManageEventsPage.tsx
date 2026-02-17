@@ -713,7 +713,7 @@ const App: React.FC = () => {
               >
                 <option value="" disabled>Select Pass</option>
                 {passes.map(pass => (
-                  <option key={pass.id} value={pass.id}>{pass.name} (Current Cost: ₹{pass.cost})</option>
+                  <option key={pass.id} value={pass.id}>{pass.name} (Current Cost: {'\u20B9'}{pass.cost})</option>
                 ))}
               </select>
             </>
@@ -762,5 +762,8 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+
+
 
 

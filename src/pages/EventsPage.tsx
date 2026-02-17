@@ -445,9 +445,9 @@ const EventsPage: React.FC = () => {
                           {discountToShow && discountToShow > 0 ? (
                             <div className="flex flex-col">
                               <div className="flex items-center gap-2">
-                                <span className="line-through text-red-400 text-sm">₹{event.registrationFees}</span>
+                                <span className="line-through text-red-400 text-sm">{'\u20B9'}{event.registrationFees}</span>
                                 <span className="text-green-400 font-bold text-lg">
-                                  ₹{Math.floor(event.registrationFees * (1 - discountToShow / 100))}
+                                  {'\u20B9'}{Math.floor(event.registrationFees * (1 - discountToShow / 100))}
                                 </span>
                               </div>
                               {reasonToShow && (
@@ -458,7 +458,7 @@ const EventsPage: React.FC = () => {
                             </div>
                           ) : (
                             event.registrationFees > 0 ? (
-                              <p className="text-white font-bold">₹{event.registrationFees}</p>
+                              <p className="text-white font-bold">{'\u20B9'}{event.registrationFees}</p>
                             ) : (
                               <p className="text-green-400 font-bold">Free</p>
                             )
@@ -587,10 +587,10 @@ const EventsPage: React.FC = () => {
                   return (
                     <span className="inline-block ml-1">
                       <span className="line-through text-red-400 mr-2">
-                        ₹{selectedEvent.registrationFees}
+                        {'\u20B9'}{selectedEvent.registrationFees}
                       </span>
                       <span className="text-green-400 font-bold text-lg mr-2">
-                        ₹{Math.floor(selectedEvent.registrationFees * (1 - discountToShow / 100))}
+                        {'\u20B9'}{Math.floor(selectedEvent.registrationFees * (1 - discountToShow / 100))}
                       </span>
                       {reasonToShow && (
                         <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">
@@ -600,7 +600,7 @@ const EventsPage: React.FC = () => {
                     </span>
                   );
                 }
-                return <span>₹{selectedEvent.registrationFees}</span>;
+                return <span>{'\u20B9'}{selectedEvent.registrationFees}</span>;
               })()}
             </div>
             {/* --------------------------------------- */}
@@ -624,5 +624,8 @@ const EventsPage: React.FC = () => {
 };
 
 export default EventsPage;
+
+
+
 
 

@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://csmit.mitindia.edu'],
+  origin: ['http://localhost:5173', 'https://samhita.live'],
   methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH']
 }));
 
@@ -80,6 +80,16 @@ async function createTablesIfNotExists() {
       if (columns.length === 0) {
 
         await db.execute(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`);
+      }
+    }
+
+    async function addIndexIfNotExists(tableName, indexName, indexDef) {
+      const [indexes] = await db.execute(`
+        SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?
+      `, [tableName, indexName]);
+      if (indexes.length === 0) {
+        await db.execute(`ALTER TABLE ${tableName} ADD ${indexDef}`);
       }
     }
 
@@ -219,46 +229,10 @@ async function createTablesIfNotExists() {
       );
     `);
 
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS events (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        eventName VARCHAR(255) NOT NULL,
-        eventCategory VARCHAR(255) NOT NULL,
-        eventDescription TEXT NOT NULL,
-        numberOfRounds INT NOT NULL,
-        teamOrIndividual ENUM('Team', 'Individual') NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        registrationFees INT NOT NULL,
-        coordinatorName VARCHAR(255) NOT NULL,
-        coordinatorContactNo VARCHAR(20) NOT NULL,
-        coordinatorMail VARCHAR(255) NOT NULL,
-        lastDateForRegistration DATETIME NOT NULL,
-        posterImage LONGBLOB,
-        open_to_non_mit BOOLEAN DEFAULT TRUE,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
     // Add discount columns to events if not exists
     await addColumnIfNotExists('events', 'discountPercentage', 'INT DEFAULT 0');
     await addColumnIfNotExists('events', 'discountReason', 'VARCHAR(255) NULL');
     await addColumnIfNotExists('events', 'mit_discount_percentage', 'INT DEFAULT 0');
-
-    // Add discount columns to events if not exists
-    await addColumnIfNotExists('events', 'discountPercentage', 'INT DEFAULT 0');
-    await addColumnIfNotExists('events', 'discountReason', 'VARCHAR(255) NULL');
-    await addColumnIfNotExists('events', 'mit_discount_percentage', 'INT DEFAULT 0');
-
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS rounds (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        eventId INT NOT NULL,
-        roundNumber INT NOT NULL,
-        roundDetails TEXT NOT NULL,
-        roundDateTime DATETIME NOT NULL,
-        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
-      );
-    `);
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS rounds (
@@ -294,6 +268,7 @@ async function createTablesIfNotExists() {
         symposium VARCHAR(255),
         eventId INT,
         passId INT,
+        userId VARCHAR(5),
         userName VARCHAR(255) NOT NULL,
         userEmail VARCHAR(255) NOT NULL,
         mobileNumber VARCHAR(20),
@@ -321,6 +296,11 @@ async function createTablesIfNotExists() {
       await db.execute(`ALTER TABLE registrations ADD COLUMN passId INT NULL AFTER eventId`);
     }
 
+    const hasUserId = registrationsColumns.some(c => c.COLUMN_NAME === 'userId');
+    if (!hasUserId) {
+      await db.execute(`ALTER TABLE registrations ADD COLUMN userId VARCHAR(5) NULL AFTER passId`);
+    }
+
     const eventIdCol = registrationsColumns.find(c => c.COLUMN_NAME === 'eventId');
     if (eventIdCol && eventIdCol.IS_NULLABLE === 'NO') {
       await db.execute(`ALTER TABLE registrations MODIFY COLUMN eventId INT NULL`);
@@ -334,6 +314,33 @@ async function createTablesIfNotExists() {
     await addColumnIfNotExists('registrations', 'round1', 'INT DEFAULT 0');
     await addColumnIfNotExists('registrations', 'round2', 'INT DEFAULT 0');
     await addColumnIfNotExists('registrations', 'round3', 'INT DEFAULT 0');
+
+    // Backfill userId using email for existing rows
+    await db.execute(`
+      UPDATE registrations r
+      JOIN users u ON r.userEmail = u.email
+      SET r.userId = u.id
+      WHERE r.userId IS NULL
+    `);
+
+    await addIndexIfNotExists('registrations', 'idx_registrations_userId', 'INDEX idx_registrations_userId (userId)');
+    await addIndexIfNotExists('registrations', 'idx_registrations_eventId', 'INDEX idx_registrations_eventId (eventId)');
+
+    const [fkRows] = await db.execute(`
+      SELECT 1 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'registrations'
+        AND COLUMN_NAME = 'userId'
+        AND REFERENCED_TABLE_NAME = 'users'
+    `);
+    if (fkRows.length === 0) {
+      await db.execute(`
+        ALTER TABLE registrations
+        ADD CONSTRAINT registrations_user_fk
+        FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE SET NULL
+      `);
+    }
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS cart (
@@ -530,6 +537,7 @@ async function createTablesIfNotExists() {
         FOREIGN KEY (member4Id) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
+    await addIndexIfNotExists('pass_teams', 'unique_team_name', 'UNIQUE KEY unique_team_name (passId, teamName)');
 
 
   } catch (err) {
@@ -543,12 +551,12 @@ async function connectToDatabase() {
 
 /* -------------------- Mail -------------------- */
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
   secure: false, // true for 465, false for other ports
   auth: {
-    user: 'csmitindia@gmail.com',
-    pass: 'kjue fgfj pwqy fqvk'
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
   },
   connectionTimeout: 10000,
   debug: true // Show debug logs for email

@@ -69,6 +69,9 @@ module.exports = function (db) {
       res.status(201).json({ message: 'Team saved.', teamId: result.insertId });
     } catch (error) {
       if (connection) await connection.rollback();
+      if (error && error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ message: 'Team name already taken.' });
+      }
       console.error('Error creating team:', error);
       res.status(500).json({ message: 'Failed to create team.' });
     } finally {
@@ -92,6 +95,9 @@ module.exports = function (db) {
           'SELECT eventName FROM events WHERE id = ?',
           [eventId]
         );
+        if (!eventRow) {
+          return res.status(404).json({ message: 'Event not found.' });
+        }
         const eventNameLower = String(eventRow.eventName || '').toLowerCase();
         const isHackathonEvent = eventNameLower.includes('hackathon');
         const isPaperEvent = eventNameLower.includes('paper') && eventNameLower.includes('presentation');
