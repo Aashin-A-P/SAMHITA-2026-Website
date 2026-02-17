@@ -20,6 +20,7 @@ CREATE TABLE `users` (
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`email`),
   UNIQUE KEY `id_UNIQUE` (`id`),
+  UNIQUE KEY `mobile_UNIQUE` (`mobile`),
   CONSTRAINT `users_id_format` CHECK (`id` REGEXP '^S[0-9]{4}$')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

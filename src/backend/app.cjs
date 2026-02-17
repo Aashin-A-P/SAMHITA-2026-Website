@@ -66,6 +66,7 @@ async function createTablesIfNotExists() {
         district VARCHAR(255),
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY id_UNIQUE (id),
+        UNIQUE KEY mobile_UNIQUE (mobile),
         CONSTRAINT users_id_format CHECK (id REGEXP '^S[0-9]{4}$')
       );
     `);
@@ -101,6 +102,8 @@ async function createTablesIfNotExists() {
     await addColumnIfNotExists('users', 'yearofPassing', 'INT');
     await addColumnIfNotExists('users', 'state', 'VARCHAR(255)');
     await addColumnIfNotExists('users', 'district', 'VARCHAR(255)');
+
+    await addIndexIfNotExists('users', 'mobile_UNIQUE', 'UNIQUE KEY mobile_UNIQUE (mobile)');
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS experiences (
