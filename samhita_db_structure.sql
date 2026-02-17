@@ -258,7 +258,7 @@ CREATE TABLE `cart` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Rounds table (similar to enigma_rounds)
-DROP TABLE DIF EXISTS `rounds`;
+DROP TABLE IF EXISTS `rounds`;
 CREATE TABLE `rounds` (
   `id` int NOT NULL AUTO_INCREMENT,
   `eventId` int NOT NULL,
@@ -271,7 +271,7 @@ CREATE TABLE `rounds` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Registrations table
-ROP TABLE IF EXISTS `registrations`;
+DROP TABLE IF EXISTS `registrations`;
 CREATE TABLE `registrations` (
   `id` int NOT NULL AUTO_INCREMENT,
   `symposium` varchar(255) DEFAULT NULL,
