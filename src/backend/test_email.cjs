@@ -2,12 +2,12 @@ const nodemailer = require('nodemailer');
 
 async function testEmail() {
     const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: Number(process.env.SMTP_PORT || 587),
+        host: 'smtp.gmail.com',
+        port: 587,
         secure: false,
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+            user: 'itasamhita26@gmail.com',
+            pass: 'ldnv pgqr dgqr ujoc'
         },
         connectionTimeout: 10000, // 10 seconds
         logger: true,
