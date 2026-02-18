@@ -1140,7 +1140,7 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient scroll-mt-28">Event Passes</h2>
+                <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient scroll-mt-28">Claim Your Pass</h2>
                 <div className="max-w-6xl mx-auto">
                   {isPassesLoading ? (
                     <div className="text-center text-gray-400">Loading passes...</div>
