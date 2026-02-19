@@ -119,6 +119,23 @@ const sponsors = [
   { name: 'LIC', logoUrl: Lic}
 ];
 
+const contactLeads = [
+  { role: 'Chairman', name: 'Navin Surgith M', phones: ['8903402688', '9043773914'] },
+  { role: 'Vice Chairperson', name: 'Harini Rajam S', phones: ['8347089212'] },
+  { role: 'General Secretary', name: 'Guruprakash P', phones: ['8072944921'] },
+  { role: 'Organising Secretary', name: 'Gowtham Rajasekaran', phones: ['9344002774'] },
+  { role: 'Organising Secretary', name: 'Anisha B', phones: ['6381232428'] },
+  { role: 'Technical Head', name: 'Harishma K', phones: ['9884891537'] },
+  { role: 'Events Head', name: 'R Arun Kishore', phones: ['9500280573'] },
+  { role: 'Media Head', name: 'Samyukthha C S P', phones: ['8015791119'] },
+  { role: 'Head of Public Relations', name: 'M Vigna Saktheeshwaran', phones: ['6369237881'] },
+];
+
+const formatPhone = (phone: string) => {
+  if (phone.length !== 10) return phone;
+  return `${phone.slice(0, 5)} ${phone.slice(5)}`;
+};
+
 export default function HomePage() {
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -1594,22 +1611,34 @@ export default function HomePage() {
 
         <footer id="contact" className="py-16 px-6 sm:px-12 bg-black/50 backdrop-blur-md border-t border-gold-500/20 text-gray-400">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 max-w-7xl mx-auto text-center md:text-left">
-                <div>
-                    <h3 className="text-lg font-bold mb-4 text-white">SAMHITA</h3>
-                    <p className="text-lg font-bold">Fostering the next generation of technologists through innovation and collaboration.</p>
-                </div>
-                <div>
-                    <h3 className="text-lg font-bold mb-4 text-white">Quick Links</h3>
-                    <ul className="space-y-2 text-lg font-bold">
-                        <li><a href="#about" className="hover:text-gold-400 transition">About</a></li>
-                        <li><a href="#events" className="hover:text-gold-400 transition">Events</a></li>
-                        <li><a href="#passes" className="hover:text-gold-400 transition">Event Passes</a></li>
-                    </ul>
+                <div className="md:col-span-2 flex flex-col gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div>
+                            <h3 className="text-lg font-bold mb-4 text-white">SAMHITA</h3>
+                            <p className="text-lg font-bold">Fostering the next generation of technologists through innovation and collaboration.</p>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold mb-4 text-white">Quick Links</h3>
+                            <ul className="space-y-2 text-lg font-bold">
+                                <li><a href="#about" className="hover:text-gold-400 transition">About</a></li>
+                                <li><a href="#events" className="hover:text-gold-400 transition">Events</a></li>
+                                <li><a href="#passes" className="hover:text-gold-400 transition">Event Passes</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="w-full flex-1 min-h-[12rem] sm:min-h-[14rem] md:min-h-[18rem] rounded-lg overflow-hidden border border-gold-500/30">
+                        <iframe
+                          title="MIT Campus, Chromepet, Chennai"
+                          className="w-full h-full"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src="https://www.google.com/maps?q=Department%20of%20Information%20Technology%2C%20Madras%20Institute%20of%20Technology%4012.948091809406428%2C80.1400281640265&output=embed"
+                        />
+                    </div>
                 </div>
                 <div>
                     <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
                     <p className="text-lg font-bold">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
-                    <p className='text-lg font-bold'>Phone: <a href="tel:+91 8903402688" className="hover:text-gold-400 transition">+91 89034 02688</a></p>
                     <p className="text-lg font-bold">Address: MIT Campus, Chromepet, Chennai</p>
                     <button
                       type="button"
@@ -1618,6 +1647,27 @@ export default function HomePage() {
                     >
                       <FaWhatsapp /> Join SAMHITA WhatsApp
                     </button>
+                    <div className="mt-4 space-y-3 text-base font-semibold text-gray-300">
+                      {contactLeads.map((lead, idx) => (
+                        <div key={`${lead.role}-${lead.name}-${idx}`}>
+                          <div className="text-white">{lead.role} - {lead.name}</div>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                            {lead.phones.map((phone) => (
+                              <a
+                                key={phone}
+                                href={`https://wa.me/91${phone}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 hover:text-gold-400 transition"
+                              >
+                                <FaWhatsapp className="text-green-400" />
+                                +91 {formatPhone(phone)}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                 </div>
             </div>
             <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - National Level Technical Symposium. All Rights Reserved.</p>
