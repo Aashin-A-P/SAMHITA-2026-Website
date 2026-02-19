@@ -174,7 +174,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Mobile Number</label>
-              <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="+91..." className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
+              <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Enter without +91" className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
             </div>
           </div>
           <div>
