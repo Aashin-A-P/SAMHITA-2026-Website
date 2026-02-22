@@ -112,7 +112,7 @@ module.exports = function (db, transporter, uploadDocument) {
           `;
 
           const mailOptions = {
-            from: `"CSMIT Team" <${process.env.EMAIL_USER}>`,
+            from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
             to: user.email,
             subject: subject,
             html: htmlBody,
@@ -190,7 +190,7 @@ module.exports = function (db, transporter, uploadDocument) {
       `;
 
       await transporter.sendMail({
-        from: `"CSMIT Team" <${process.env.EMAIL_USER}>`,
+        from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
         to: user.email,
         subject: subject,
         html: htmlBody,

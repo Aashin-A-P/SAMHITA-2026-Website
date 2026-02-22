@@ -455,7 +455,7 @@ module.exports = function (db, uploadEventPoster, transporter) {
       if (eligibleUsers.length > 0) {
         const eligibleEmails = eligibleUsers.map(u => u.email);
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
           to: eligibleEmails.join(', '),
           subject: emailSubject,
           text: eligibleMessage, // fallback for email clients not supporting HTML
@@ -472,7 +472,7 @@ module.exports = function (db, uploadEventPoster, transporter) {
       if (ineligibleUsers.length > 0) {
         const ineligibleEmails = ineligibleUsers.map(u => u.email);
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
           to: ineligibleEmails.join(', '),
           subject: emailSubject,
           text: ineligibleMessage,

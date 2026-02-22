@@ -30,7 +30,7 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'test@gmail.com' && password === '123') {
+    if (email === 'itadmin@gmail.com' && password === 'Aashin@2026') {
       login(null, email, 'admin');
       navigate('/admin/manage-events');
       onClose();

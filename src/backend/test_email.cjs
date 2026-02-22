@@ -22,7 +22,7 @@ async function testEmail() {
         /* 
         // Optional: Try sending a test email
         const info = await transporter.sendMail({
-          from: 'csmitindia@gmail.com',
+          from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
           to: 'divakarsubramani2005@gmail.com', // Using the email from recent registrations as a test target, or just the sender
           subject: 'Test Email Connectivity',
           text: 'If you receive this, the connection is working.'

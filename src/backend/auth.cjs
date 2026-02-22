@@ -30,7 +30,7 @@ module.exports = function (db, transporter) {
       otpStore[email] = otp;
 
       const mailOptions = {
-        from: "csmitindia@gmail.com",
+        from: `"Samhita'26 team" <itasamhita26@gmail.com>`,
         to: email,
         subject: "Your OTP for Password Reset",
         html: `
