@@ -23,6 +23,13 @@ const CartPage: React.FC = () => {
   const [showWhatsappModal, setShowWhatsappModal] = useState(false);
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
 
+  const formatDate = (value?: string) => {
+    if (!value) return 'Date TBA';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    return d.toLocaleDateString('en-GB').replace(/\//g, '-');
+  };
+
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
     setIsSignUpModalOpen(true);
@@ -59,6 +66,12 @@ const CartPage: React.FC = () => {
       cost: number;
       description: string;
     };
+    workshops?: {
+      eventId: number;
+      eventName: string;
+      roundDateTime?: string;
+      registrationFees: number;
+    }[];
     accommodationDetails?: {
       name: string;
       cost: number;
@@ -329,6 +342,21 @@ const CartPage: React.FC = () => {
                               <h2 className="text-xl font-semibold">{item.passDetails.name}</h2>
                               <p>{item.passDetails.description}</p>
                               <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{item.passDetails.cost}</p>
+                              {item.workshops && item.workshops.length > 0 && (
+                                <div className="mt-3 text-sm text-gray-300">
+                                  <p className="font-semibold text-gold-300">Selected Workshops:</p>
+                                  <ul className="list-disc list-inside">
+                                    {item.workshops.map((w) => {
+                                      const dateLabel = formatDate(w.roundDateTime);
+                                      return (
+                                        <li key={`workshop-${item.cartId}-${w.eventId}`}>
+                                          {w.eventName} ({dateLabel})
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
                             </>
                           )}
                           {item.type === 'accommodation' && item.accommodationDetails && (

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db) {
+  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+
   // Add item to cart
   router.post('/', async (req, res) => {
     const { userEmail, eventId, symposiumName } = req.body;
@@ -110,7 +112,25 @@ module.exports = function (db) {
           );
 
           if (passDetails.length > 0) {
-            return { ...item, type: 'pass', passDetails: passDetails[0] };
+            const pass = passDetails[0];
+            if (isWorkshopPassName(pass.name)) {
+              const [workshops] = await db.execute(
+                `SELECT e.id as eventId, e.eventName, e.registrationFees, r.roundDateTime
+                 FROM pass_cart_workshops pcw
+                 JOIN events e ON e.id = pcw.eventId
+                 LEFT JOIN rounds r ON r.eventId = e.id AND r.roundNumber = 1
+                 WHERE pcw.cartId = ?`,
+                [item.cartId]
+              );
+              const workshopTotal = workshops.reduce((sum, w) => sum + (Number(w.registrationFees) || 0), 0);
+              return {
+                ...item,
+                type: 'pass',
+                passDetails: { ...pass, cost: workshopTotal },
+                workshops
+              };
+            }
+            return { ...item, type: 'pass', passDetails: pass };
           }
           return null;
         })

@@ -86,6 +86,15 @@ const EventsPage: React.FC = () => {
     return symposium ? symposium.isOpen === 1 : false;
   };
 
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'Date TBA';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    const datePart = d.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    return `${datePart}, ${timePart}`;
+  };
+
   const handleViewDetails = (event: Event) => {
     if (!isSymposiumOpen(activeSymposium)) {
       setModalContent({
@@ -607,11 +616,11 @@ const EventsPage: React.FC = () => {
 
             <p><strong>Coordinator:</strong> {selectedEvent.coordinatorName} ({selectedEvent.coordinatorContactNo})</p>
             <p><strong>Coordinator Email:</strong> {selectedEvent.coordinatorMail}</p>
-            <p><strong>Last Date for Registration:</strong> {new Date(selectedEvent.lastDateForRegistration).toLocaleString()}</p>
+            <p><strong>Last Date for Registration:</strong> {formatDateTime(selectedEvent.lastDateForRegistration)}</p>
             {selectedEvent.rounds && selectedEvent.rounds.map((round, index) => (
               <div key={index} className="ml-4 mt-2">
                 <p><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
-                <p>Date & Time: {new Date(round.roundDateTime).toLocaleString()}</p>
+                <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
               </div>
             ))}
           </div>

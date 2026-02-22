@@ -191,9 +191,10 @@ module.exports = function (db, uploadEventPoster, transporter) {
             
             SELECT DISTINCT vr.userId
             FROM verified_registrations vr
-            JOIN passes p ON vr.passId = p.id
-            JOIN pass_events pe_event ON pe_event.eventId = ?
-            WHERE vr.verified = true
+         JOIN passes p ON vr.passId = p.id
+         JOIN pass_events pe_event ON pe_event.eventId = ?
+         WHERE vr.verified = true
+              AND LOWER(p.name) <> 'workshop pass'
               AND (
                 p.id = pe_event.passId OR
                 (LOWER(p.name) LIKE '%global%' AND pe_event.passId IN (
@@ -202,12 +203,24 @@ module.exports = function (db, uploadEventPoster, transporter) {
                   SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'
                 ))
               )
+            
+            UNION
+            
+            SELECT DISTINCT vr.userId
+            FROM verified_registrations vr
+            JOIN passes p ON vr.passId = p.id
+            JOIN workshop_pass_registrations wpr
+              ON wpr.userId = vr.userId
+             AND wpr.passId = vr.passId
+             AND wpr.eventId = ?
+            WHERE vr.verified = true
+              AND LOWER(p.name) = 'workshop pass'
          ) vr_all ON u.id = vr_all.userId
          LEFT JOIN registrations r_event ON u.email = r_event.userEmail AND r_event.eventId = ? AND r_event.symposium = ?
          LEFT JOIN registrations r_pass ON u.email = r_pass.userEmail AND r_pass.passId IS NOT NULL AND r_pass.symposium = ?
          WHERE (r_event.id IS NOT NULL OR r_pass.id IS NOT NULL)
          GROUP BY u.id, u.fullName, u.email, u.mobile, u.department, u.yearofPassing, u.college`,
-        [eventId, eventId, eventId, eventId, symposium, symposium]
+        [eventId, eventId, eventId, eventId, eventId, symposium, symposium]
       );
       res.json(registrations);
     } catch (error) {

@@ -22,6 +22,12 @@ interface Registration {
   transactionAmount: number;
   transactionScreenshot: { type: string; data: number[] };
   verified: boolean | null | number;
+  workshops?: {
+    eventId: number;
+    eventName: string;
+    roundDateTime?: string;
+    registrationFees: number;
+  }[];
 }
 
 const RegistrationStatusPage: React.FC = () => {
@@ -32,6 +38,13 @@ const RegistrationStatusPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
+
+  const formatDate = (value?: string) => {
+    if (!value) return 'Date TBA';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    return d.toLocaleDateString('en-GB').replace(/\//g, '-');
+  };
 
   const fetchRegistrations = useCallback(async () => {
     try {
@@ -195,6 +208,18 @@ const RegistrationStatusPage: React.FC = () => {
             <p><strong>User Email:</strong> {selectedRegistration.userEmail}</p>
             <p><strong>Mobile Number:</strong> {selectedRegistration.mobileNumber}</p>
             <p><strong>Item Name:</strong> {selectedRegistration.itemName}</p>
+            {selectedRegistration.workshops && selectedRegistration.workshops.length > 0 && (
+              <div className="mt-2">
+                <strong>Selected Workshops:</strong>
+                <ul className="list-disc list-inside">
+                  {selectedRegistration.workshops.map((w) => (
+                    <li key={`workshop-${w.eventId}`}>
+                      {w.eventName} ({formatDate(w.roundDateTime)})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <p><strong>Transaction ID:</strong> {selectedRegistration.transactionId}</p>
             <p><strong>Transaction Amount:</strong> {selectedRegistration.transactionAmount}</p>
             <p><strong>Status:</strong> {getStatusText(selectedRegistration.verified)}</p>

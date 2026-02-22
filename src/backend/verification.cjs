@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db) {
+  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+
+  async function getWorkshopSelections(executor, userId, passId, transactionId) {
+    const [rows] = await executor.execute(
+      `SELECT eventId FROM workshop_pass_registrations
+       WHERE userId = ? AND passId = ? AND transactionId = ?`,
+      [userId, passId, transactionId]
+    );
+    return rows.map((r) => r.eventId);
+  }
 
   // Helper function to "explode" a verified pass into individual event registrations
   async function explodePassRegistration(executor, userId, passId, transactionId) {
@@ -14,7 +24,18 @@ module.exports = function (db) {
     const passNameLower = pass.name.toLowerCase();
     let events = [];
 
-    if (passNameLower.includes('global')) {
+    if (isWorkshopPassName(pass.name)) {
+      const selectedEventIds = await getWorkshopSelections(executor, userId, passId, transactionId);
+      if (selectedEventIds.length === 0) return;
+      const placeholders = selectedEventIds.map(() => '?').join(',');
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         WHERE e.id IN (${placeholders})`,
+        selectedEventIds
+      );
+      events = rows;
+    } else if (passNameLower.includes('global')) {
       const [techPasses] = await executor.execute(
         `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
       );

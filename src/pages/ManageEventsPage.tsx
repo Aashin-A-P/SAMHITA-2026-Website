@@ -128,6 +128,7 @@ type Pass = {
   discountReason?: string | null;
 };
 
+
 // --- Main App ---
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -280,30 +281,11 @@ const App: React.FC = () => {
     const { name, value, type } = e.target;
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : type === 'number' ? parseInt(value, 10) : value;
 
-    const resolvePassName = (passIdValue: string) => {
-      const pass = passes.find(p => p.id.toString() === passIdValue);
-      return pass ? pass.name.toLowerCase() : '';
-    };
-
     if (editingEvent) {
       const updatedEvent = { ...editingEvent, [name]: val };
-      if (name === 'passId') {
-        const passName = resolvePassName(String(value));
-        if (passName.includes('workshop')) {
-          updatedEvent.numberOfRounds = 0;
-          setRounds([]);
-        }
-      }
       setEditingEvent(updatedEvent);
     } else {
       const updatedNewEvent = { ...newEvent, [name]: val };
-      if (name === 'passId') {
-        const passName = resolvePassName(String(value));
-        if (passName.includes('workshop')) {
-          updatedNewEvent.numberOfRounds = 0;
-          setRounds([]);
-        }
-      }
       setNewEvent(updatedNewEvent);
     }
   };
@@ -565,20 +547,11 @@ const App: React.FC = () => {
                         onChange={handleNumberOfRoundsChange}
                         min={0}
                         required
-                        disabled={(() => {
-                          const selectedPassId = (editingEvent?.passId ?? newEvent.passId);
-                          const passName = passes.find(p => p.id.toString() === String(selectedPassId))?.name.toLowerCase() || '';
-                          return passName.includes('workshop');
-                        })()}
                         className="w-full px-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white"
                       />
                     </div>
 
-                    {(() => {
-                      const selectedPassId = (editingEvent?.passId ?? newEvent.passId);
-                      const passName = passes.find(p => p.id.toString() === String(selectedPassId))?.name.toLowerCase() || '';
-                      return !passName.includes('workshop');
-                    })() && rounds.map((round, idx) => (
+                    {rounds.map((round, idx) => (
                       <div key={idx} className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 space-y-4">
                         <textarea
                           value={round.roundDetails}

@@ -36,6 +36,15 @@ const AdminEventsDisplayPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
 
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'Date TBA';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    const datePart = d.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    return `${datePart}, ${timePart}`;
+  };
+
   const showModal = (title: string, message: string) => {
     setModal({ isOpen: true, title, message });
   };
@@ -213,11 +222,11 @@ const AdminEventsDisplayPage: React.FC = () => {
                   <p><strong>Registration Fees:</strong> {'\u20B9'}{event.registrationFees}</p>
                   <p><strong>Coordinator:</strong> {event.coordinatorName} ({event.coordinatorContactNo})</p>
                   <p><strong>Coordinator Email:</strong> {event.coordinatorMail}</p>
-                  <p><strong>Last Date for Registration:</strong> {new Date(event.lastDateForRegistration).toLocaleString()}</p>
+                  <p><strong>Last Date for Registration:</strong> {formatDateTime(event.lastDateForRegistration)}</p>
                   {event.rounds && event.rounds.map((round, index) => (
                     <div key={index} className="ml-4 mt-2">
                       <p><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
-                      <p>Date & Time: {new Date(round.roundDateTime).toLocaleString()}</p>
+                      <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
                     </div>
                   ))}
                 </div>

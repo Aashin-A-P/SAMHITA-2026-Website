@@ -21,11 +21,36 @@ interface CartItem {
 const PassesDisplay: React.FC = () => {
     const [passes, setPasses] = useState<Pass[]>([]);
     const [selectedPass, setSelectedPass] = useState<Pass | null>(null);
+    const [events, setEvents] = useState<any[]>([]);
+    const [selectedWorkshopEventIds, setSelectedWorkshopEventIds] = useState<number[]>([]);
+    const [workshopSelectionError, setWorkshopSelectionError] = useState<string | null>(null);
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [verifiedPassIds, setVerifiedPassIds] = useState<number[]>([]);
     const { user, isLoggedIn } = useAuth();
     const navigate = useNavigate();
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+
+    const isWorkshopPassName = (name: string) => name.trim().toLowerCase() === 'workshop pass';
+    const getRound1DateKey = (event: any) => {
+        const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
+        if (!round?.roundDateTime) return null;
+        const d = new Date(round.roundDateTime);
+        if (Number.isNaN(d.getTime())) return null;
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+    const formatRound1Date = (event: any) => {
+        const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
+        if (!round?.roundDateTime) return 'Date TBA';
+        const d = new Date(round.roundDateTime);
+        if (Number.isNaN(d.getTime())) return 'Date TBA';
+        const datePart = d.toLocaleDateString('en-GB').replace(/\//g, '-');
+        const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        return `${datePart}, ${timePart}`;
+    };
+    const getEventsForPass = (pass: Pass) => events.filter((e) => Number(e.passId) === Number(pass.id));
 
     const fetchCartItems = useCallback(async () => {
         if (!user) return;
@@ -86,6 +111,28 @@ const PassesDisplay: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/events`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        setEvents(data);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            }
+        };
+        fetchEvents();
+    }, []);
+
+    useEffect(() => {
+        setSelectedWorkshopEventIds([]);
+        setWorkshopSelectionError(null);
+    }, [selectedPass]);
+
+    useEffect(() => {
         if (isLoggedIn) {
             fetchCartItems();
             fetchVerifiedPasses();
@@ -98,13 +145,22 @@ const PassesDisplay: React.FC = () => {
             return;
         }
 
+        if (isWorkshopPassName(pass.name) && selectedWorkshopEventIds.length === 0) {
+            setWorkshopSelectionError('Select at least one workshop.');
+            return;
+        }
+
         try {
             const response = await fetch(`${API_BASE_URL}/pass-cart`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userId: user?.id, passId: pass.id }),
+                body: JSON.stringify({
+                    userId: user?.id,
+                    passId: pass.id,
+                    eventIds: isWorkshopPassName(pass.name) ? selectedWorkshopEventIds : undefined
+                }),
             });
 
             if (response.ok) {
@@ -200,8 +256,70 @@ const PassesDisplay: React.FC = () => {
                         </button>
                         <div className="p-8">
                             <h2 className="text-2xl font-bold text-gold-400 mb-2">{selectedPass.name}</h2>
-                            <p className="text-3xl font-bold mb-4">{'\u20B9'}{selectedPass.cost}</p>
+                            <p className="text-3xl font-bold mb-4">
+                                {isWorkshopPassName(selectedPass.name)
+                                    ? (() => {
+                                        const total = getEventsForPass(selectedPass)
+                                            .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
+                                            .reduce((sum: number, e: any) => sum + (Number(e.registrationFees) || 0), 0);
+                                        return `\u20B9${total}`;
+                                    })()
+                                    : `\u20B9${selectedPass.cost}`}
+                            </p>
                             <p className="text-gray-300 mb-6">{selectedPass.description}</p>
+                            {isWorkshopPassName(selectedPass.name) && (
+                                <div className="mb-4 space-y-2">
+                                    <p className="text-gold-300 font-semibold">Select workshops (unique round 1 dates):</p>
+                                    <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
+                                        {getEventsForPass(selectedPass).map((event: any) => {
+                                            const eventId = Number(event.id);
+                                            const dateKey = getRound1DateKey(event);
+                                            const selectedDates = new Set(
+                                                getEventsForPass(selectedPass)
+                                                    .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
+                                                    .map((e: any) => getRound1DateKey(e))
+                                                    .filter(Boolean)
+                                            );
+                                            const isSelected = selectedWorkshopEventIds.includes(eventId);
+                                            const isBlocked = !isSelected && dateKey && selectedDates.has(dateKey);
+                                            return (
+                                                <label
+                                                    key={`workshop-${eventId}`}
+                                                    className={`flex items-start gap-3 p-3 rounded-lg border ${
+                                                        isBlocked ? 'border-gray-700 text-gray-500' : 'border-gray-700 text-gray-200'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        disabled={isBlocked}
+                                                        onChange={(e) => {
+                                                            setWorkshopSelectionError(null);
+                                                            if (e.target.checked) {
+                                                                setSelectedWorkshopEventIds((prev) => [...prev, eventId]);
+                                                            } else {
+                                                                setSelectedWorkshopEventIds((prev) => prev.filter((id) => id !== eventId));
+                                                            }
+                                                        }}
+                                                        className="mt-1"
+                                                    />
+                                                    <div className="text-sm">
+                                                        <div className="font-semibold">{event.eventName}</div>
+                                                        <div className="text-gray-400">Date: {formatRound1Date(event)}</div>
+                                                        <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                        {getEventsForPass(selectedPass).length === 0 && (
+                                            <div className="text-gray-400 text-sm">No workshops mapped yet.</div>
+                                        )}
+                                    </div>
+                                    {workshopSelectionError && (
+                                        <p className="text-sm text-red-400">{workshopSelectionError}</p>
+                                    )}
+                                </div>
+                            )}
                             {isLoggedIn ? (
                                 isPassVerified(selectedPass.id) ? (
                                     <button

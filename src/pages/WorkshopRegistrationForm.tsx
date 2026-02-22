@@ -26,6 +26,12 @@ interface CartItem {
     cost: number;
     description: string;
   };
+  workshops?: {
+    eventId: number;
+    eventName: string;
+    roundDateTime?: string;
+    registrationFees: number;
+  }[];
   accommodationDetails?: {
     name: string;
     cost: number;
@@ -228,6 +234,14 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
 
       const eventIds = cartItems.filter(item => item.type === 'event').map(item => item.eventId);
       const passIds = cartItems.filter(item => item.type === 'pass').map(item => item.passId);
+      const workshopSelections = cartItems
+        .filter(item => item.type === 'pass' && item.workshops && item.workshops.length > 0)
+        .reduce((acc: Record<string, number[]>, item) => {
+          if (item.passId) {
+            acc[String(item.passId)] = (item.workshops || []).map(w => w.eventId);
+          }
+          return acc;
+        }, {});
       const accommodationItem = cartItems.find(item => item.type === 'accommodation');
 
       if (accommodationItem) {
@@ -236,6 +250,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
 
       formData.append('eventIds', JSON.stringify(eventIds));
       formData.append('passIds', JSON.stringify(passIds));
+      formData.append('workshopSelections', JSON.stringify(workshopSelections));
 
       formData.append('transactionId', transactionId);
       formData.append('transactionTime', transactionTime);
@@ -310,7 +325,14 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
               } else if (item.type === 'pass' && item.passDetails) {
                 return (
                   <div key={item.cartId} className="flex justify-between items-center text-gray-300 border-b border-gray-700 pb-2 last:border-0">
-                    <span className="font-medium">{item.passDetails.name}</span>
+                    <div>
+                      <span className="font-medium">{item.passDetails.name}</span>
+                      {item.workshops && item.workshops.length > 0 && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {item.workshops.map((w) => w.eventName).join(', ')}
+                        </div>
+                      )}
+                    </div>
                     <span>{'\u20B9'}{item.passDetails.cost}</span>
                   </div>
                 );

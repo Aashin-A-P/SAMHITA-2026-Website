@@ -369,6 +369,18 @@ async function createTablesIfNotExists() {
     `);
 
     await db.execute(`
+      CREATE TABLE IF NOT EXISTS pass_cart_workshops (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cartId INT NOT NULL,
+        eventId INT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(cartId, eventId),
+        FOREIGN KEY (cartId) REFERENCES pass_cart(id) ON DELETE CASCADE,
+        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
+      );
+    `);
+
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS verified_registrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
         userId VARCHAR(5) NOT NULL,
@@ -379,6 +391,21 @@ async function createTablesIfNotExists() {
         transactionId VARCHAR(255) NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS workshop_pass_registrations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId VARCHAR(5) NOT NULL,
+        passId INT NOT NULL,
+        eventId INT NOT NULL,
+        transactionId VARCHAR(255) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(userId, passId, eventId, transactionId),
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (passId) REFERENCES passes(id) ON DELETE CASCADE,
+        FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
       );
     `);
 

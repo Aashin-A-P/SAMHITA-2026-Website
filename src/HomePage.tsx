@@ -61,6 +61,11 @@ import BranStark from './Photos/Bran Stark.png';
 import RickonStark from './Photos/Rickon Stark.png';
 import JohnSnow from './Photos/John Snow.png';
 import DaenerysTargaryen from './Photos/Daenarys Targaryen.png';
+import OberynMartell from './Photos/Oberyn Martell.png';
+import NightKing from './Photos/Night King.png';
+import TheHound from './Photos/The Hound.png';
+import LittleFinger from './Photos/Little Finger.png';
+import JorahMormont from './Photos/Jorah Mormont.png';
 import RegistrationTimer from './components/RegistrationTimer';
 import OfferBanner from './components/OfferBanner';
 import PassesDisplay from './components/PassesDisplay';
@@ -151,6 +156,8 @@ export default function HomePage() {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [selectedPass, setSelectedPass] = useState<any | null>(null);
+  const [selectedWorkshopEventIds, setSelectedWorkshopEventIds] = useState<number[]>([]);
+  const [workshopSelectionError, setWorkshopSelectionError] = useState<string | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [memberCount, setMemberCount] = useState(2);
@@ -347,6 +354,11 @@ export default function HomePage() {
     fetchPurchasedPasses(user.id);
   }, [user]);
 
+  useEffect(() => {
+    setSelectedWorkshopEventIds([]);
+    setWorkshopSelectionError(null);
+  }, [selectedPass]);
+
   const categorizedEvents = useMemo(() => {
     const normalized = events.map((event) => ({
       ...event,
@@ -360,13 +372,20 @@ export default function HomePage() {
 
     const isTechPass = (name: string) => name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
     const isNonTechPass = (name: string) => name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
-    const isWorkshop = (category: string) => category.toLowerCase().includes('workshop');
+    const isWorkshopCategory = (category: string) => category.toLowerCase().includes('workshop');
+    const isWorkshopPass = (name: string) => name.includes('workshop pass') || name.includes('workshop');
 
     return {
       Technical: normalized.filter((e) => isTechPass(e.passName)),
       'Non-Technical': normalized.filter((e) => isNonTechPass(e.passName)),
-      Signature: normalized.filter((e) => !isTechPass(e.passName) && !isNonTechPass(e.passName) && !isWorkshop(e.category)),
-      Workshop: normalized.filter((e) => isWorkshop(e.category)),
+      Signature: normalized.filter(
+        (e) =>
+          !isTechPass(e.passName) &&
+          !isNonTechPass(e.passName) &&
+          !isWorkshopCategory(e.category) &&
+          !isWorkshopPass(e.passName)
+      ),
+      Workshop: normalized.filter((e) => isWorkshopCategory(e.category) || isWorkshopPass(e.passName)),
     };
   }, [events]);
 
@@ -388,6 +407,36 @@ export default function HomePage() {
       });
     }
     return events.filter((e) => Number(e.passId) === Number(pass.id));
+  };
+
+  const getRound1DateKey = (event: any) => {
+    const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
+    if (!round?.roundDateTime) return null;
+    const d = new Date(round.roundDateTime);
+    if (Number.isNaN(d.getTime())) return null;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const formatRound1Date = (event: any) => {
+    const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
+    if (!round?.roundDateTime) return 'Date TBA';
+    const d = new Date(round.roundDateTime);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    const datePart = d.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    return `${datePart}, ${timePart}`;
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'Date TBA';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Date TBA';
+    const datePart = d.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    return `${datePart}, ${timePart}`;
   };
 
   const techCoverImages = [
@@ -412,6 +461,13 @@ export default function HomePage() {
   const signatureCoverImages = [
     JohnSnow,
     DaenerysTargaryen,
+  ];
+  const workshopCoverImages = [
+    OberynMartell,
+    NightKing,
+    TheHound,
+    LittleFinger,
+    JorahMormont,
   ];
 
   const handleSwitchToSignUp = () => {
@@ -450,6 +506,7 @@ export default function HomePage() {
     passName.toLowerCase().includes('non tech') ||
     passName.toLowerCase().includes('nontech');
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
+  const isWorkshopPassName = (passName: string) => passName.trim().toLowerCase() === 'workshop pass';
   const isMitEligiblePass = (passName: string) => {
     const name = passName.toLowerCase();
     const isTech = name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
@@ -473,7 +530,7 @@ export default function HomePage() {
     return cleaned;
   };
 
-  const addPassToCartDirect = async (passId: number, passName: string) => {
+  const addPassToCartDirect = async (passId: number, passName: string, workshopEventIds?: number[]) => {
     if (!user) {
       setIsLoginModalOpen(true);
       return;
@@ -483,7 +540,7 @@ export default function HomePage() {
       const response = await fetch(`${API_BASE_URL}/pass-cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, passId }),
+        body: JSON.stringify({ userId: user.id, passId, eventIds: workshopEventIds }),
       });
 
       if (!response.ok) {
@@ -600,6 +657,13 @@ export default function HomePage() {
       setIsTeamModalOpen(true);
       return;
     }
+
+    if (isWorkshopPassName(passName)) {
+      if (selectedWorkshopEventIds.length === 0) {
+        setWorkshopSelectionError('Select at least one workshop.');
+        return;
+      }
+    }
     const globalPass = passes.find((p) => isGlobalPassName(p.name));
     const globalPassId = globalPass ? Number(globalPass.id) : null;
     const hasGlobalInCart = globalPassId
@@ -675,7 +739,7 @@ export default function HomePage() {
       return;
     }
 
-    await addPassToCartDirect(passId, passName);
+    await addPassToCartDirect(passId, passName, isWorkshopPassName(passName) ? selectedWorkshopEventIds : undefined);
   };
 
   const handleMemberIdChange = (index: number, value: string) => {
@@ -1091,7 +1155,8 @@ export default function HomePage() {
                       <h3 className="text-2xl font-bold text-white text-center">Workshops</h3>
                       <div className="relative">
                         <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
-                          {categorizedEvents.Workshop.map((event) => {
+                          {categorizedEvents.Workshop.map((event, index) => {
+                            const coverImage = workshopCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
                             return (
                               <div
@@ -1101,7 +1166,7 @@ export default function HomePage() {
                                 <div className="flip-card w-full h-full">
                                   <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
-                                      <img src={EventCover} alt="Event cover" className="w-full h-full object-cover" />
+                                      <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flip-face flip-back">
                                       {hasPoster ? (
@@ -1271,7 +1336,14 @@ export default function HomePage() {
                                 {renderDetailsButton('flex-1 h-10')}
                                 <button
                                   type="button"
-                                  onClick={() => handleAddPassToCart(pass.id, pass.name)}
+                                  onClick={() => {
+                                    if (isWorkshopPassName(pass.name)) {
+                                      setSelectedPass(pass);
+                                      setIsPassModalOpen(true);
+                                      return;
+                                    }
+                                    handleAddPassToCart(pass.id, pass.name);
+                                  }}
                                   disabled={disableForGlobal}
                                   className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
                                     disableForGlobal
@@ -1368,7 +1440,7 @@ export default function HomePage() {
                     {selectedEvent.rounds.map((round: any) => (
                       <div key={`round-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
                         <p>Round {round.roundNumber}: {round.roundDetails}</p>
-                        <p>Date & Time: {new Date(round.roundDateTime).toLocaleString()}</p>
+                        <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
                       </div>
                     ))}
                   </div>
@@ -1386,20 +1458,84 @@ export default function HomePage() {
             {selectedPass && (
               <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
                 <p className="text-gray-200 font-event-body">
-                  <span className="text-gold-300 font-semibold">Pass Cost:</span> {'\u20B9'}{selectedPass.cost}
+                  <span className="text-gold-300 font-semibold">Pass Cost:</span>{' '}
+                  {isWorkshopPassName(selectedPass.name)
+                    ? (() => {
+                        const workshopEvents = getEventsForPass(selectedPass);
+                        const total = workshopEvents
+                          .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
+                          .reduce((sum: number, e: any) => sum + (Number(e.registrationFees) || 0), 0);
+                        return `\u20B9${total}`;
+                      })()
+                    : `\u20B9${selectedPass.cost}`}
                 </p>
-                <div>
-                  <p className="text-gold-300 font-semibold mb-2">Events included in this pass:</p>
-                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">
-                    {getEventsForPass(selectedPass).length === 0 ? (
-                      <li>No events mapped yet.</li>
-                    ) : (
-                      getEventsForPass(selectedPass).map((evt: any) => (
-                        <li key={evt.id}>{evt.eventName}</li>
-                      ))
+                {isWorkshopPassName(selectedPass.name) && (
+                  <div className="space-y-2">
+                    <p className="text-gold-300 font-semibold">Select workshops (Round 1 dates must be unique):</p>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
+                      {getEventsForPass(selectedPass).map((event: any) => {
+                        const eventId = Number(event.id);
+                        const dateKey = getRound1DateKey(event);
+                        const selectedDates = new Set(
+                          getEventsForPass(selectedPass)
+                            .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
+                            .map((e: any) => getRound1DateKey(e))
+                            .filter(Boolean)
+                        );
+                        const isSelected = selectedWorkshopEventIds.includes(eventId);
+                        const isBlocked = !isSelected && dateKey && selectedDates.has(dateKey);
+                        return (
+                          <label
+                            key={`workshop-${eventId}`}
+                            className={`flex items-start gap-3 p-3 rounded-lg border ${
+                              isBlocked ? 'border-gray-700 text-gray-500' : 'border-gray-700 text-gray-200'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isBlocked}
+                              onChange={(e) => {
+                                setWorkshopSelectionError(null);
+                                if (e.target.checked) {
+                                  setSelectedWorkshopEventIds((prev) => [...prev, eventId]);
+                                } else {
+                                  setSelectedWorkshopEventIds((prev) => prev.filter((id) => id !== eventId));
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            <div className="text-sm">
+                              <div className="font-semibold">{event.eventName}</div>
+                              <div className="text-gray-400">Date: {formatRound1Date(event)}</div>
+                              <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                      {getEventsForPass(selectedPass).length === 0 && (
+                        <div className="text-gray-400 text-sm">No workshops mapped yet.</div>
+                      )}
+                    </div>
+                    {workshopSelectionError && (
+                      <p className="text-sm text-red-400">{workshopSelectionError}</p>
                     )}
-                  </ul>
-                </div>
+                  </div>
+                )}
+                {!isWorkshopPassName(selectedPass.name) && (
+                  <div>
+                    <p className="text-gold-300 font-semibold mb-2">Events included in this pass:</p>
+                    <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">
+                      {getEventsForPass(selectedPass).length === 0 ? (
+                        <li>No events mapped yet.</li>
+                      ) : (
+                        getEventsForPass(selectedPass).map((evt: any) => (
+                          <li key={evt.id}>{evt.eventName}</li>
+                        ))
+                      )}
+                    </ul>
+                  </div>
+                )}
                 <div className="flex justify-end gap-3 pt-2">
                   {(() => {
                     const isPurchased = purchasedPassIds.includes(Number(selectedPass.id));

@@ -2,6 +2,70 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db, uploadTransactionScreenshot) {
+  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+  const getLocalDateKey = (value) => {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  async function validateWorkshopSelections(executor, passId, eventIds) {
+    if (!Array.isArray(eventIds) || eventIds.length === 0) {
+      return { ok: false, message: 'Please select at least one workshop.' };
+    }
+
+    const uniqueEventIds = [...new Set(eventIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
+    if (uniqueEventIds.length === 0) {
+      return { ok: false, message: 'Invalid workshop selection.' };
+    }
+
+    const placeholders = uniqueEventIds.map(() => '?').join(',');
+    const [mappedRows] = await executor.execute(
+      `SELECT eventId FROM pass_events WHERE passId = ? AND eventId IN (${placeholders})`,
+      [passId, ...uniqueEventIds]
+    );
+    if (mappedRows.length !== uniqueEventIds.length) {
+      return { ok: false, message: 'One or more selected workshops are not part of this pass.' };
+    }
+
+    const [roundRows] = await executor.execute(
+      `SELECT e.id as eventId, e.eventName, r.roundDateTime
+       FROM events e
+       JOIN rounds r ON r.eventId = e.id AND r.roundNumber = 1
+       WHERE e.id IN (${placeholders})`,
+      uniqueEventIds
+    );
+
+    if (roundRows.length !== uniqueEventIds.length) {
+      return { ok: false, message: 'Each workshop must have exactly one round date set.' };
+    }
+
+    const seenDates = new Set();
+    for (const row of roundRows) {
+      const key = getLocalDateKey(row.roundDateTime);
+      if (!key) {
+        return { ok: false, message: `Invalid round date for workshop ${row.eventName || row.eventId}.` };
+      }
+      if (seenDates.has(key)) {
+        return { ok: false, message: 'You cannot select two workshops with round 1 on the same day.' };
+      }
+      seenDates.add(key);
+    }
+
+    return { ok: true, eventIds: uniqueEventIds };
+  }
+
+  async function getWorkshopSelections(executor, userId, passId, transactionId) {
+    const [rows] = await executor.execute(
+      `SELECT eventId FROM workshop_pass_registrations
+       WHERE userId = ? AND passId = ? AND transactionId = ?`,
+      [userId, passId, transactionId]
+    );
+    return rows.map((r) => r.eventId);
+  }
 
   // Helper function to "explode" a verified pass into individual event registrations
   async function explodePassRegistration(executor, userId, passId, transactionId) {
@@ -13,7 +77,18 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
     let events = [];
 
-    if (passNameLower.includes('global')) {
+    if (isWorkshopPassName(pass.name)) {
+      const selectedEventIds = await getWorkshopSelections(executor, userId, passId, transactionId);
+      if (selectedEventIds.length === 0) return;
+      const placeholders = selectedEventIds.map(() => '?').join(',');
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         WHERE e.id IN (${placeholders})`,
+        selectedEventIds
+      );
+      events = rows;
+    } else if (passNameLower.includes('global')) {
       const [techPasses] = await executor.execute(
         `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
       );
@@ -125,7 +200,23 @@ module.exports = function (db, uploadTransactionScreenshot) {
                  p.name, vr.verified, ab.status
         ORDER BY MAX(r.createdAt) DESC
       `);
-      res.status(200).json(registrations);
+      const normalized = [];
+      for (const reg of registrations) {
+        if (reg.itemType === 'pass' && String(reg.itemName || '').trim().toLowerCase() === 'workshop pass') {
+          const [workshops] = await db.execute(
+            `SELECT e.id as eventId, e.eventName, r.roundDateTime, e.registrationFees
+             FROM workshop_pass_registrations wpr
+             JOIN events e ON e.id = wpr.eventId
+             LEFT JOIN rounds r ON r.eventId = e.id AND r.roundNumber = 1
+             WHERE wpr.userId = ? AND wpr.passId = ? AND wpr.transactionId = ?`,
+            [reg.userId, reg.passId, reg.transactionId]
+          );
+          normalized.push({ ...reg, workshops });
+        } else {
+          normalized.push(reg);
+        }
+      }
+      res.status(200).json(normalized);
     } catch (error) {
       console.error('Failed to fetch all registrations:', error);
       res.status(500).json({ message: 'Failed to fetch all registrations.' });
@@ -172,6 +263,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
       const transactionScreenshot = req.file ? req.file.buffer : null;
       const parsedEventIds = eventIds ? JSON.parse(eventIds) : [];
       const parsedPassIds = passIds ? JSON.parse(passIds) : [];
+      const workshopSelections = req.body.workshopSelections ? JSON.parse(req.body.workshopSelections) : {};
       const accommodationInfo = req.body.accommodation ? JSON.parse(req.body.accommodation) : null;
 
       if (!userId) return res.status(400).json({ message: 'Missing required field: userId.' });
@@ -263,7 +355,37 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
           const symposium = activeSymposium;
 
-          const discountedPassCost = Math.floor(pass.cost * (1 - couponDiscount / 100));
+          let computedPassCost = Number(pass.cost) || 0;
+
+          if (isWorkshopPassName(pass.name)) {
+            const selectedEventIds = workshopSelections?.[String(passId)] || [];
+            const selectionCheck = await validateWorkshopSelections(connection, passId, selectedEventIds);
+            if (!selectionCheck.ok) {
+              await connection.rollback();
+              return res.status(400).json({ message: selectionCheck.message });
+            }
+            const placeholders = selectionCheck.eventIds.map(() => '?').join(',');
+            const [workshopRows] = await connection.execute(
+              `SELECT registrationFees FROM events WHERE id IN (${placeholders})`,
+              selectionCheck.eventIds
+            );
+            computedPassCost = workshopRows.reduce((sum, row) => sum + (Number(row.registrationFees) || 0), 0);
+
+            await connection.execute(
+              'DELETE FROM workshop_pass_registrations WHERE userId = ? AND passId = ? AND transactionId = ?',
+              [userId, passId, transactionId]
+            );
+            if (selectionCheck.eventIds.length > 0) {
+              const values = selectionCheck.eventIds.map(() => '(?, ?, ?, ?)').join(', ');
+              const params = selectionCheck.eventIds.flatMap((eventId) => [userId, passId, eventId, transactionId]);
+              await connection.execute(
+                `INSERT INTO workshop_pass_registrations (userId, passId, eventId, transactionId) VALUES ${values}`,
+                params
+              );
+            }
+          }
+
+          const discountedPassCost = Math.floor(computedPassCost * (1 - couponDiscount / 100));
 
           const passNameLower = String(pass.name || '').toLowerCase();
           const isHackathonPass = passNameLower.includes('hackathon');
@@ -577,7 +699,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
       }
 
       const [allRegistrations] = await db.execute(
-        `SELECT r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium,
+        `SELECT r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium, r.transactionId,
                 IF(r.passId IS NOT NULL, 'pass', 'event') as itemType,
                 MAX(vr.verified) as verified
          FROM registrations r
@@ -589,7 +711,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
              (r.passId IS NOT NULL AND r.eventId IS NULL AND vr.passId = r.passId AND vr.eventId IS NULL)
            )
          WHERE u.id = ?
-         GROUP BY r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium`,
+         GROUP BY r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium, r.transactionId`,
         [userId]
       );
 
@@ -621,7 +743,19 @@ module.exports = function (db, uploadTransactionScreenshot) {
             [reg.passId]
           );
           if (pass) {
-            registrationsWithDetails.push({ ...reg, pass });
+            if (isWorkshopPassName(pass.name) && reg.transactionId) {
+              const [rows] = await db.execute(
+                `SELECT e.registrationFees
+                 FROM workshop_pass_registrations wpr
+                 JOIN events e ON e.id = wpr.eventId
+                 WHERE wpr.userId = ? AND wpr.passId = ? AND wpr.transactionId = ?`,
+                [userId, reg.passId, reg.transactionId]
+              );
+              const workshopTotal = rows.reduce((sum, r) => sum + (Number(r.registrationFees) || 0), 0);
+              registrationsWithDetails.push({ ...reg, pass: { ...pass, cost: workshopTotal } });
+            } else {
+              registrationsWithDetails.push({ ...reg, pass });
+            }
             if (Number(reg.verified) === 1) {
               passRegistrations.push({
                 passId: reg.passId,
@@ -663,6 +797,32 @@ module.exports = function (db, uploadTransactionScreenshot) {
         }
       };
 
+      const fetchWorkshopEventsForPass = async (passId, symposium, rounds) => {
+        const roundsTable = 'rounds';
+        const [events] = await db.execute(
+          `SELECT e.* FROM events e
+           JOIN workshop_pass_registrations wpr ON wpr.eventId = e.id
+           WHERE wpr.userId = ? AND wpr.passId = ?`,
+          [userId, passId]
+        );
+        for (const event of events) {
+          if (!eventIds.has(event.id)) {
+            const [roundsResult] = await db.execute(`SELECT * FROM ${roundsTable} WHERE eventId = ?`, [event.id]);
+            event.rounds = roundsResult;
+            registrationsWithDetails.push({
+              id: `pass-${event.id}`,
+              itemType: 'event',
+              eventId: event.id,
+              symposium,
+              round1: rounds.r1, round2: rounds.r2, round3: rounds.r3,
+              pass: { name: 'Pass Unlocked' },
+              event,
+            });
+            eventIds.add(event.id);
+          }
+        }
+      };
+
       const [symposiumStatusRows] = await db.execute('SELECT symposiumName, isOpen FROM symposium_status');
       const symposiumStatus = symposiumStatusRows.reduce((acc, row) => {
         acc[row.symposiumName] = row.isOpen === 1;
@@ -673,7 +833,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
       if (isOpen) {
         for (const passReg of passRegistrations) {
           const passNameLower = (passReg.passName || '').toLowerCase();
-          if (passNameLower.includes('global')) {
+          if (passNameLower.trim() === 'workshop pass') {
+            await fetchWorkshopEventsForPass(passReg.passId, 'SAMHITA', passReg.rounds);
+          } else if (passNameLower.includes('global')) {
             const [techPasses] = await db.execute(
               `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
             );
@@ -708,7 +870,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
 
   // Admin/Organizer registration of a user for events/passes
   router.post('/admin-register', async (req, res) => {
-    const { userId, eventIds, passIds } = req.body;
+    const { userId, eventIds, passIds, workshopEventIds } = req.body;
 
     if (!userId || (!eventIds && !passIds)) {
       return res.status(400).json({ message: 'Missing userId or event/pass selections.' });
@@ -736,6 +898,27 @@ module.exports = function (db, uploadTransactionScreenshot) {
           if (!pass) {
             console.warn(`Pass with ID ${passId} not found. Skipping.`);
             continue;
+          }
+
+          if (isWorkshopPassName(pass.name)) {
+            const selectedEventIds = workshopEventIds?.[String(passId)] || [];
+            const selectionCheck = await validateWorkshopSelections(connection, passId, selectedEventIds);
+            if (!selectionCheck.ok) {
+              await connection.rollback();
+              return res.status(400).json({ message: selectionCheck.message });
+            }
+            await connection.execute(
+              'DELETE FROM workshop_pass_registrations WHERE userId = ? AND passId = ? AND transactionId = ?',
+              [userId, passId, 'ADMIN_REG']
+            );
+            if (selectionCheck.eventIds.length > 0) {
+              const values = selectionCheck.eventIds.map(() => '(?, ?, ?, ?)').join(', ');
+              const params = selectionCheck.eventIds.flatMap((eventId) => [userId, passId, eventId, 'ADMIN_REG']);
+              await connection.execute(
+                `INSERT INTO workshop_pass_registrations (userId, passId, eventId, transactionId) VALUES ${values}`,
+                params
+              );
+            }
           }
 
           const [existing] = await connection.execute('SELECT id FROM registrations WHERE userEmail = ? AND passId = ?', [user.email, passId]);
@@ -840,6 +1023,10 @@ module.exports = function (db, uploadTransactionScreenshot) {
         [userId, passId]
       );
       await connection.execute(
+        'DELETE FROM workshop_pass_registrations WHERE userId = ? AND passId = ?',
+        [userId, passId]
+      );
+      await connection.execute(
         `DELETE vr FROM verified_registrations vr
          JOIN pass_events pe ON pe.eventId = vr.eventId
          WHERE vr.userId = ? AND pe.passId = ?`,
@@ -891,6 +1078,10 @@ module.exports = function (db, uploadTransactionScreenshot) {
           // For passes, also delete all exploded event verified_registrations linked to this pass
           await connection.execute(
             'DELETE FROM verified_registrations WHERE userId = ? AND passId = ?',
+            [registration.userId, registration.passId]
+          );
+          await connection.execute(
+            'DELETE FROM workshop_pass_registrations WHERE userId = ? AND passId = ?',
             [registration.userId, registration.passId]
           );
         }
