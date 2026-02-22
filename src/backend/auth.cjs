@@ -44,7 +44,7 @@ module.exports = function (db, transporter) {
               </p>
               <br/>
               <p style="margin-top: 20px;">Regards,</p>
-              <p><strong>CSMIT Team</strong></p>
+              <p><strong>SAMHITA'26 Team</strong></p>
             </div>
           `,
       };

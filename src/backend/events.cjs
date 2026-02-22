@@ -463,7 +463,7 @@ module.exports = function (db, uploadEventPoster, transporter) {
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
         ${eligibleMessage}
         <br/>
-        <p style="margin-top: 20px;">Regards,<br/><strong>CSMIT Team</strong></p>
+        <p style="margin-top: 20px;">Regards,<br/><strong>SAMHITA'26 Team</strong></p>
       </div>
     `
         });
@@ -480,7 +480,7 @@ module.exports = function (db, uploadEventPoster, transporter) {
             <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
               ${ineligibleMessage}
               <br/>
-              <p style="margin-top: 20px;">Regards,<br/><strong>CSMIT Team</strong></p>
+              <p style="margin-top: 20px;">Regards,<br/><strong>SAMHITA'26 Team</strong></p>
             </div>
           `
         });

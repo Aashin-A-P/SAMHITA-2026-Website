@@ -108,7 +108,7 @@ module.exports = function (db, transporter, uploadDocument) {
             </ul>
             <br>
             <p>Thank you,</p>
-            <p>CSMIT Team</p>
+            <p>SAMHITA'26 Team</p>
           `;
 
           const mailOptions = {
@@ -186,7 +186,7 @@ module.exports = function (db, transporter, uploadDocument) {
         </ul>
         <br>
         <p>Thank you,</p>
-        <p>CSMIT Team</p>
+        <p>SAMHITA'26 Team</p>
       `;
 
       await transporter.sendMail({
