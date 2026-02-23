@@ -261,6 +261,46 @@ module.exports = function (db) {
     }
   });
 
+  // Check if email is registered and has a verified Tech Pass
+  router.post('/check-ticket', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ status: 'invalid', message: 'Email is required.' });
+    }
+
+    try {
+      const [[user]] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+      if (!user) {
+        return res.status(200).json({ status: 'invalid' });
+      }
+
+      const [rows] = await db.execute(
+        `SELECT 1
+         FROM verified_registrations vr
+         JOIN passes p ON p.id = vr.passId
+         WHERE vr.userId = ?
+           AND vr.verified = true
+           AND (
+             (LOWER(p.name) LIKE '%tech pass%'
+              AND LOWER(p.name) NOT LIKE '%non-tech%'
+              AND LOWER(p.name) NOT LIKE '%non tech%')
+             OR LOWER(p.name) LIKE '%global%'
+           )
+         LIMIT 1`,
+        [user.id]
+      );
+
+      if (rows.length > 0) {
+        return res.status(200).json({ status: 'okay' });
+      }
+      return res.status(200).json({ status: 'invalid' });
+    } catch (error) {
+      console.error('Check ticket failed:', error);
+      return res.status(500).json({ status: 'invalid' });
+    }
+  });
+
   return router;
 };
 
