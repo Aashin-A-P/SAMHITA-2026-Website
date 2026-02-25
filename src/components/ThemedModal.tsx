@@ -36,8 +36,11 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
-      <div className="relative bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 scale-100 opacity-100">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-start justify-center pb-6"
+      style={{ paddingTop: 'calc(6rem + 5px)' }}
+    >
+      <div className="relative bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[calc(100vh-8rem)] overflow-y-auto transform transition-all duration-300 scale-100 opacity-100">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -46,7 +49,7 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
         </button>
         <h2 className="text-2xl font-bold text-gold-300 mb-4">{title}</h2>
         {message && <p className="text-gray-300 mb-4">{message}</p>}
-        <div className="text-white max-h-[70vh] overflow-y-auto pr-1" style={{ minHeight: '80px' }}>
+        <div className="text-white max-h-[60vh] overflow-y-auto pr-1" style={{ minHeight: '80px' }}>
           {children}
         </div>
         {!hideDefaultFooter && ( // Conditionally render default footer

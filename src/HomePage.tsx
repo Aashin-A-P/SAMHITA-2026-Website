@@ -948,6 +948,7 @@ export default function HomePage() {
                           {categorizedEvents.Technical.map((event, index) => {
                             const coverImage = techCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
+                            const isTosEvent = isTournamentOfStrategies(event.eventName || event.title);
                             return (
                               <div
                                 key={event.id}
@@ -973,13 +974,32 @@ export default function HomePage() {
                                     </div>
                                   </div>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
-                                  className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
-                                >
-                                  View Details
-                                </button>
+                                {isTosEvent ? (
+                                  <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3">
+                                    <button
+                                      type="button"
+                                      onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                      className="w-full px-3 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                    >
+                                      View Details
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => window.open(toseLink, '_blank')}
+                                      className="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                                    >
+                                      Visit TOS Site
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                                  >
+                                    View Details
+                                  </button>
+                                )}
                               </div>
                             );
                           })}
@@ -1454,7 +1474,7 @@ export default function HomePage() {
                     onClick={() => window.open(toseLink, '_blank')}
                     className="mt-3 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
                   >
-                    Tournament of Strategies Login
+                    Visit Tournament of Strategies Event Site.
                   </button>
                 )}
               </div>
@@ -1744,7 +1764,7 @@ export default function HomePage() {
                 onClick={() => window.open(toseLink, '_blank')}
                 className="px-5 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
               >
-                Tournament of Strategies
+                Visit Tournament of Strategies Event Site
               </button>
               <button
                 type="button"

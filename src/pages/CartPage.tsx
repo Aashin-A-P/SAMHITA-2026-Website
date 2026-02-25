@@ -522,7 +522,7 @@ const CartPage: React.FC = () => {
                 onClick={() => window.open(toseLink, '_blank')}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
               >
-                Tournament of Strategies
+                Visit Tournament of Strategies Event Site
               </button>
               <button
                 type="button"
