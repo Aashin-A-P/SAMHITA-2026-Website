@@ -960,7 +960,7 @@ export default function HomePage() {
                                         <img
                                           src={getPosterSrc(event.posterImage) as string}
                                           alt={`${event.title} poster`}
-                                          className="w-full h-full object-cover"
+                                          className="w-full h-full object-fill bg-black/60"
                                         />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
@@ -1031,7 +1031,7 @@ export default function HomePage() {
                                         <img
                                           src={getPosterSrc(event.posterImage) as string}
                                           alt={`${event.title} poster`}
-                                          className="w-full h-full object-cover"
+                                          className="w-full h-full object-fill bg-black/60"
                                         />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
@@ -1102,7 +1102,7 @@ export default function HomePage() {
                                         <img
                                           src={getPosterSrc(event.posterImage) as string}
                                           alt={`${event.title} poster`}
-                                          className="w-full h-full object-cover"
+                                          className="w-full h-full object-fill bg-black/60"
                                         />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
@@ -1173,7 +1173,7 @@ export default function HomePage() {
                                         <img
                                           src={getPosterSrc(event.posterImage) as string}
                                           alt={`${event.title} poster`}
-                                          className="w-full h-full object-cover"
+                                          className="w-full h-full object-fill bg-black/60"
                                         />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
@@ -1246,7 +1246,7 @@ export default function HomePage() {
                               <img
                                 src={`data:image/jpeg;base64,${pass.posterImage}`}
                                 alt={`${pass.name} poster`}
-                                className="w-full h-full object-cover bg-black"
+                                className="w-full h-full object-fill bg-black/60"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">

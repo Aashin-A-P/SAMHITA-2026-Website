@@ -407,7 +407,7 @@ const EnrolledEventsPage: React.FC = () => {
                             <div className="relative z-10 p-6 flex flex-col h-full">
                               {registration.event.posterUrl && (
                                 <div className="mb-4">
-                                  <img src={`${API_BASE_URL}${registration.event.posterUrl}`} alt={registration.event.eventName} className="w-full h-48 object-cover rounded-md mx-auto shadow-md" />
+                                  <img src={`${API_BASE_URL}${registration.event.posterUrl}`} alt={registration.event.eventName} className="w-full h-48 object-fill rounded-md mx-auto shadow-md bg-black/60" />
                                 </div>
                               )}
                               <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight font-event-heading">{registration.event.eventName}</h3>

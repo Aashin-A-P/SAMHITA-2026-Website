@@ -207,7 +207,7 @@ const AdminEventsDisplayPage: React.FC = () => {
                     <img
                       src={`data:image/jpeg;base64,${event.posterImage}`}
                       alt="Event Poster"
-                      className="w-full h-auto object-contain rounded-md"
+                      className="w-full h-auto object-fill rounded-md"
                     />
 
                   </div>

@@ -439,7 +439,7 @@ const EventsPage: React.FC = () => {
                           <img
                             src={`data:image/jpeg;base64,${event.posterImage}`}
                             alt={event.eventName}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-fill"
                           />
                         </div>
                       )}
