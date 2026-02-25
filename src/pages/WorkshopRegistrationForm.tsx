@@ -436,7 +436,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="min-w-0">
             <div className="mb-4">
               <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-400 mb-2">Mobile Number</label>
               <input
@@ -444,7 +444,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 id="mobileNumber"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 required
                 placeholder="Enter your mobile number"
               />
@@ -457,7 +457,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="date"
                   id="transactionDate"
-                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
                   required
@@ -470,7 +470,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="time"
                   id="transactionTime"
-                  className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                   value={transactionTime}
                   onChange={(e) => setTransactionTime(e.target.value)}
                   required
@@ -484,7 +484,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 id="transactionId"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 required
                 placeholder="Enter UPI / Bank Transaction ID"
               />
@@ -495,12 +495,12 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 type="file"
                 id="transactionScreenshot"
                 onChange={handleFileChange}
-                className="w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 accept="image/jpeg,image/png,application/pdf"
                 required
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 min-w-0">
               <button type="button" onClick={onCancel} className="w-1/3 px-4 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-transform duration-300">
                 Cancel
               </button>
