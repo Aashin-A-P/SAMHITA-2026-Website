@@ -211,7 +211,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Aadhar Number</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Aadhar Number (Please carry a valid Photo ID when attending the event.)</label>
             <input
               type="text"
               name="aadhar"
