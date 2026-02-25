@@ -1010,12 +1010,46 @@ module.exports = function (db, uploadTransactionScreenshot) {
       );
 
       // Remove exploded event registrations for this pass (PASS_ENTRY)
-      await connection.execute(
-        `DELETE r FROM registrations r
-         JOIN pass_events pe ON pe.eventId = r.eventId
-         WHERE r.userEmail = ? AND r.transactionId = 'PASS_ENTRY' AND pe.passId = ?`,
-        [user.email, passId]
-      );
+      const [[passRow]] = await connection.execute('SELECT name FROM passes WHERE id = ?', [passId]);
+      const passNameLower = (passRow?.name || '').toLowerCase();
+      let eventIdsToRemove = [];
+      if (isWorkshopPassName(passRow?.name || '')) {
+        const [rows] = await connection.execute(
+          `SELECT eventId FROM workshop_pass_registrations WHERE userId = ? AND passId = ?`,
+          [userId, passId]
+        );
+        eventIdsToRemove = rows.map(r => r.eventId);
+      } else if (passNameLower.includes('global')) {
+        const [techPasses] = await connection.execute(
+          `SELECT id FROM passes WHERE LOWER(name) LIKE '%tech pass%' AND LOWER(name) NOT LIKE '%non-tech%' AND LOWER(name) NOT LIKE '%non tech%'`
+        );
+        const [nonTechPasses] = await connection.execute(
+          `SELECT id FROM passes WHERE LOWER(name) LIKE '%non-tech pass%' OR LOWER(name) LIKE '%non tech pass%' OR LOWER(name) LIKE '%nontech pass%'`
+        );
+        const passIds = [...techPasses, ...nonTechPasses].map(p => p.id);
+        if (passIds.length > 0) {
+          const [rows] = await connection.execute(
+            `SELECT eventId FROM pass_events WHERE passId IN (${passIds.map(() => '?').join(',')})`,
+            passIds
+          );
+          eventIdsToRemove = rows.map(r => r.eventId);
+        }
+      } else {
+        const [rows] = await connection.execute(
+          `SELECT eventId FROM pass_events WHERE passId = ?`,
+          [passId]
+        );
+        eventIdsToRemove = rows.map(r => r.eventId);
+      }
+
+      if (eventIdsToRemove.length > 0) {
+        const placeholders = eventIdsToRemove.map(() => '?').join(',');
+        await connection.execute(
+          `DELETE FROM registrations
+           WHERE userEmail = ? AND transactionId = 'PASS_ENTRY' AND eventId IN (${placeholders})`,
+          [user.email, ...eventIdsToRemove]
+        );
+      }
 
       // Remove verified registrations for this pass and related events
       await connection.execute(
@@ -1026,12 +1060,14 @@ module.exports = function (db, uploadTransactionScreenshot) {
         'DELETE FROM workshop_pass_registrations WHERE userId = ? AND passId = ?',
         [userId, passId]
       );
-      await connection.execute(
-        `DELETE vr FROM verified_registrations vr
-         JOIN pass_events pe ON pe.eventId = vr.eventId
-         WHERE vr.userId = ? AND pe.passId = ?`,
-        [userId, passId]
-      );
+      if (eventIdsToRemove.length > 0) {
+        const placeholders = eventIdsToRemove.map(() => '?').join(',');
+        await connection.execute(
+          `DELETE FROM verified_registrations
+           WHERE userId = ? AND eventId IN (${placeholders})`,
+          [userId, ...eventIdsToRemove]
+        );
+      }
 
       await connection.commit();
       if (passDelResult.affectedRows === 0) {
