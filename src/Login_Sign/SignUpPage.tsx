@@ -168,9 +168,17 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-gray-400 mb-1">Date of Birth</label>
-              <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="w-full min-w-0 max-w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                className="block w-full min-w-0 max-w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Mobile Number</label>
