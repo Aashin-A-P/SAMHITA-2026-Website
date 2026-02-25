@@ -167,7 +167,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
               )}
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Date of Birth</label>
               <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
@@ -203,7 +203,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
               />
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Department</label>
               <input type="text" name="department" value={formData.department} onChange={handleChange} placeholder="Your department" className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
@@ -215,7 +215,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">State</label>
               <select name="state" value={formData.state} onChange={handleChange} className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold-500" required>
