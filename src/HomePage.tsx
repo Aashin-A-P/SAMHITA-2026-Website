@@ -1457,6 +1457,11 @@ export default function HomePage() {
         >
             {selectedPass && (
               <div className="space-y-4 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                {selectedPass.description && (
+                  <p className="text-gray-300 font-event-body whitespace-pre-line">
+                    {selectedPass.description}
+                  </p>
+                )}
                 <p className="text-gray-200 font-event-body">
                   <span className="text-gold-300 font-semibold">Pass Cost:</span>{' '}
                   {isWorkshopPassName(selectedPass.name)

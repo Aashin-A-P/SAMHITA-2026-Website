@@ -337,7 +337,6 @@ const EnrolledEventsPage: React.FC = () => {
                           <div key={`pass-${registration.id}`} className="relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 border-green-500/50 bg-green-900/20">
                             <div className="relative z-10 p-6 flex flex-col h-full">
                               <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight">{registration.pass.name}</h3>
-                              <p className="text-gray-300 text-base mb-4 flex-grow">{registration.pass.description}</p>
                               <div className="mt-auto space-y-1">
                                 <p className="text-2xl font-bold text-green-400">{'\u20B9'}{registration.pass.cost}</p>
                                 <p className="text-sm text-gray-300 font-event-body">

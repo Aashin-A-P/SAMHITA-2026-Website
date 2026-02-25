@@ -130,7 +130,14 @@ module.exports = function (db) {
                 workshops
               };
             }
-            return { ...item, type: 'pass', passDetails: pass };
+            const [passEvents] = await db.execute(
+              `SELECT e.id as eventId, e.eventName
+               FROM pass_events pe
+               JOIN events e ON e.id = pe.eventId
+               WHERE pe.passId = ?`,
+              [item.passId]
+            );
+            return { ...item, type: 'pass', passDetails: pass, passEvents };
           }
           return null;
         })

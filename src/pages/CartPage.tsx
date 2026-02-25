@@ -15,6 +15,7 @@ const CartPage: React.FC = () => {
   const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
@@ -66,6 +67,10 @@ const CartPage: React.FC = () => {
       cost: number;
       description: string;
     };
+    passEvents?: {
+      eventId: number;
+      eventName: string;
+    }[];
     workshops?: {
       eventId: number;
       eventName: string;
@@ -110,6 +115,41 @@ const CartPage: React.FC = () => {
 
     fetchCartItems();
   }, [user]);
+
+  useEffect(() => {
+    const fetchAllEvents = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/events`);
+        setAllEvents(response.data || []);
+      } catch (error) {
+        console.error('Failed to load events for pass mapping:', error);
+      }
+    };
+    fetchAllEvents();
+  }, []);
+
+  const getEventsForPass = (item: CartItem) => {
+    if (item.passEvents && item.passEvents.length > 0) {
+      return item.passEvents;
+    }
+    if (!allEvents || allEvents.length === 0) return [];
+    const passName = String(item.passDetails?.name || '').toLowerCase();
+    const passId = Number(item.passId);
+    if (passName.includes('global')) {
+      return allEvents
+        .filter((e: any) => {
+          const name = String(e.passName || '').toLowerCase();
+          return name.includes('tech pass') || name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
+        })
+        .map((e: any) => ({ eventId: e.id, eventName: e.eventName }));
+    }
+    return allEvents
+      .filter((e: any) => {
+        if (!Number.isNaN(passId) && Number(e.passId) === passId) return true;
+        return String(e.passName || '').toLowerCase() === passName;
+      })
+      .map((e: any) => ({ eventId: e.id, eventName: e.eventName }));
+  };
 
   const handleRemoveFromCart = async (item: CartItem) => {
     if (!user || !item) return;
@@ -340,7 +380,6 @@ const CartPage: React.FC = () => {
                           {item.type === 'pass' && item.passDetails && (
                             <>
                               <h2 className="text-xl font-semibold">{item.passDetails.name}</h2>
-                              <p>{item.passDetails.description}</p>
                               <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{item.passDetails.cost}</p>
                               {item.workshops && item.workshops.length > 0 && (
                                 <div className="mt-3 text-sm text-gray-300">
@@ -354,6 +393,22 @@ const CartPage: React.FC = () => {
                                         </li>
                                       );
                                     })}
+                                  </ul>
+                                </div>
+                              )}
+                              {(!item.workshops || item.workshops.length === 0) && (
+                                <div className="mt-3 text-sm text-gray-300">
+                                  <p className="font-semibold text-gold-300">Events included in this pass:</p>
+                                  <ul className="list-disc list-inside">
+                                    {(() => {
+                                      const events = getEventsForPass(item);
+                                      if (events.length === 0) {
+                                        return <li>No events mapped yet.</li>;
+                                      }
+                                      return events.map((evt) => (
+                                        <li key={`pass-event-${item.cartId}-${evt.eventId}`}>{evt.eventName}</li>
+                                      ));
+                                    })()}
                                   </ul>
                                 </div>
                               )}

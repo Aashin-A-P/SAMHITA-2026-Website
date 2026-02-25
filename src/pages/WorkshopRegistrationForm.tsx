@@ -371,9 +371,11 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
               <h3 className="text-xl font-semibold text-gold-300 mb-4">Payment Information</h3>
               <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700 text-sm">
                 <p><strong>Account Name:</strong> {accountDetails.accountName}</p>
+                {/*
                 <p><strong>Bank Name:</strong> {accountDetails.bankName}</p>
                 <p><strong>Account Number:</strong> {accountDetails.accountNumber}</p>
                 <p><strong>IFSC Code:</strong> {accountDetails.ifscCode}</p>
+                */}
                 {accountDetails.upiId && (
                   <p><strong>UPI ID:</strong> {accountDetails.upiId}</p>
                 )}
