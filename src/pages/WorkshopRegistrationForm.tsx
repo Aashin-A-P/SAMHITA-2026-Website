@@ -457,7 +457,8 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="date"
                   id="transactionDate"
-                  className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  className="w-full min-w-0 max-w-full appearance-none px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', WebkitAppearance: 'none', appearance: 'none' }}
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
                   required
@@ -470,7 +471,8 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <input
                   type="time"
                   id="transactionTime"
-                  className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  className="w-full min-w-0 max-w-full appearance-none px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                  style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', WebkitAppearance: 'none', appearance: 'none' }}
                   value={transactionTime}
                   onChange={(e) => setTransactionTime(e.target.value)}
                   required
