@@ -176,7 +176,13 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
                 value={formData.dob}
                 onChange={handleChange}
                 className="block w-full min-w-0 max-w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                style={{
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                }}
                 required
               />
             </div>
