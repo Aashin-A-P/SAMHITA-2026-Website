@@ -288,12 +288,12 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
 
   return (
-    <div className="p-8 rounded-2xl">
+    <div className="w-full max-w-full overflow-x-hidden p-4 sm:p-8 rounded-2xl">
       <h2 className="text-3xl font-bold text-white text-center mb-8">Registration</h2>
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Order Summary */}
-        <div className="bg-gray-800/70 p-6 rounded-lg">
+        <div className="bg-gray-800/70 p-6 rounded-lg min-w-0">
           <h3 className="text-xl font-semibold text-gold-300 mb-4">Order Summary</h3>
           <div className="space-y-4 mb-4">
             {cartItems && cartItems.map(item => {
@@ -365,7 +365,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
         </div>
 
         {/* Right Column: Payment and Registration */}
-        <div className="bg-gray-800/70 p-6 rounded-lg">
+        <div className="bg-gray-800/70 p-6 rounded-lg min-w-0">
           {accountDetails ? (
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-gold-300 mb-4">Payment Information</h3>
