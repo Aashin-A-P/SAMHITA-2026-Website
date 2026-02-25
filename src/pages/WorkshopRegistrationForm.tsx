@@ -401,19 +401,19 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
               </div>
               <div className="mt-4">
                 <label htmlFor="couponCode" className="block text-sm font-medium text-gray-400 mb-2">Coupon Code (Optional)</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 min-w-0">
                   <input
                     id="couponCode"
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
+                    className="w-full sm:flex-1 min-w-0 max-w-full px-4 py-2 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                     placeholder="Enter coupon code"
                   />
                   <button
                     type="button"
                     onClick={handleApplyCoupon}
-                    className="px-4 py-2 bg-samhita-600 text-white rounded-lg hover:bg-samhita-700 transition disabled:opacity-60"
+                    className="w-full sm:w-auto px-4 py-2 bg-samhita-600 text-white rounded-lg hover:bg-samhita-700 transition disabled:opacity-60"
                     disabled={isApplyingCoupon}
                   >
                     {isApplyingCoupon ? 'Applying...' : 'Apply'}
