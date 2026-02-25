@@ -515,6 +515,8 @@ export default function HomePage() {
     const isGlobal = name.includes('global');
     return isTech || isNonTech || isGlobal;
   };
+  const isTournamentOfStrategies = (name?: string) =>
+    String(name || '').trim().toLowerCase() === 'tournament of strategies';
 
   const getTeamConfig = (passName: string) => {
     if (isPaperPresentationPass(passName)) {
@@ -1445,6 +1447,15 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
+                )}
+                {isTournamentOfStrategies(selectedEvent.eventName || selectedEvent.title) && (
+                  <button
+                    type="button"
+                    onClick={() => window.open(toseLink, '_blank')}
+                    className="mt-3 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                  >
+                    Tournament of Strategies Login
+                  </button>
                 )}
               </div>
             )}
