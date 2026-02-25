@@ -143,6 +143,7 @@ const formatPhone = (phone: string) => {
 
 export default function HomePage() {
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
+  const toseLink = 'https://tosedition5.web.app';
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
@@ -1727,6 +1728,13 @@ export default function HomePage() {
               You are registered! Please join the official WhatsApp group for updates and announcements.
             </p>
             <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => window.open(toseLink, '_blank')}
+                className="px-5 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+              >
+                Tournament of Strategies
+              </button>
               <button
                 type="button"
                 onClick={() => {

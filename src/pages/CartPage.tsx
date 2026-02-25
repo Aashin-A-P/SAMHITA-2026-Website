@@ -23,6 +23,7 @@ const CartPage: React.FC = () => {
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
   const [showWhatsappModal, setShowWhatsappModal] = useState(false);
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
+  const toseLink = 'https://tosedition5.web.app';
 
   const formatDate = (value?: string) => {
     if (!value) return 'Date TBA';
@@ -45,6 +46,46 @@ const CartPage: React.FC = () => {
   const handleSwitchToForgotPassword = () => {
     setIsLoginModalOpen(false);
     setIsForgotPasswordModalOpen(true);
+  };
+
+  const isTechPassName = (passName: string) =>
+    passName.toLowerCase().includes('tech pass') &&
+    !passName.toLowerCase().includes('non-tech') &&
+    !passName.toLowerCase().includes('non tech') &&
+    !passName.toLowerCase().includes('nontech');
+
+  const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
+
+  const isPaidItem = (item: CartItem) => {
+    if (item.type === 'pass') return (item.passDetails?.cost || 0) > 0;
+    if (item.type === 'event' && item.eventDetails) {
+      const fee = item.eventDetails.registrationFees;
+      const mitDiscount = item.eventDetails.mit_discount_percentage || 0;
+      const genDiscount = item.eventDetails.discountPercentage || 0;
+      let discount = 0;
+      if (user && user.college && (user.college.toLowerCase().includes('mit') || user.college.toLowerCase().includes('madras institute of technology'))) {
+        discount = mitDiscount || genDiscount;
+      } else {
+        discount = genDiscount;
+      }
+      const finalPrice = Math.floor(fee * (1 - discount / 100));
+      return finalPrice > 0;
+    }
+    if (item.type === 'accommodation' && item.accommodationDetails) {
+      return (item.accommodationDetails.cost * item.accommodationDetails.quantity) > 0;
+    }
+    return false;
+  };
+
+  const shouldShowWhatsappForItems = (items: CartItem[]) => {
+    const paidItems = items.filter(isPaidItem);
+    if (paidItems.length === 0) return false;
+    const paidPasses = paidItems.filter((item) => item.type === 'pass');
+    if (paidPasses.length !== paidItems.length) return false;
+    return paidPasses.every((item) => {
+      const name = String(item.passDetails?.name || '');
+      return isGlobalPassName(name) || isTechPassName(name);
+    });
   };
 
   interface CartItem {
@@ -234,7 +275,7 @@ const CartPage: React.FC = () => {
     setShowRegistrationForm(false);
     window.dispatchEvent(new CustomEvent('registrationComplete'));
     showModal('Success', 'Registration successful for all items!');
-    setShowWhatsappModal(true);
+    setShowWhatsappModal(shouldShowWhatsappForItems(itemsToRemove));
 
     try {
       for (const item of itemsToRemove) {
@@ -475,6 +516,13 @@ const CartPage: React.FC = () => {
                 className="px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-colors"
               >
                 Back
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open(toseLink, '_blank')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+              >
+                Tournament of Strategies
               </button>
               <button
                 type="button"

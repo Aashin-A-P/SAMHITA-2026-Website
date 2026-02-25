@@ -54,6 +54,7 @@ interface Registration {
 
 const EnrolledEventsPage: React.FC = () => {
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
+  const toseLink = 'https://tosedition5.web.app';
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isLoggedIn, loading: authLoading } = useAuth();
@@ -76,6 +77,9 @@ const EnrolledEventsPage: React.FC = () => {
   const showModal = (title: string, message: string) => {
     setModal({ isOpen: true, title, message });
   };
+
+  const isTournamentOfStrategies = (name?: string) =>
+    String(name || '').trim().toLowerCase() === 'tournament of strategies';
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -461,6 +465,18 @@ const EnrolledEventsPage: React.FC = () => {
                                 <ul className="space-y-1 text-gray-300">{renderRoundStatus()}</ul>
                               </div>
 
+                              {isTournamentOfStrategies(registration.event?.eventName) && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(toseLink, '_blank');
+                                  }}
+                                  className="mt-4 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                                >
+                                  Join TOS Now
+                                </button>
+                              )}
 
                             </div>
                           </div>
