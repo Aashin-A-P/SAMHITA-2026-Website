@@ -1,3 +1,5 @@
+import React, { useEffect } from 'react';
+
 interface ThemedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,20 +21,23 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
   message,
   children,
 }) => {
-  if (!isOpen) {
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = '';
-    }
-    return null;
-  }
-
-  if (typeof document !== 'undefined') {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    if (!isOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  if (!isOpen) {
+    return null;
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
-      <div className="relative bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 scale-100 opacity-100 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 scale-100 opacity-100">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -41,7 +46,7 @@ const ThemedModal: React.FC<ThemedModalProps> = ({
         </button>
         <h2 className="text-2xl font-bold text-gold-300 mb-4">{title}</h2>
         {message && <p className="text-gray-300 mb-4">{message}</p>}
-        <div className="text-white" style={{ minHeight: '80px' }}>
+        <div className="text-white max-h-[70vh] overflow-y-auto pr-1" style={{ minHeight: '80px' }}>
           {children}
         </div>
         {!hideDefaultFooter && ( // Conditionally render default footer

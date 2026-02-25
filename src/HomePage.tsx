@@ -1419,7 +1419,7 @@ export default function HomePage() {
         >
             {selectedEvent && (
               <div className="space-y-3 rounded-lg p-4 bg-black/70 border border-gold-500/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-                <p className="text-gray-300 font-event-body">{selectedEvent.eventDescription}</p>
+                <p className="text-gray-300 font-event-body whitespace-pre-line">{selectedEvent.eventDescription}</p>
                 <p className="text-gray-300 text-sm font-event-body">
                   <span className="font-semibold text-gold-200">Pass:</span> {selectedEvent.passName ? selectedEvent.passName : 'N/A'}
                 </p>
@@ -1439,7 +1439,7 @@ export default function HomePage() {
                   <div className="space-y-2">
                     {selectedEvent.rounds.map((round: any) => (
                       <div key={`round-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
-                        <p>Round {round.roundNumber}: {round.roundDetails}</p>
+                        <p className="whitespace-pre-line">Round {round.roundNumber}: {round.roundDetails}</p>
                         <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
                       </div>
                     ))}

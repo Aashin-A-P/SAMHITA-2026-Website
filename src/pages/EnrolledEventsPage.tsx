@@ -266,7 +266,7 @@ const EnrolledEventsPage: React.FC = () => {
         {selectedEvent ? (
           <div className="text-white">
             <p className="text-gold-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
-            <p className="text-gray-300 text-base mb-4 font-event-body">{selectedEvent.eventDescription}</p>
+            <p className="text-gray-300 text-base mb-4 font-event-body whitespace-pre-line">{selectedEvent.eventDescription}</p>
             <p><strong>Rounds:</strong> {selectedEvent.numberOfRounds}</p>
             <p><strong>Type:</strong> {selectedEvent.teamOrIndividual}</p>
             <p><strong>Location:</strong> {selectedEvent.location}</p>
@@ -293,7 +293,7 @@ const EnrolledEventsPage: React.FC = () => {
             <p><strong>Last Date for Registration:</strong> {formatDateTime(selectedEvent.lastDateForRegistration)}</p>
             {selectedEvent.rounds && selectedEvent.rounds.map((round, index) => (
               <div key={index} className="ml-4 mt-2">
-                <p><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
+                <p className="whitespace-pre-line"><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
                 <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
               </div>
             ))}
@@ -412,7 +412,7 @@ const EnrolledEventsPage: React.FC = () => {
                               )}
                               <h3 className="text-2xl font-extrabold text-white mb-1 leading-tight font-event-heading">{registration.event.eventName}</h3>
                               <p className="text-gold-300 text-sm font-medium mb-3 font-event-body">{registration.event.eventCategory}</p>
-                              <p className="text-gray-300 text-base mb-4 font-event-body">{registration.event.eventDescription}</p>
+                              <p className="text-gray-300 text-base mb-4 font-event-body whitespace-pre-line">{registration.event.eventDescription}</p>
 
                               <div className="text-sm text-gray-300 space-y-1 mb-4 font-event-body">
                                 <p><span className="text-gray-400">Location:</span> {registration.event.location}</p>

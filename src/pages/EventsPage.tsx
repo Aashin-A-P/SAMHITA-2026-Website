@@ -563,7 +563,7 @@ const EventsPage: React.FC = () => {
         {selectedEvent ? (
           <div className="text-white">
             <p className="text-gold-300 text-sm mb-3">{selectedEvent.eventCategory}</p>
-            <p className="text-gray-300 text-base mb-4">{selectedEvent.eventDescription}</p>
+            <p className="text-gray-300 text-base mb-4 whitespace-pre-line">{selectedEvent.eventDescription}</p>
             <p><strong>Rounds:</strong> {selectedEvent.numberOfRounds}</p>
             <p><strong>Type:</strong> {selectedEvent.teamOrIndividual}</p>
             <p><strong>Location:</strong> {selectedEvent.location}</p>
@@ -619,7 +619,7 @@ const EventsPage: React.FC = () => {
             <p><strong>Last Date for Registration:</strong> {formatDateTime(selectedEvent.lastDateForRegistration)}</p>
             {selectedEvent.rounds && selectedEvent.rounds.map((round, index) => (
               <div key={index} className="ml-4 mt-2">
-                <p><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
+                <p className="whitespace-pre-line"><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
                 <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
               </div>
             ))}
