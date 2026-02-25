@@ -173,6 +173,7 @@ module.exports = function (db, transporter) {
       password,
       dob,
       mobile,
+      aadhar,
       college,
       department,
       yearofPassing,
@@ -183,15 +184,19 @@ module.exports = function (db, transporter) {
     // Log non-sensitive info
 
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !aadhar) {
 
-      return res.status(400).json({ message: 'Full name, email, and password are required.' });
+      return res.status(400).json({ message: 'Full name, email, password, and Aadhar are required.' });
+    }
+    if (!/^\d{4}-\d{4}-\d{4}$/.test(String(aadhar))) {
+      return res.status(400).json({ message: 'Aadhar number must be in XXXX-XXXX-XXXX format.' });
     }
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const safeDob = dob ?? null;
       const safeMobile = mobile ?? null;
+      const safeAadhar = aadhar ?? null;
       const safeCollege = college ?? null;
       const safeDepartment = department ?? null;
       const safeYear = yearofPassing ?? null;
@@ -199,8 +204,8 @@ module.exports = function (db, transporter) {
       const safeDistrict = district ?? null;
 
       const [result] = await db.execute(
-        'INSERT INTO users (fullName, email, password, dob, mobile, college, department, yearofPassing, state, district) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [fullName, email, hashedPassword, safeDob, safeMobile, safeCollege, safeDepartment, safeYear, safeState, safeDistrict]
+        'INSERT INTO users (fullName, email, password, dob, mobile, aadhar, college, department, yearofPassing, state, district) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [fullName, email, hashedPassword, safeDob, safeMobile, safeAadhar, safeCollege, safeDepartment, safeYear, safeState, safeDistrict]
       );
 
 
@@ -211,6 +216,10 @@ module.exports = function (db, transporter) {
         if (message.includes('mobile_UNIQUE')) {
           console.warn(`Signup failed: Mobile already exists: ${mobile}`);
           return res.status(409).json({ message: 'Mobile number already exists.' });
+        }
+        if (message.includes('aadhar_UNIQUE')) {
+          console.warn(`Signup failed: Aadhar already exists: ${aadhar}`);
+          return res.status(409).json({ message: 'Aadhar number already exists.' });
         }
         console.warn(`Signup failed: Email already exists: ${email}`);
         return res.status(409).json({ message: 'Email already exists.' });

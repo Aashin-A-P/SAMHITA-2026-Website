@@ -457,6 +457,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `dob` date DEFAULT NULL,
   `mobile` varchar(20) DEFAULT NULL,
+  `aadhar` varchar(14) DEFAULT NULL,
   `college` varchar(255) DEFAULT NULL,
   `department` varchar(255) DEFAULT NULL,
   `yearOfPassing` int DEFAULT NULL,
@@ -464,7 +465,8 @@ CREATE TABLE `users` (
   `district` varchar(255) DEFAULT NULL,
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `aadhar_UNIQUE` (`aadhar`)
 ) ENGINE=InnoDB AUTO_INCREMENT=339 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -16,6 +16,7 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
     password: '',
     dob: '',
     mobile: '',
+    aadhar: '',
     college: '',
     department: '',
     yearOfPassing: new Date().getFullYear(),
@@ -49,6 +50,20 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const formatAadhar = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 12);
+    const parts = [];
+    for (let i = 0; i < digitsOnly.length; i += 4) {
+      parts.push(digitsOnly.slice(i, i + 4));
+    }
+    return parts.join('-');
+  };
+
+  const handleAadharChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatAadhar(e.target.value);
+    setFormData({ ...formData, aadhar: formatted });
+  };
+
   const handleCollegeSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === 'Other') {
@@ -80,6 +95,10 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
 
   if (!/^\d{10}$/.test(formData.mobile)) {
     setError('Please enter a valid 10-digit mobile number.');
+    return;
+  }
+  if (!/^\d{4}-\d{4}-\d{4}$/.test(formData.aadhar)) {
+    setError('Please enter a valid Aadhar number in XXXX-XXXX-XXXX format.');
     return;
   }
 
@@ -190,6 +209,19 @@ export default function SignUpPage({ isOpen, onClose, onSwitchToLogin }: SignUpP
               <label className="block text-sm font-medium text-gray-400 mb-1">Mobile Number</label>
               <input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Enter without +91" className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500" required />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Aadhar Number</label>
+            <input
+              type="text"
+              name="aadhar"
+              value={formData.aadhar}
+              onChange={handleAadharChange}
+              placeholder="1234-5678-9012"
+              inputMode="numeric"
+              className="w-full px-4 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500"
+              required
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">College Name</label>

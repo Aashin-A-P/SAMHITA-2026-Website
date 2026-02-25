@@ -12,6 +12,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `dob` date DEFAULT NULL,
   `mobile` varchar(20) DEFAULT NULL,
+  `aadhar` varchar(14) DEFAULT NULL,
   `college` varchar(255) DEFAULT NULL,
   `department` varchar(255) DEFAULT NULL,
   `yearofPassing` int DEFAULT NULL,
@@ -21,6 +22,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`email`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `mobile_UNIQUE` (`mobile`),
+  UNIQUE KEY `aadhar_UNIQUE` (`aadhar`),
   CONSTRAINT `users_id_format` CHECK (`id` REGEXP '^S[0-9]{4}$')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

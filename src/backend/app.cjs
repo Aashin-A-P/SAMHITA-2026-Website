@@ -59,6 +59,7 @@ async function createTablesIfNotExists() {
         password VARCHAR(255),
         dob DATE,
         mobile VARCHAR(20),
+        aadhar VARCHAR(14),
         college VARCHAR(255),
         department VARCHAR(255),
         yearofPassing INT,
@@ -67,6 +68,7 @@ async function createTablesIfNotExists() {
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY id_UNIQUE (id),
         UNIQUE KEY mobile_UNIQUE (mobile),
+        UNIQUE KEY aadhar_UNIQUE (aadhar),
         CONSTRAINT users_id_format CHECK (id REGEXP '^S[0-9]{4}$')
       );
     `);
@@ -97,6 +99,7 @@ async function createTablesIfNotExists() {
     // Ensure users table has all new columns (Migrate existing data)
     await addColumnIfNotExists('users', 'dob', 'DATE');
     await addColumnIfNotExists('users', 'mobile', 'VARCHAR(20)');
+    await addColumnIfNotExists('users', 'aadhar', 'VARCHAR(14)');
     await addColumnIfNotExists('users', 'college', 'VARCHAR(255)');
     await addColumnIfNotExists('users', 'department', 'VARCHAR(255)');
     await addColumnIfNotExists('users', 'yearofPassing', 'INT');
@@ -104,6 +107,7 @@ async function createTablesIfNotExists() {
     await addColumnIfNotExists('users', 'district', 'VARCHAR(255)');
 
     await addIndexIfNotExists('users', 'mobile_UNIQUE', 'UNIQUE KEY mobile_UNIQUE (mobile)');
+    await addIndexIfNotExists('users', 'aadhar_UNIQUE', 'UNIQUE KEY aadhar_UNIQUE (aadhar)');
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS experiences (
