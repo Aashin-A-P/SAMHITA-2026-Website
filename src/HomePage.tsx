@@ -986,7 +986,7 @@ export default function HomePage() {
                                     <button
                                       type="button"
                                       onClick={() => window.open(toseLink, '_blank')}
-                                      className="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                                      className="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
                                     >
                                       Visit TOS Site
                                     </button>
@@ -1472,7 +1472,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => window.open(toseLink, '_blank')}
-                    className="mt-3 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                    className="mt-3 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
                   >
                     Visit Tournament of Strategies Event Site.
                   </button>
@@ -1762,7 +1762,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => window.open(toseLink, '_blank')}
-                className="px-5 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                className="px-5 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
               >
                 Visit Tournament of Strategies Event Site
               </button>

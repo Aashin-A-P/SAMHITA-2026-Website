@@ -471,7 +471,7 @@ const EnrolledEventsPage: React.FC = () => {
                                     e.stopPropagation();
                                     window.open(toseLink, '_blank');
                                   }}
-                                  className="mt-4 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                                  className="mt-4 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
                                 >
                                   Visit TOS Site
                                 </button>

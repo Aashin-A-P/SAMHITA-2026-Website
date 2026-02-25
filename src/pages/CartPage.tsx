@@ -520,7 +520,7 @@ const CartPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => window.open(toseLink, '_blank')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/40 hover:bg-blue-500/30 transition"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
               >
                 Visit Tournament of Strategies Event Site
               </button>
