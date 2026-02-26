@@ -3,10 +3,20 @@ const router = express.Router();
 
 module.exports = function (db) {
   const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
 
   async function getWorkshopSelections(executor, userId, passId, transactionId) {
     const [rows] = await executor.execute(
       `SELECT eventId FROM workshop_pass_registrations
+       WHERE userId = ? AND passId = ? AND transactionId = ?`,
+      [userId, passId, transactionId]
+    );
+    return rows.map((r) => r.eventId);
+  }
+
+  async function getSpecialSelections(executor, userId, passId, transactionId) {
+    const [rows] = await executor.execute(
+      `SELECT eventId FROM special_pass_registrations
        WHERE userId = ? AND passId = ? AND transactionId = ?`,
       [userId, passId, transactionId]
     );
@@ -26,6 +36,17 @@ module.exports = function (db) {
 
     if (isWorkshopPassName(pass.name)) {
       const selectedEventIds = await getWorkshopSelections(executor, userId, passId, transactionId);
+      if (selectedEventIds.length === 0) return;
+      const placeholders = selectedEventIds.map(() => '?').join(',');
+      const [rows] = await executor.execute(
+        `SELECT e.id, 'SAMHITA' as symposium
+         FROM events e
+         WHERE e.id IN (${placeholders})`,
+        selectedEventIds
+      );
+      events = rows;
+    } else if (isSpecialPassName(pass.name)) {
+      const selectedEventIds = await getSpecialSelections(executor, userId, passId, transactionId);
       if (selectedEventIds.length === 0) return;
       const placeholders = selectedEventIds.map(() => '?').join(',');
       const [rows] = await executor.execute(

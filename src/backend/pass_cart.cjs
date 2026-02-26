@@ -3,6 +3,7 @@ const router = express.Router();
 
 module.exports = function (db) {
   const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
   const getLocalDateKey = (value) => {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
@@ -58,6 +59,32 @@ module.exports = function (db) {
     return { ok: true, eventIds: uniqueEventIds };
   }
 
+  async function validateSpecialSelections(passId, eventIds) {
+    if (!Array.isArray(eventIds) || eventIds.length === 0) {
+      return { ok: false, message: 'Please select at least one special event.' };
+    }
+
+    const uniqueEventIds = [...new Set(eventIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
+    if (uniqueEventIds.length === 0) {
+      return { ok: false, message: 'Invalid special event selection.' };
+    }
+
+    if (uniqueEventIds.length > 2) {
+      return { ok: false, message: 'You can select up to two special events.' };
+    }
+
+    const placeholders = uniqueEventIds.map(() => '?').join(',');
+    const [mappedRows] = await db.execute(
+      `SELECT eventId FROM pass_events WHERE passId = ? AND eventId IN (${placeholders})`,
+      [passId, ...uniqueEventIds]
+    );
+    if (mappedRows.length !== uniqueEventIds.length) {
+      return { ok: false, message: 'One or more selected events are not part of this pass.' };
+    }
+
+    return { ok: true, eventIds: uniqueEventIds };
+  }
+
   // Add item to pass cart
   router.post('/', async (req, res) => {
     const { userId, passId, eventIds } = req.body;
@@ -72,9 +99,16 @@ module.exports = function (db) {
         return res.status(404).json({ message: 'Pass not found.' });
       }
       const isWorkshopPass = isWorkshopPassName(pass.name);
+      const isSpecialPass = isSpecialPassName(pass.name);
 
       if (isWorkshopPass) {
         const selectionCheck = await validateWorkshopSelections(passId, eventIds);
+        if (!selectionCheck.ok) {
+          return res.status(400).json({ message: selectionCheck.message });
+        }
+      }
+      if (isSpecialPass) {
+        const selectionCheck = await validateSpecialSelections(passId, eventIds);
         if (!selectionCheck.ok) {
           return res.status(400).json({ message: selectionCheck.message });
         }
@@ -123,6 +157,17 @@ module.exports = function (db) {
           );
         }
       }
+      if (isSpecialPass) {
+        const uniqueEventIds = [...new Set(eventIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
+        if (uniqueEventIds.length > 0) {
+          const values = uniqueEventIds.map(() => '(?, ?)').join(', ');
+          const params = uniqueEventIds.flatMap((id) => [insertResult.insertId, id]);
+          await db.execute(
+            `INSERT INTO pass_cart_special_events (cartId, eventId) VALUES ${values}`,
+            params
+          );
+        }
+      }
 
       res.status(201).json({ message: 'Pass added to cart successfully.' });
     } catch (error) {
@@ -158,6 +203,25 @@ module.exports = function (db) {
             cost: workshopTotal,
             workshops,
           });
+        } else if (isSpecialPassName(item.name)) {
+          const [specialEvents] = await db.execute(
+            `SELECT e.id as eventId, e.eventName, e.registrationFees
+             FROM pass_cart_special_events pcs
+             JOIN events e ON e.id = pcs.eventId
+             WHERE pcs.cartId = ?`,
+            [item.id]
+          );
+          let specialCost = Number(item.cost) || 0;
+          if (specialEvents.length === 1) {
+            specialCost = Number(specialEvents[0].registrationFees) || 0;
+          } else if (specialEvents.length >= 2) {
+            specialCost = Number(item.cost) || 0;
+          }
+          normalized.push({
+            ...item,
+            cost: specialCost,
+            specialEvents,
+          });
         } else {
           normalized.push(item);
         }
@@ -176,6 +240,7 @@ module.exports = function (db) {
 
     try {
       await db.execute('DELETE FROM pass_cart_workshops WHERE cartId = ?', [cartId]);
+      await db.execute('DELETE FROM pass_cart_special_events WHERE cartId = ?', [cartId]);
       const [result] = await db.execute(
         'DELETE FROM pass_cart WHERE id = ?',
         [cartId]

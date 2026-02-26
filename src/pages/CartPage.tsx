@@ -55,6 +55,20 @@ const CartPage: React.FC = () => {
     !passName.toLowerCase().includes('nontech');
 
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
+  const isSpecialPassName = (passName: string) => passName.toLowerCase().includes('special event pass');
+
+  const getSpecialPassCost = (item: CartItem) => {
+    if (item.type !== 'pass' || !item.passDetails) return 0;
+    if (!isSpecialPassName(item.passDetails.name)) return item.passDetails.cost;
+    const specialEvents = item.specialEvents || [];
+    if (specialEvents.length === 1) {
+      return Number(specialEvents[0].registrationFees) || 0;
+    }
+    if (specialEvents.length >= 2) {
+      return Number(item.passDetails.cost) || 0;
+    }
+    return Number(item.passDetails.cost) || 0;
+  };
 
   const isPaidItem = (item: CartItem) => {
     if (item.type === 'pass') return (item.passDetails?.cost || 0) > 0;
@@ -116,6 +130,11 @@ const CartPage: React.FC = () => {
       eventId: number;
       eventName: string;
       roundDateTime?: string;
+      registrationFees: number;
+    }[];
+    specialEvents?: {
+      eventId: number;
+      eventName: string;
       registrationFees: number;
     }[];
     accommodationDetails?: {
@@ -310,7 +329,7 @@ const CartPage: React.FC = () => {
 
       price = Math.floor(original * (1 - discount / 100));
     } else if (item.type === 'pass' && item.passDetails) {
-      price = item.passDetails.cost;
+      price = getSpecialPassCost(item);
     } else if (item.type === 'accommodation' && item.accommodationDetails) {
       price = item.accommodationDetails.cost * item.accommodationDetails.quantity;
     }
@@ -421,7 +440,7 @@ const CartPage: React.FC = () => {
                           {item.type === 'pass' && item.passDetails && (
                             <>
                               <h2 className="text-xl font-semibold">{item.passDetails.name}</h2>
-                              <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{item.passDetails.cost}</p>
+                              <p className="mt-2"><strong>Cost:</strong> {'\u20B9'}{getSpecialPassCost(item)}</p>
                               {item.workshops && item.workshops.length > 0 && (
                                 <div className="mt-3 text-sm text-gray-300">
                                   <p className="font-semibold text-gold-300">Selected Workshops:</p>
@@ -437,7 +456,19 @@ const CartPage: React.FC = () => {
                                   </ul>
                                 </div>
                               )}
-                              {(!item.workshops || item.workshops.length === 0) && (
+                              {item.specialEvents && item.specialEvents.length > 0 && (
+                                <div className="mt-3 text-sm text-gray-300">
+                                  <p className="font-semibold text-gold-300">Selected Special Events:</p>
+                                  <ul className="list-disc list-inside">
+                                    {item.specialEvents.map((e) => (
+                                      <li key={`special-${item.cartId}-${e.eventId}`}>
+                                        {e.eventName}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {(!item.workshops || item.workshops.length === 0) && (!item.specialEvents || item.specialEvents.length === 0) && (
                                 <div className="mt-3 text-sm text-gray-300">
                                   <p className="font-semibold text-gold-300">Events included in this pass:</p>
                                   <ul className="list-disc list-inside">

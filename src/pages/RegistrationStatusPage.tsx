@@ -28,6 +28,11 @@ interface Registration {
     roundDateTime?: string;
     registrationFees: number;
   }[];
+  specialEvents?: {
+    eventId: number;
+    eventName: string;
+    registrationFees: number;
+  }[];
 }
 
 const RegistrationStatusPage: React.FC = () => {
@@ -216,6 +221,16 @@ const RegistrationStatusPage: React.FC = () => {
                     <li key={`workshop-${w.eventId}`}>
                       {w.eventName} ({formatDate(w.roundDateTime)})
                     </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {selectedRegistration.specialEvents && selectedRegistration.specialEvents.length > 0 && (
+              <div className="mt-2">
+                <strong>Selected Special Events:</strong>
+                <ul className="list-disc list-inside">
+                  {selectedRegistration.specialEvents.map((e) => (
+                    <li key={`special-${e.eventId}`}>{e.eventName}</li>
                   ))}
                 </ul>
               </div>

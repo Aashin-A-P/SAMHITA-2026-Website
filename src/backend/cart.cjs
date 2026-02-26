@@ -3,6 +3,7 @@ const router = express.Router();
 
 module.exports = function (db) {
   const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
+  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
 
   // Add item to cart
   router.post('/', async (req, res) => {
@@ -128,6 +129,27 @@ module.exports = function (db) {
                 type: 'pass',
                 passDetails: { ...pass, cost: workshopTotal },
                 workshops
+              };
+            }
+            if (isSpecialPassName(pass.name)) {
+              const [specialEvents] = await db.execute(
+                `SELECT e.id as eventId, e.eventName, e.registrationFees
+                 FROM pass_cart_special_events pcs
+                 JOIN events e ON e.id = pcs.eventId
+                 WHERE pcs.cartId = ?`,
+                [item.cartId]
+              );
+              let specialCost = Number(pass.cost) || 0;
+              if (specialEvents.length === 1) {
+                specialCost = Number(specialEvents[0].registrationFees) || 0;
+              } else if (specialEvents.length >= 2) {
+                specialCost = Number(pass.cost) || 0;
+              }
+              return {
+                ...item,
+                type: 'pass',
+                passDetails: { ...pass, cost: specialCost },
+                specialEvents
               };
             }
             const [passEvents] = await db.execute(

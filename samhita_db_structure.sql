@@ -247,6 +247,20 @@ CREATE TABLE `pass_cart` (
   CONSTRAINT `pass_cart_ibfk_2` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- Special pass cart event selections
+DROP TABLE IF EXISTS `pass_cart_special_events`;
+CREATE TABLE `pass_cart_special_events` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cartId` int NOT NULL,
+  `eventId` int NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `cart_event_unique` (`cartId`,`eventId`),
+  KEY `eventId` (`eventId`),
+  CONSTRAINT `pass_cart_special_events_ibfk_1` FOREIGN KEY (`cartId`) REFERENCES `pass_cart` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pass_cart_special_events_ibfk_2` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Cart table (same as csmit_db cart)
 DROP TABLE IF EXISTS `cart`;
 CREATE TABLE `cart` (
@@ -332,6 +346,24 @@ CREATE TABLE `verified_registrations` (
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   CONSTRAINT `verified_registrations_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Special pass registrations (selected events under Special Event Pass)
+DROP TABLE IF EXISTS `special_pass_registrations`;
+CREATE TABLE `special_pass_registrations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` varchar(5) NOT NULL,
+  `passId` int NOT NULL,
+  `eventId` int NOT NULL,
+  `transactionId` varchar(255) NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_pass_event_tx_unique` (`userId`,`passId`,`eventId`,`transactionId`),
+  KEY `passId` (`passId`),
+  KEY `eventId` (`eventId`),
+  CONSTRAINT `special_pass_registrations_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `special_pass_registrations_ibfk_2` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `special_pass_registrations_ibfk_3` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `attendance`;

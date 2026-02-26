@@ -24,6 +24,8 @@ const PassesDisplay: React.FC = () => {
     const [events, setEvents] = useState<any[]>([]);
     const [selectedWorkshopEventIds, setSelectedWorkshopEventIds] = useState<number[]>([]);
     const [workshopSelectionError, setWorkshopSelectionError] = useState<string | null>(null);
+    const [selectedSpecialEventIds, setSelectedSpecialEventIds] = useState<number[]>([]);
+    const [specialSelectionError, setSpecialSelectionError] = useState<string | null>(null);
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [verifiedPassIds, setVerifiedPassIds] = useState<number[]>([]);
     const { user, isLoggedIn } = useAuth();
@@ -31,6 +33,7 @@ const PassesDisplay: React.FC = () => {
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
     const isWorkshopPassName = (name: string) => name.trim().toLowerCase() === 'workshop pass';
+    const isSpecialPassName = (name: string) => name.toLowerCase().includes('special event pass');
     const getRound1DateKey = (event: any) => {
         const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
         if (!round?.roundDateTime) return null;
@@ -130,6 +133,8 @@ const PassesDisplay: React.FC = () => {
     useEffect(() => {
         setSelectedWorkshopEventIds([]);
         setWorkshopSelectionError(null);
+        setSelectedSpecialEventIds([]);
+        setSpecialSelectionError(null);
     }, [selectedPass]);
 
     useEffect(() => {
@@ -149,6 +154,14 @@ const PassesDisplay: React.FC = () => {
             setWorkshopSelectionError('Select at least one workshop.');
             return;
         }
+        if (isSpecialPassName(pass.name) && selectedSpecialEventIds.length === 0) {
+            setSpecialSelectionError('Select at least one special event.');
+            return;
+        }
+        if (isSpecialPassName(pass.name) && selectedSpecialEventIds.length > 2) {
+            setSpecialSelectionError('You can select up to two special events.');
+            return;
+        }
 
         try {
             const response = await fetch(`${API_BASE_URL}/pass-cart`, {
@@ -159,7 +172,11 @@ const PassesDisplay: React.FC = () => {
                 body: JSON.stringify({
                     userId: user?.id,
                     passId: pass.id,
-                    eventIds: isWorkshopPassName(pass.name) ? selectedWorkshopEventIds : undefined
+                    eventIds: isWorkshopPassName(pass.name)
+                        ? selectedWorkshopEventIds
+                        : isSpecialPassName(pass.name)
+                            ? selectedSpecialEventIds
+                            : undefined
                 }),
             });
 
@@ -264,7 +281,19 @@ const PassesDisplay: React.FC = () => {
                                             .reduce((sum: number, e: any) => sum + (Number(e.registrationFees) || 0), 0);
                                         return `\u20B9${total}`;
                                     })()
-                                    : `\u20B9${selectedPass.cost}`}
+                                    : isSpecialPassName(selectedPass.name)
+                                        ? (() => {
+                                            const specialEvents = getEventsForPass(selectedPass)
+                                                .filter((e: any) => selectedSpecialEventIds.includes(Number(e.id)));
+                                            if (specialEvents.length === 1) {
+                                                return `\u20B9${Number(specialEvents[0].registrationFees) || 0}`;
+                                            }
+                                            if (specialEvents.length >= 2) {
+                                                return `\u20B9${selectedPass.cost}`;
+                                            }
+                                            return `\u20B90`;
+                                        })()
+                                        : `\u20B9${selectedPass.cost}`}
                             </p>
                             <p className="text-gray-300 mb-6">{selectedPass.description}</p>
                             {isWorkshopPassName(selectedPass.name) && (
@@ -317,6 +346,51 @@ const PassesDisplay: React.FC = () => {
                                     </div>
                                     {workshopSelectionError && (
                                         <p className="text-sm text-red-400">{workshopSelectionError}</p>
+                                    )}
+                                </div>
+                            )}
+                            {isSpecialPassName(selectedPass.name) && (
+                                <div className="mb-4 space-y-2">
+                                    <p className="text-gold-300 font-semibold">Select special events:</p>
+                                    <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
+                                        {getEventsForPass(selectedPass).map((event: any) => {
+                                            const eventId = Number(event.id);
+                                            const isSelected = selectedSpecialEventIds.includes(eventId);
+                                            const isBlocked = !isSelected && selectedSpecialEventIds.length >= 2;
+                                            return (
+                                                <label
+                                                    key={`special-${eventId}`}
+                                                    className={`flex items-start gap-3 p-3 rounded-lg border ${
+                                                        isBlocked ? 'border-gray-700 text-gray-500' : 'border-gray-700 text-gray-200'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        disabled={isBlocked}
+                                                        onChange={(e) => {
+                                                            setSpecialSelectionError(null);
+                                                            if (e.target.checked) {
+                                                                setSelectedSpecialEventIds((prev) => [...prev, eventId]);
+                                                            } else {
+                                                                setSelectedSpecialEventIds((prev) => prev.filter((id) => id !== eventId));
+                                                            }
+                                                        }}
+                                                        className="mt-1"
+                                                    />
+                                                    <div className="text-sm">
+                                                        <div className="font-semibold">{event.eventName}</div>
+                                                        <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                        {getEventsForPass(selectedPass).length === 0 && (
+                                            <div className="text-gray-400 text-sm">No events mapped yet.</div>
+                                        )}
+                                    </div>
+                                    {specialSelectionError && (
+                                        <p className="text-sm text-red-400">{specialSelectionError}</p>
                                     )}
                                 </div>
                             )}

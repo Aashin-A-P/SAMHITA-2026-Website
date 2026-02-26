@@ -159,6 +159,8 @@ export default function HomePage() {
   const [selectedPass, setSelectedPass] = useState<any | null>(null);
   const [selectedWorkshopEventIds, setSelectedWorkshopEventIds] = useState<number[]>([]);
   const [workshopSelectionError, setWorkshopSelectionError] = useState<string | null>(null);
+  const [selectedSpecialEventIds, setSelectedSpecialEventIds] = useState<number[]>([]);
+  const [specialSelectionError, setSpecialSelectionError] = useState<string | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [memberCount, setMemberCount] = useState(2);
@@ -379,6 +381,8 @@ export default function HomePage() {
   useEffect(() => {
     setSelectedWorkshopEventIds([]);
     setWorkshopSelectionError(null);
+    setSelectedSpecialEventIds([]);
+    setSpecialSelectionError(null);
   }, [selectedPass]);
 
   const categorizedEvents = useMemo(() => {
@@ -532,6 +536,7 @@ export default function HomePage() {
     passName.toLowerCase().includes('nontech');
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
   const isWorkshopPassName = (passName: string) => passName.trim().toLowerCase() === 'workshop pass';
+  const isSpecialPassName = (passName: string) => passName.toLowerCase().includes('special event pass');
   const isMitEligiblePass = (passName: string) => {
     const name = passName.toLowerCase();
     const isTech = name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
@@ -557,7 +562,7 @@ export default function HomePage() {
     return cleaned;
   };
 
-  const addPassToCartDirect = async (passId: number, passName: string, workshopEventIds?: number[]) => {
+  const addPassToCartDirect = async (passId: number, passName: string, eventIds?: number[]) => {
     if (!user) {
       setIsLoginModalOpen(true);
       return;
@@ -567,7 +572,7 @@ export default function HomePage() {
       const response = await fetch(`${API_BASE_URL}/pass-cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, passId, eventIds: workshopEventIds }),
+        body: JSON.stringify({ userId: user.id, passId, eventIds }),
       });
 
       if (!response.ok) {
@@ -691,6 +696,21 @@ export default function HomePage() {
         return;
       }
     }
+    if (isSpecialPassName(passName)) {
+      if (selectedSpecialEventIds.length === 0) {
+        setSpecialSelectionError('Select at least one special event.');
+        return;
+      }
+      if (selectedSpecialEventIds.length > 2) {
+        setSpecialSelectionError('You can select up to two special events.');
+        return;
+      }
+    }
+    const selectionEventIds = isWorkshopPassName(passName)
+      ? selectedWorkshopEventIds
+      : isSpecialPassName(passName)
+        ? selectedSpecialEventIds
+        : undefined;
     const globalPass = passes.find((p) => isGlobalPassName(p.name));
     const globalPassId = globalPass ? Number(globalPass.id) : null;
     const hasGlobalInCart = globalPassId
@@ -739,7 +759,7 @@ export default function HomePage() {
     if (isGlobalPassName(passName)) {
       if (techPassId) await removePassFromCartByPassId(techPassId);
       if (nonTechPassId) await removePassFromCartByPassId(nonTechPassId);
-      await addPassToCartDirect(passId, passName);
+      await addPassToCartDirect(passId, passName, selectionEventIds);
       showToast('Global pass is added', 'success');
       await fetchPassCart(user?.id || '');
       return;
@@ -766,7 +786,7 @@ export default function HomePage() {
       return;
     }
 
-    await addPassToCartDirect(passId, passName, isWorkshopPassName(passName) ? selectedWorkshopEventIds : undefined);
+    await addPassToCartDirect(passId, passName, selectionEventIds);
   };
 
   const handleMemberIdChange = (index: number, value: string) => {
@@ -1460,7 +1480,7 @@ export default function HomePage() {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (isWorkshopPassName(pass.name)) {
+                                    if (isWorkshopPassName(pass.name) || isSpecialPassName(pass.name)) {
                                       setSelectedPass(pass);
                                       setIsPassModalOpen(true);
                                       return;
@@ -1605,7 +1625,20 @@ export default function HomePage() {
                           .reduce((sum: number, e: any) => sum + (Number(e.registrationFees) || 0), 0);
                         return `\u20B9${total}`;
                       })()
-                    : `\u20B9${selectedPass.cost}`}
+                    : isSpecialPassName(selectedPass.name)
+                      ? (() => {
+                          const specialEvents = getEventsForPass(selectedPass).filter((e: any) =>
+                            selectedSpecialEventIds.includes(Number(e.id))
+                          );
+                          if (specialEvents.length === 1) {
+                            return `\u20B9${Number(specialEvents[0].registrationFees) || 0}`;
+                          }
+                          if (specialEvents.length >= 2) {
+                            return `\u20B9${selectedPass.cost}`;
+                          }
+                          return `\u20B90`;
+                        })()
+                      : `\u20B9${selectedPass.cost}`}
                 </p>
                 {isWorkshopPassName(selectedPass.name) && (
                   <div className="space-y-2">
@@ -1660,7 +1693,52 @@ export default function HomePage() {
                     )}
                   </div>
                 )}
-                {!isWorkshopPassName(selectedPass.name) && (
+                {isSpecialPassName(selectedPass.name) && (
+                  <div className="space-y-2">
+                    <p className="text-gold-300 font-semibold">Select special events:</p>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
+                      {getEventsForPass(selectedPass).map((event: any) => {
+                        const eventId = Number(event.id);
+                        const isSelected = selectedSpecialEventIds.includes(eventId);
+                        const isBlocked = !isSelected && selectedSpecialEventIds.length >= 2;
+                        return (
+                          <label
+                            key={`special-${eventId}`}
+                            className={`flex items-start gap-3 p-3 rounded-lg border ${
+                              isBlocked ? 'border-gray-700 text-gray-500' : 'border-gray-700 text-gray-200'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isBlocked}
+                              onChange={(e) => {
+                                setSpecialSelectionError(null);
+                                if (e.target.checked) {
+                                  setSelectedSpecialEventIds((prev) => [...prev, eventId]);
+                                } else {
+                                  setSelectedSpecialEventIds((prev) => prev.filter((id) => id !== eventId));
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            <div className="text-sm">
+                              <div className="font-semibold">{event.eventName}</div>
+                              <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                      {getEventsForPass(selectedPass).length === 0 && (
+                        <div className="text-gray-400 text-sm">No events mapped yet.</div>
+                      )}
+                    </div>
+                    {specialSelectionError && (
+                      <p className="text-sm text-red-400">{specialSelectionError}</p>
+                    )}
+                  </div>
+                )}
+                {!isWorkshopPassName(selectedPass.name) && !isSpecialPassName(selectedPass.name) && (
                   <div>
                     <p className="text-gold-300 font-semibold mb-2">Events included in this pass:</p>
                     <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">

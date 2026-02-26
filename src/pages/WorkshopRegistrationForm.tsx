@@ -32,6 +32,11 @@ interface CartItem {
     roundDateTime?: string;
     registrationFees: number;
   }[];
+  specialEvents?: {
+    eventId: number;
+    eventName: string;
+    registrationFees: number;
+  }[];
   accommodationDetails?: {
     name: string;
     cost: number;
@@ -61,6 +66,19 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   onCancel
 }) => {
   const { user } = useAuth();
+  const isSpecialPassName = (name: string) => name.toLowerCase().includes('special event pass');
+  const getSpecialPassCost = (item: CartItem) => {
+    if (item.type !== 'pass' || !item.passDetails) return 0;
+    if (!isSpecialPassName(item.passDetails.name)) return item.passDetails.cost;
+    const specialEvents = item.specialEvents || [];
+    if (specialEvents.length === 1) {
+      return Number(specialEvents[0].registrationFees) || 0;
+    }
+    if (specialEvents.length >= 2) {
+      return Number(item.passDetails.cost) || 0;
+    }
+    return Number(item.passDetails.cost) || 0;
+  };
   const [transactionId, setTransactionId] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [transactionDate, setTransactionDate] = useState('');
@@ -84,7 +102,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       const discountedPrice = Math.floor(original * (1 - discount / 100));
       return sum + discountedPrice;
     } else if (item.type === 'pass' && item.passDetails) {
-      return sum + item.passDetails.cost;
+      return sum + getSpecialPassCost(item);
     } else if (item.type === 'accommodation' && item.accommodationDetails) {
       return sum + (item.accommodationDetails.cost * item.accommodationDetails.quantity);
     }
@@ -242,6 +260,14 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
           }
           return acc;
         }, {});
+      const specialSelections = cartItems
+        .filter(item => item.type === 'pass' && item.specialEvents && item.specialEvents.length > 0)
+        .reduce((acc: Record<string, number[]>, item) => {
+          if (item.passId) {
+            acc[String(item.passId)] = (item.specialEvents || []).map(e => e.eventId);
+          }
+          return acc;
+        }, {});
       const accommodationItem = cartItems.find(item => item.type === 'accommodation');
 
       if (accommodationItem) {
@@ -251,6 +277,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
       formData.append('eventIds', JSON.stringify(eventIds));
       formData.append('passIds', JSON.stringify(passIds));
       formData.append('workshopSelections', JSON.stringify(workshopSelections));
+      formData.append('specialSelections', JSON.stringify(specialSelections));
 
       formData.append('transactionId', transactionId);
       formData.append('transactionTime', transactionTime);
@@ -330,6 +357,11 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                       {item.workshops && item.workshops.length > 0 && (
                         <div className="text-xs text-gray-400 mt-1">
                           {item.workshops.map((w) => w.eventName).join(', ')}
+                        </div>
+                      )}
+                      {item.specialEvents && item.specialEvents.length > 0 && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {item.specialEvents.map((e) => e.eventName).join(', ')}
                         </div>
                       )}
                     </div>
