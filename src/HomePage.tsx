@@ -263,6 +263,29 @@ export default function HomePage() {
     };
   }, [activeEventTab, events]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (prefersReduced) return undefined;
+
+    let intervalId: number | null = null;
+    let delayTimer: number | null = null;
+    if (eventsInView) {
+      delayTimer = window.setTimeout(() => {
+        intervalId = window.setInterval(() => {
+          setShouldFlipEvents((prev) => !prev);
+        }, 4000);
+      }, 750);
+    } else {
+      setShouldFlipEvents(false);
+    }
+
+    return () => {
+      if (delayTimer) window.clearTimeout(delayTimer);
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [eventsInView]);
+
 
   useEffect(() => {
     const checkOverflow = () => {
