@@ -178,6 +178,7 @@ export default function HomePage() {
   const [showMitRegisterModal, setShowMitRegisterModal] = useState(false);
   const [eventsInView, setEventsInView] = useState(false);
   const eventsSectionRef = useRef<HTMLElement | null>(null);
+  const eventsSentinelRef = useRef<HTMLDivElement | null>(null);
   const [showTechArrows, setShowTechArrows] = useState(false);
   const [showNonTechArrows, setShowNonTechArrows] = useState(false);
   const [showSignatureArrows, setShowSignatureArrows] = useState(false);
@@ -228,11 +229,11 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const section = eventsSectionRef.current;
-    if (!section) return;
+    const sentinel = eventsSentinelRef.current;
+    if (!sentinel) return;
 
     const checkInView = () => {
-      const rect = section.getBoundingClientRect();
+      const rect = sentinel.getBoundingClientRect();
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
       const isVisible = visibleHeight / Math.max(rect.height, 1) >= 0.2;
@@ -247,7 +248,7 @@ export default function HomePage() {
         { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
       );
 
-      observer.observe(section);
+      observer.observe(sentinel);
       checkInView();
       return () => {
         observer.disconnect();
@@ -928,6 +929,7 @@ export default function HomePage() {
               ref={eventsSectionRef}
               className={`py-20 px-4 sm:px-6 lg:px-8 ${eventsInView ? 'events-in-view' : 'events-out'}`}
             >
+                <div ref={eventsSentinelRef} className="h-1 w-full"></div>
                 <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
                 <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
 
