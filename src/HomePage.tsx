@@ -184,7 +184,6 @@ export default function HomePage() {
   const [showWorkshopArrows, setShowWorkshopArrows] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
-  const [autoFlipActive, setAutoFlipActive] = useState(false);
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual';
@@ -232,33 +231,37 @@ export default function HomePage() {
     const section = eventsSectionRef.current;
     if (!section) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setEventsInView(entry.isIntersecting);
-      },
-      { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
-    );
+    const checkInView = () => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+      const isVisible = visibleHeight / Math.max(rect.height, 1) >= 0.2;
+      setEventsInView(isVisible);
+    };
 
-    observer.observe(section);
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setEventsInView(entry.isIntersecting);
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+      );
+
+      observer.observe(section);
+      checkInView();
+      return () => {
+        observer.disconnect();
+      };
+    }
+
+    checkInView();
+    window.addEventListener('scroll', checkInView, { passive: true });
+    window.addEventListener('resize', checkInView);
     return () => {
-      observer.disconnect();
+      window.removeEventListener('scroll', checkInView);
+      window.removeEventListener('resize', checkInView);
     };
   }, [activeEventTab, events]);
-
-  useEffect(() => {
-    if (!eventsInView) {
-      setAutoFlipActive(false);
-      return;
-    }
-    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    if (prefersReduced) return;
-
-    const startTimer = window.setTimeout(() => {
-      setAutoFlipActive(true);
-    }, 600);
-
-    return () => window.clearTimeout(startTimer);
-  }, [eventsInView]);
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -920,7 +923,11 @@ export default function HomePage() {
             </section>
 
             
-            <section id="events" ref={eventsSectionRef} className="py-20 px-4 sm:px-6 lg:px-8">
+            <section
+              id="events"
+              ref={eventsSectionRef}
+              className={`py-20 px-4 sm:px-6 lg:px-8 ${eventsInView ? 'events-in-view' : 'events-out'}`}
+            >
                 <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
                 <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
 
@@ -954,7 +961,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
+                                  <div className="flip-inner">
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1044,7 +1051,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
+                                  <div className="flip-inner">
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1115,7 +1122,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
+                                  <div className="flip-inner">
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1186,7 +1193,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
+                                  <div className="flip-inner">
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1266,7 +1273,7 @@ export default function HomePage() {
                           className="relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                         >
                               <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
+                                <div className="flip-inner">
                                   <div className="flip-face">
                                     <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                   </div>

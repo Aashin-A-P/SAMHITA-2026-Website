@@ -169,11 +169,32 @@
   transition: transform 0.8s ease;
   -webkit-transform: rotateY(0deg);
   -webkit-transition: -webkit-transform 0.8s ease;
+  will-change: transform;
 }
 
 .flip-inner.is-flipped {
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
+}
+
+.events-out .flip-inner {
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+  animation: none;
+}
+
+.events-in-view .flip-inner {
+  animation: flip-once 0.8s ease forwards;
+  animation-delay: 0.6s;
+}
+
+@keyframes flip-once {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
 }
 
 .flip-face {
