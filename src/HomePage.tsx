@@ -375,14 +375,17 @@ export default function HomePage() {
     const isNonTechPass = (name: string) => name.includes('non-tech') || name.includes('non tech') || name.includes('nontech');
     const isWorkshopCategory = (category: string) => category.toLowerCase().includes('workshop');
     const isWorkshopPass = (name: string) => name.includes('workshop pass') || name.includes('workshop');
+    const isElitePass = (name: string) => name.includes('special event pass');
 
     return {
+      Elite: normalized.filter((e) => isElitePass(e.passName)),
       Technical: normalized.filter((e) => isTechPass(e.passName)),
       'Non-Technical': normalized.filter((e) => isNonTechPass(e.passName)),
       Signature: normalized.filter(
         (e) =>
           !isTechPass(e.passName) &&
           !isNonTechPass(e.passName) &&
+          !isElitePass(e.passName) &&
           !isWorkshopCategory(e.category) &&
           !isWorkshopPass(e.passName)
       ),
@@ -1245,6 +1248,63 @@ export default function HomePage() {
                   )}
                 </div>
 
+                <section className="py-10 px-4 sm:px-6 lg:px-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-gold-500/10 via-gold-300/10 to-gold-500/10 blur-2xl pointer-events-none"></div>
+                    <div className="relative mx-auto max-w-4xl rounded-2xl border border-gold-500/50 bg-black/55 p-6 shadow-[0_0_50px_rgba(212,175,55,0.35)]">
+                      <h3 className="text-2xl font-extrabold text-center text-gold-gradient drop-shadow">ELITE EVENTS</h3>
+                      <p className="text-center text-gold-200/90 mt-2 mb-6">Premium career-focused challenges accessible only via the Special Event Pass.</p>
+                    {categorizedEvents.Elite.length === 0 ? (
+                      <div className="mx-auto max-w-3xl rounded-xl border border-gold-500/30 bg-black/60 p-8 text-center text-gray-300">
+                        Coming soon.
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap justify-center gap-6">
+                        {categorizedEvents.Elite.map((event, index) => {
+                          const eliteCoverImages = [DaenerysTargaryen, JohnSnow];
+                          const coverImage = eliteCoverImages[index] || EventCover;
+                          const hasPoster = Boolean(getPosterSrc(event.posterImage));
+                          return (
+                            <div
+                              key={`elite-${event.id}`}
+                              className="relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                            >
+                              <div className="flip-card w-full h-full">
+                                <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                  <div className="flip-face">
+                                    <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flip-face flip-back">
+                                    {hasPoster ? (
+                                      <img
+                                        src={getPosterSrc(event.posterImage) as string}
+                                        alt={`${event.title} poster`}
+                                        className="w-full h-full object-fill bg-black/60"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                        Poster coming soon
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { setSelectedEvent(event); setIsEventModalOpen(true); }}
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex px-4 py-2 rounded-lg text-xs font-semibold gold-outline hover:scale-105 transition-transform"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    </div>
+                  </div>
+                </section>
+
                 <h2 id="passes" className="text-3xl font-bold font-display text-center mt-16 mb-12 text-gold-gradient scroll-mt-28">Claim Your Throne</h2>
                 <div className="max-w-6xl mx-auto">
                   {isPassesLoading ? (
@@ -1384,6 +1444,7 @@ export default function HomePage() {
                     </div>
                   )}
                 </div>
+
             </section>
             <section id="why-join" className="py-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-5xl mx-auto text-center bg-black/70 backdrop-blur-md border border-gold-500/30 p-8 rounded-lg gold-glow">
