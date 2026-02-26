@@ -185,7 +185,7 @@
 
 .events-in-view .flip-inner {
   animation: flip-once 0.8s ease forwards;
-  animation-delay: 0.6s;
+  animation-delay: 0.75s;
 }
 
 @keyframes flip-once {

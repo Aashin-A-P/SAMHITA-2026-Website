@@ -176,9 +176,8 @@ export default function HomePage() {
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
   const toastTimeoutRef = useRef<number | null>(null);
   const [showMitRegisterModal, setShowMitRegisterModal] = useState(false);
-  const [eventsInView, setEventsInView] = useState(false);
   const eventsSectionRef = useRef<HTMLElement | null>(null);
-  const eventsSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [visibleCardIds, setVisibleCardIds] = useState<Set<number>>(new Set());
   const [showTechArrows, setShowTechArrows] = useState(false);
   const [showNonTechArrows, setShowNonTechArrows] = useState(false);
   const [showSignatureArrows, setShowSignatureArrows] = useState(false);
@@ -229,38 +228,60 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const sentinel = eventsSentinelRef.current;
-    if (!sentinel) return;
+    const section = eventsSectionRef.current;
+    if (!section) return;
 
-    const checkInView = () => {
-      const rect = sentinel.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
-      const isVisible = visibleHeight / Math.max(rect.height, 1) >= 0.2;
-      setEventsInView(isVisible);
+    const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-event-card-id]'));
+    if (cards.length === 0) return;
+
+    const updateVisibility = (id: number, isVisible: boolean) => {
+      setVisibleCardIds((prev) => {
+        const next = new Set(prev);
+        if (isVisible) next.add(id);
+        else next.delete(id);
+        return next;
+      });
     };
 
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(
-        ([entry]) => {
-          setEventsInView(entry.isIntersecting);
+        (entries) => {
+          entries.forEach((entry) => {
+            const el = entry.target as HTMLElement;
+            const id = Number(el.dataset.eventCardId);
+            if (!Number.isNaN(id)) {
+              updateVisibility(id, entry.intersectionRatio >= 0.45);
+            }
+          });
         },
-        { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+        { threshold: 0.45, rootMargin: '0px' }
       );
 
-      observer.observe(sentinel);
-      checkInView();
-      return () => {
-        observer.disconnect();
-      };
+      cards.forEach((c) => observer.observe(c));
+      return () => observer.disconnect();
     }
 
-    checkInView();
-    window.addEventListener('scroll', checkInView, { passive: true });
-    window.addEventListener('resize', checkInView);
+    const checkAll = () => {
+      cards.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+        const visibleWidth = Math.min(rect.right, vw) - Math.max(rect.left, 0);
+        const visibleArea = Math.max(0, visibleHeight) * Math.max(0, visibleWidth);
+        const totalArea = Math.max(rect.height, 1) * Math.max(rect.width, 1);
+        const isVisible = visibleArea / totalArea >= 0.45;
+        const id = Number(el.dataset.eventCardId);
+        if (!Number.isNaN(id)) updateVisibility(id, isVisible);
+      });
+    };
+
+    checkAll();
+    window.addEventListener('scroll', checkAll, { passive: true });
+    window.addEventListener('resize', checkAll);
     return () => {
-      window.removeEventListener('scroll', checkInView);
-      window.removeEventListener('resize', checkInView);
+      window.removeEventListener('scroll', checkAll);
+      window.removeEventListener('resize', checkAll);
     };
   }, [activeEventTab, events]);
 
@@ -283,7 +304,7 @@ export default function HomePage() {
     checkOverflow();
     window.addEventListener('resize', checkOverflow);
     return () => window.removeEventListener('resize', checkOverflow);
-  }, [events, activeEventTab, eventsInView]);
+  }, [events, activeEventTab]);
 
   useEffect(() => {
     setMemberIds((prev) => {
@@ -927,9 +948,8 @@ export default function HomePage() {
             <section
               id="events"
               ref={eventsSectionRef}
-              className={`py-20 px-4 sm:px-6 lg:px-8 ${eventsInView ? 'events-in-view' : 'events-out'}`}
+              className="py-20 px-4 sm:px-6 lg:px-8"
             >
-                <div ref={eventsSentinelRef} className="h-1 w-full"></div>
                 <h2 className="text-3xl font-bold font-display text-center mb-8 text-gold-gradient">Discover the Battlefields</h2>
                 <p className="text-center text-gray-300 mb-8">Choose your arena and explore the events crafted for every kind of challenger.</p>
 
@@ -960,7 +980,10 @@ export default function HomePage() {
                             return (
                               <div
                                 key={event.id}
-                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                                data-event-card-id={event.id}
+                                className={`event-card relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col ${
+                                  visibleCardIds.has(event.id) ? 'events-in-view' : 'events-out'
+                                }`}
                               >
                                 <div className="flip-card w-full h-full">
                                   <div className="flip-inner">
@@ -1050,7 +1073,10 @@ export default function HomePage() {
                             return (
                               <div
                                 key={event.id}
-                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                                data-event-card-id={event.id}
+                                className={`event-card relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col ${
+                                  visibleCardIds.has(event.id) ? 'events-in-view' : 'events-out'
+                                }`}
                               >
                                 <div className="flip-card w-full h-full">
                                   <div className="flip-inner">
@@ -1121,7 +1147,10 @@ export default function HomePage() {
                             return (
                               <div
                                 key={event.id}
-                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                                data-event-card-id={event.id}
+                                className={`event-card relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col ${
+                                  visibleCardIds.has(event.id) ? 'events-in-view' : 'events-out'
+                                }`}
                               >
                                 <div className="flip-card w-full h-full">
                                   <div className="flip-inner">
@@ -1192,7 +1221,10 @@ export default function HomePage() {
                             return (
                               <div
                                 key={event.id}
-                                className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                                data-event-card-id={event.id}
+                                className={`event-card relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col ${
+                                  visibleCardIds.has(event.id) ? 'events-in-view' : 'events-out'
+                                }`}
                               >
                                 <div className="flip-card w-full h-full">
                                   <div className="flip-inner">
@@ -1272,7 +1304,10 @@ export default function HomePage() {
                           return (
                         <div
                           key={`elite-${event.id}`}
-                          className="relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                          data-event-card-id={event.id}
+                          className={`event-card relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col ${
+                            visibleCardIds.has(event.id) ? 'events-in-view' : 'events-out'
+                          }`}
                         >
                               <div className="flip-card w-full h-full">
                                 <div className="flip-inner">
