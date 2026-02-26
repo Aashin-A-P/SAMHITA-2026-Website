@@ -24,18 +24,19 @@ const VerifyTransactionPage: React.FC = () => {
   const [bulkResults, setBulkResults] = useState<VerificationResult[]>([]);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '' });
+  const [csvType, setCsvType] = useState<'simple' | 'indian_bank'>('simple');
 
   // ------------------------------------------
   // Helper: Reusable API Call
   // ------------------------------------------
-  const verifyTransactionAPI = async (id: string) => {
+  const verifyTransactionAPI = async (id: string, amount?: number) => {
     // Ensure ID is a clean string with no scientific notation artifacts
     const cleanId = String(id).trim();
 
     const response = await fetch(`${API_BASE_URL}/verification/verify-transaction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transactionId: cleanId }),
+      body: JSON.stringify({ transactionId: cleanId, amount }),
     });
 
     const data = await response.json();
@@ -105,39 +106,56 @@ const VerifyTransactionPage: React.FC = () => {
 
       complete: async (results) => {
         const rows = results.data as any[];
-        
-        // Grab the first column value, ensure it is treated as a string
-        const idsToVerify = rows
-          .map((row) => {
-            const val = Object.values(row)[0];
-            return val ? String(val) : ''; 
-          })
-          .filter(id => id !== '');
+
+        const parsedRows = csvType === 'indian_bank'
+          ? rows.map((row) => {
+              const details = String(row['Transaction Details'] || '').trim();
+              const creditsRaw = String(row['Credits'] || '').trim();
+              const match = details.match(/\/UPI\/([^\/\s]+)/i);
+              const extractedId = match ? match[1] : '';
+              const amount = Number(creditsRaw.replace(/[^\d.]/g, ''));
+              return { id: extractedId, amount, rawId: extractedId };
+            })
+          : rows.map((row) => {
+              const val = Object.values(row)[0];
+              return { id: val ? String(val).trim() : '', amount: undefined, rawId: val ? String(val).trim() : '' };
+            });
+
+        const idsToVerify = parsedRows.filter((r) => r.id !== '');
 
         setProgress({ current: 0, total: idsToVerify.length });
 
         for (let i = 0; i < idsToVerify.length; i++) {
-          const currentId = idsToVerify[i];
-          
-          // Double check we aren't sending scientific notation like "5.12E+10"
+          const current = idsToVerify[i];
+          const currentId = current.id;
+
           if (currentId.toLowerCase().includes('e+')) {
-             setBulkResults((prev) => [
-              ...prev, 
+            setBulkResults((prev) => [
+              ...prev,
               { id: currentId, status: 'error', message: 'Invalid ID Format (Scientific Notation detected in CSV)' }
             ]);
             setProgress((prev) => ({ ...prev, current: i + 1 }));
             continue;
           }
 
-          try {
-            const apiRes = await verifyTransactionAPI(currentId);
+          if (csvType === 'indian_bank' && (!current.amount || Number.isNaN(current.amount))) {
             setBulkResults((prev) => [
-              ...prev, 
+              ...prev,
+              { id: currentId || '(missing)', status: 'error', message: 'Invalid or missing credit amount.' }
+            ]);
+            setProgress((prev) => ({ ...prev, current: i + 1 }));
+            continue;
+          }
+
+          try {
+            const apiRes = await verifyTransactionAPI(currentId, current.amount);
+            setBulkResults((prev) => [
+              ...prev,
               { id: currentId, status: 'success', message: apiRes.message || 'Verified' }
             ]);
           } catch (error: any) {
             setBulkResults((prev) => [
-              ...prev, 
+              ...prev,
               { id: currentId, status: 'error', message: error.message }
             ]);
           }
@@ -201,6 +219,24 @@ const VerifyTransactionPage: React.FC = () => {
           <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200">
              <strong>Tip:</strong> If using Excel, ensure your ID column is formatted as <strong>Text</strong> before saving. 
              If you see "E+" in your results, check your CSV file.
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              CSV Type
+            </label>
+            <select
+              value={csvType}
+              onChange={(e) => {
+                setCsvType(e.target.value as 'simple' | 'indian_bank');
+                setBulkResults([]);
+                setProgress({ current: 0, total: 0 });
+              }}
+              className="w-full max-w-md p-2 border rounded focus:ring-2 focus:ring-gold-500 outline-none"
+            >
+              <option value="simple">Simple ID List (first column)</option>
+              <option value="indian_bank">Indian Bank Statement (Transaction Details + Credits)</option>
+            </select>
           </div>
 
           <div className="mb-6">

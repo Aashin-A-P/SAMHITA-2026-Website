@@ -134,7 +134,7 @@ module.exports = function (db) {
 
   // Verify by Transaction ID (Scanning or Manual Entry)
   router.post('/verify-transaction', async (req, res) => {
-    const { transactionId } = req.body;
+    const { transactionId, amount } = req.body;
 
     if (!transactionId) {
       return res.status(400).json({ message: 'Transaction ID is required.' });
@@ -145,14 +145,28 @@ module.exports = function (db) {
       connection = await db.getConnection();
       await connection.beginTransaction();
 
-      // 1. Find ALL registrations by transactionId
-      const [registrations] = await connection.execute(
-        'SELECT * FROM registrations WHERE transactionId = ?',
-        [transactionId]
-      );
+      const numericAmount = amount !== undefined && amount !== null ? Number(amount) : null;
+      if (numericAmount !== null && Number.isNaN(numericAmount)) {
+        await connection.rollback();
+        return res.status(400).json({ message: 'Invalid amount.' });
+      }
+
+      // 1. Find ALL registrations by transactionId (optionally filter by amount)
+      const [registrations] = numericAmount !== null
+        ? await connection.execute(
+            'SELECT * FROM registrations WHERE transactionId = ? AND transactionAmount IS NOT NULL AND ROUND(transactionAmount, 2) = ROUND(?, 2)',
+            [transactionId, numericAmount]
+          )
+        : await connection.execute(
+            'SELECT * FROM registrations WHERE transactionId = ?',
+            [transactionId]
+          );
 
       if (registrations.length === 0) {
         await connection.rollback();
+        if (numericAmount !== null) {
+          return res.status(404).json({ message: 'Transaction ID found, but amount does not match.' });
+        }
         return res.status(404).json({ message: 'Registration with this Transaction ID not found.' });
       }
 
