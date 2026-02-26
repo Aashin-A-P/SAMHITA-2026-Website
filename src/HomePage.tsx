@@ -177,8 +177,6 @@ export default function HomePage() {
   const toastTimeoutRef = useRef<number | null>(null);
   const [showMitRegisterModal, setShowMitRegisterModal] = useState(false);
   const [eventsInView, setEventsInView] = useState(false);
-  const [shouldFlipEvents, setShouldFlipEvents] = useState(false);
-  const flipTimerRef = useRef<number | null>(null);
   const eventsSectionRef = useRef<HTMLElement | null>(null);
   const [showTechArrows, setShowTechArrows] = useState(false);
   const [showNonTechArrows, setShowNonTechArrows] = useState(false);
@@ -186,6 +184,7 @@ export default function HomePage() {
   const [showWorkshopArrows, setShowWorkshopArrows] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const [autoFlipActive, setAutoFlipActive] = useState(false);
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual';
@@ -236,19 +235,6 @@ export default function HomePage() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setEventsInView(entry.isIntersecting);
-        if (flipTimerRef.current) {
-          window.clearTimeout(flipTimerRef.current);
-          flipTimerRef.current = null;
-        }
-        if (entry.isIntersecting) {
-          setShouldFlipEvents(false);
-          flipTimerRef.current = window.setTimeout(() => {
-            setShouldFlipEvents(true);
-            flipTimerRef.current = null;
-          }, 750);
-        } else {
-          setShouldFlipEvents(false);
-        }
       },
       { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
     );
@@ -256,36 +242,23 @@ export default function HomePage() {
     observer.observe(section);
     return () => {
       observer.disconnect();
-      if (flipTimerRef.current) {
-        window.clearTimeout(flipTimerRef.current);
-        flipTimerRef.current = null;
-      }
     };
   }, [activeEventTab, events]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    if (prefersReduced) return undefined;
-
-    let intervalId: number | null = null;
-    let delayTimer: number | null = null;
-    if (eventsInView) {
-      delayTimer = window.setTimeout(() => {
-        intervalId = window.setInterval(() => {
-          setShouldFlipEvents((prev) => !prev);
-        }, 4000);
-      }, 750);
-    } else {
-      setShouldFlipEvents(false);
+    if (!eventsInView) {
+      setAutoFlipActive(false);
+      return;
     }
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (prefersReduced) return;
 
-    return () => {
-      if (delayTimer) window.clearTimeout(delayTimer);
-      if (intervalId) window.clearInterval(intervalId);
-    };
+    const startTimer = window.setTimeout(() => {
+      setAutoFlipActive(true);
+    }, 600);
+
+    return () => window.clearTimeout(startTimer);
   }, [eventsInView]);
-
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -981,7 +954,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1071,7 +1044,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1142,7 +1115,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1213,7 +1186,7 @@ export default function HomePage() {
                                 className="relative min-w-[280px] h-[420px] snap-center bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
                               >
                                 <div className="flip-card w-full h-full">
-                                  <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                  <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
                                     <div className="flip-face">
                                       <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                     </div>
@@ -1288,12 +1261,12 @@ export default function HomePage() {
                           const coverImage = eliteCoverImages[index] || EventCover;
                           const hasPoster = Boolean(getPosterSrc(event.posterImage));
                           return (
-                            <div
-                              key={`elite-${event.id}`}
-                              className="relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
-                            >
+                        <div
+                          key={`elite-${event.id}`}
+                          className="relative w-[280px] h-[420px] bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg gold-glow overflow-hidden flex flex-col"
+                        >
                               <div className="flip-card w-full h-full">
-                                <div className={`flip-inner${shouldFlipEvents ? ' is-flipped' : ''}`}>
+                                <div className={`flip-inner${autoFlipActive ? ' is-flipped' : ''}`}>
                                   <div className="flip-face">
                                     <img src={coverImage} alt="Event cover" className="w-full h-full object-cover" />
                                   </div>
@@ -1957,3 +1930,4 @@ export default function HomePage() {
     </>
   );
 }
+
