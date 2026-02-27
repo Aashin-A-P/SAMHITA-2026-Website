@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import API_BASE_URL from '../Config';
 
 
@@ -151,6 +152,27 @@ export default function LoginPage({ isOpen, onClose, onSwitchToSignUp, onSwitchT
             Sign up
           </a>
         </p>
+        <div className="text-center text-xs text-gold-300 font-display mt-3 flex items-center justify-center gap-2">
+          <span>Developed By Aashin A P</span>
+          <a
+            href="https://github.com/Aashin-A-P"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-gold-200 transition"
+            aria-label="Aashin A P GitHub"
+          >
+            <FaGithub />
+          </a>
+          <a
+            href="https://www.linkedin.com/in/aashin-a-p-21jan2005/"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-gold-200 transition"
+            aria-label="Aashin A P LinkedIn"
+          >
+            <FaLinkedin />
+          </a>
+        </div>
       </div>
     </div>
   );

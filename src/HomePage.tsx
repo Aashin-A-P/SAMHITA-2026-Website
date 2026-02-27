@@ -43,7 +43,7 @@ import aravinth from './Photos/aravinth.jpeg';
 import HomePageGallery from './components/HomePageGallery';
 import CsmitLogo from './Photos/Logo.png';
 import EventCover from './Photos/event_cover.png';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaWhatsapp, FaGithub, FaLinkedin } from 'react-icons/fa';
 import RobertBaratheon from './Photos/Robert Baratheon.png';
 import CerseiLannister from './Photos/Cersei Lannister.png';
 import TywinLannister from './Photos/Tywin Lannister.png';
@@ -1017,7 +1017,6 @@ export default function HomePage() {
                   <p className="text-lg text-gray-300 mb-8">
                     SAMHITA, the flagship national-level technical symposium organized by the Information Technology Association, stands as a premier platform for innovation, collaboration, and technical excellence. Designed to bring together aspiring technocrats from across institutions, SAMHITA features a diverse array of competitions, workshops, and knowledge-sharing sessions that challenge creativity and problem-solving skills. Over the years, it has evolved into more than just an event - it is a dynamic forum that nurtures talent, encourages industry interaction, and empowers students to transform their ideas into impactful solutions, shaping them into confident and future-ready professionals.
                   </p>
-
               </div>
             </section>
 
@@ -2097,6 +2096,27 @@ export default function HomePage() {
                     <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
                     <p className="text-lg font-bold">Email: <a href="mailto:itasamhita26@gmail.com" className="hover:text-gold-400 transition">itasamhita26@gmail.com</a></p>
                     <p className="text-lg font-bold">Address: MIT Campus, Chromepet, Chennai</p>
+                    <div className="mt-2 text-sm font-display text-gold-300 flex items-center gap-2">
+                      <span>Developed By Aashin A P</span>
+                      <a
+                        href="https://github.com/Aashin-A-P"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-gold-200 transition"
+                        aria-label="Aashin A P GitHub"
+                      >
+                        <FaGithub />
+                      </a>
+                      <a
+                        href="https://www.linkedin.com/in/aashin-a-p-21jan2005/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-gold-200 transition"
+                        aria-label="Aashin A P LinkedIn"
+                      >
+                        <FaLinkedin />
+                      </a>
+                    </div>
                     <button
                       type="button"
                       onClick={() => window.open(whatsappLink, '_blank')}
@@ -2127,7 +2147,30 @@ export default function HomePage() {
                     </div>
                 </div>
             </div>
-            <p className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8">© {new Date().getFullYear()} SAMHITA - National Level Technical Symposium. All Rights Reserved.</p>
+            <div className="text-xs text-center border-t border-gold-500/20 pt-8 mt-8 text-gold-300 font-display flex flex-col sm:flex-row items-center justify-center gap-2">
+              <span>© {new Date().getFullYear()} SAMHITA - National Level Technical Symposium. All Rights Reserved.</span>
+              <span className="flex items-center gap-2">
+                <span>Developed By Aashin A P</span>
+                <a
+                  href="https://github.com/Aashin-A-P"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-gold-200 transition"
+                  aria-label="Aashin A P GitHub"
+                >
+                  <FaGithub />
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/aashin-a-p-21jan2005/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-gold-200 transition"
+                  aria-label="Aashin A P LinkedIn"
+                >
+                  <FaLinkedin />
+                </a>
+              </span>
+            </div>
         </footer>
 
         <LoginPage 
