@@ -811,6 +811,20 @@ export default function HomePage() {
       return;
     }
 
+    if (isTechPassName(passName) && hasNonTechPurchased && globalPassId) {
+      await addPassToCartDirect(globalPassId, globalPass.name);
+      showToast('Global pass is added', 'success');
+      await fetchPassCart(user?.id || '');
+      return;
+    }
+
+    if (isNonTechPassName(passName) && hasTechPurchased && globalPassId) {
+      await addPassToCartDirect(globalPassId, globalPass.name);
+      showToast('Global pass is added', 'success');
+      await fetchPassCart(user?.id || '');
+      return;
+    }
+
     if (isTechPassName(passName) && hasNonTechInCart && globalPassId) {
       if (nonTechPassId) await removePassFromCartByPassId(nonTechPassId);
       await addPassToCartDirect(globalPassId, globalPass.name);

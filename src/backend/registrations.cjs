@@ -7,6 +7,15 @@ module.exports = function (db, uploadTransactionScreenshot) {
     const n = String(name || '').toLowerCase();
     return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
   };
+  const isGlobalPassName = (name) => String(name || '').toLowerCase().includes('global');
+  const isTechPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('tech pass') && !n.includes('non-tech') && !n.includes('non tech') && !n.includes('nontech');
+  };
+  const isNonTechPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('non-tech pass') || n.includes('non tech pass') || n.includes('nontech pass');
+  };
   const MAX_UPI_COUNT = 19;
   const getLocalDateKey = (value) => {
     const d = new Date(value);
@@ -555,6 +564,19 @@ module.exports = function (db, uploadTransactionScreenshot) {
                 params
               );
             }
+          } else if (isGlobalPassName(pass.name)) {
+            const [registeredPassRows] = await connection.execute(
+              `SELECT p.id, p.cost, p.name
+               FROM registrations r
+               JOIN passes p ON p.id = r.passId
+               WHERE r.userId = ? AND r.passId IS NOT NULL`,
+              [userId]
+            );
+            const registeredTech = registeredPassRows.filter((row) => isTechPassName(row.name));
+            const registeredNonTech = registeredPassRows.filter((row) => isNonTechPassName(row.name));
+            const alreadyPaid = [...registeredTech, ...registeredNonTech]
+              .reduce((sum, row) => sum + (Number(row.cost) || 0), 0);
+            computedPassCost = Math.max((Number(pass.cost) || 0) - alreadyPaid, 0);
           }
 
           const discountedPassCost = Math.floor(computedPassCost * (1 - couponDiscount / 100));

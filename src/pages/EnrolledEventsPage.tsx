@@ -83,6 +83,16 @@ const EnrolledEventsPage: React.FC = () => {
     String(name || '').trim().toLowerCase() === 'tournament of strategies';
   const isWorkshopEvent = (event?: Event | null) =>
     String(event?.eventCategory || '').toLowerCase().includes('workshop');
+  const isGlobalPassName = (name?: string) =>
+    String(name || '').toLowerCase().includes('global');
+  const isTechPassName = (name?: string) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('tech pass') && !n.includes('non-tech') && !n.includes('non tech') && !n.includes('nontech');
+  };
+  const isNonTechPassName = (name?: string) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('non-tech pass') || n.includes('non tech pass') || n.includes('nontech pass');
+  };
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -384,7 +394,13 @@ const EnrolledEventsPage: React.FC = () => {
                         }
                       });
 
-                      return Array.from(passMap.values()).map(({ reg, totalCost, count }) => {
+                      const passEntries = Array.from(passMap.values());
+                      const hasGlobal = passEntries.some(({ reg }) => isGlobalPassName(reg.pass?.name));
+                      const filteredEntries = hasGlobal
+                        ? passEntries.filter(({ reg }) => !isTechPassName(reg.pass?.name) && !isNonTechPassName(reg.pass?.name))
+                        : passEntries;
+
+                      return filteredEntries.map(({ reg, totalCost, count }) => {
                         const passName = reg.pass?.name || '';
                         const displayCost = isWorkshopPassName(passName)
                           ? totalCost
