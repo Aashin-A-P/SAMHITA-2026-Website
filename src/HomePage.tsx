@@ -1163,7 +1163,7 @@ export default function HomePage() {
                     <div className="space-y-4">
                       <h3 className="text-2xl font-bold text-white text-center">Signature Events</h3>
                       <div className="relative">
-                        <div ref={workshopScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                        <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
                           {categorizedEvents.Signature.map((event, index) => {
                             const coverImage = signatureCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
@@ -1213,7 +1213,7 @@ export default function HomePage() {
                           <>
                             <button
                               type="button"
-                          onClick={() => workshopScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              onClick={() => signatureScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
                               className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
                               aria-label="Scroll signature events left"
                             >
@@ -1221,7 +1221,7 @@ export default function HomePage() {
                             </button>
                             <button
                               type="button"
-                          onClick={() => workshopScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              onClick={() => signatureScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
                               className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
                               aria-label="Scroll signature events right"
                             >
@@ -1237,7 +1237,7 @@ export default function HomePage() {
                     <div className="space-y-4">
                       <h3 className="text-2xl font-bold text-white text-center">Workshops</h3>
                       <div className="relative">
-                        <div ref={signatureScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
+                        <div ref={workshopScrollRef} className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar pr-16">
                           {categorizedEvents.Workshop.map((event, index) => {
                             const coverImage = workshopCoverImages[index] || EventCover;
                             const hasPoster = Boolean(getPosterSrc(event.posterImage));
@@ -1287,7 +1287,7 @@ export default function HomePage() {
                           <>
                             <button
                               type="button"
-                              onClick={() => signatureScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                              onClick={() => workshopScrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
                               className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
                               aria-label="Scroll workshops left"
                             >
@@ -1295,7 +1295,7 @@ export default function HomePage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => signatureScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                              onClick={() => workshopScrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
                               className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full border-2 border-samhita-600 text-samhita-600 bg-black/70 hover:bg-samhita-600 hover:text-black transition text-lg font-bold"
                               aria-label="Scroll workshops right"
                             >
