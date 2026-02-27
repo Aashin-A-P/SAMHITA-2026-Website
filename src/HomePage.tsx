@@ -546,6 +546,9 @@ export default function HomePage() {
   };
   const isTournamentOfStrategies = (name?: string) =>
     String(name || '').trim().toLowerCase() === 'tournament of strategies';
+  const isWorkshopEvent = (event?: any) =>
+    String(event?.eventCategory || '').toLowerCase().includes('workshop') ||
+    String(event?.passName || '').toLowerCase().includes('workshop');
 
   const getTeamConfig = (passName: string) => {
     if (isPaperPresentationPass(passName)) {
@@ -1581,12 +1584,24 @@ export default function HomePage() {
                 </p>
                 {selectedEvent.rounds && selectedEvent.rounds.length > 0 && (
                   <div className="space-y-2">
-                    {selectedEvent.rounds.map((round: any) => (
-                      <div key={`round-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
-                        <p className="whitespace-pre-line">Round {round.roundNumber}: {round.roundDetails}</p>
-                        <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
-                      </div>
-                    ))}
+                    {isWorkshopEvent(selectedEvent) ? (
+                      <>
+                        <p className="text-gold-300 font-semibold">Topics Covered:</p>
+                        {selectedEvent.rounds.map((round: any) => (
+                          <div key={`topic-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
+                            <p className="whitespace-pre-line">{round.roundDetails}</p>
+                            <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      selectedEvent.rounds.map((round: any) => (
+                        <div key={`round-${round.roundNumber}`} className="text-gray-300 text-sm font-event-body ml-4">
+                          <p className="whitespace-pre-line">Round {round.roundNumber}: {round.roundDetails}</p>
+                          <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
                 {isTournamentOfStrategies(selectedEvent.eventName || selectedEvent.title) && (

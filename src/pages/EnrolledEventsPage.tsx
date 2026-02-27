@@ -80,6 +80,8 @@ const EnrolledEventsPage: React.FC = () => {
 
   const isTournamentOfStrategies = (name?: string) =>
     String(name || '').trim().toLowerCase() === 'tournament of strategies';
+  const isWorkshopEvent = (event?: Event | null) =>
+    String(event?.eventCategory || '').toLowerCase().includes('workshop');
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -295,12 +297,28 @@ const EnrolledEventsPage: React.FC = () => {
             <p><strong>Coordinator:</strong> {selectedEvent.coordinatorName} ({selectedEvent.coordinatorContactNo})</p>
             <p><strong>Coordinator Email:</strong> {selectedEvent.coordinatorMail}</p>
             <p><strong>Last Date for Registration:</strong> {formatDateTime(selectedEvent.lastDateForRegistration)}</p>
-            {selectedEvent.rounds && selectedEvent.rounds.map((round, index) => (
-              <div key={index} className="ml-4 mt-2">
-                <p className="whitespace-pre-line"><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
-                <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
+            {selectedEvent.rounds && selectedEvent.rounds.length > 0 && (
+              <div className="mt-2">
+                {isWorkshopEvent(selectedEvent) ? (
+                  <>
+                    <p className="text-gold-300 font-semibold">Topics Covered:</p>
+                    {selectedEvent.rounds.map((round, index) => (
+                      <div key={index} className="ml-4 mt-2">
+                        <p className="whitespace-pre-line">{round.roundDetails}</p>
+                        <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  selectedEvent.rounds.map((round, index) => (
+                    <div key={index} className="ml-4 mt-2">
+                      <p className="whitespace-pre-line"><strong>Round {round.roundNumber}:</strong> {round.roundDetails}</p>
+                      <p>Date & Time: {formatDateTime(round.roundDateTime)}</p>
+                    </div>
+                  ))
+                )}
               </div>
-            ))}
+            )}
           </div>
         ) : (
           <p className="text-white">No event details to display.</p>
