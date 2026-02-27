@@ -87,6 +87,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   const [accountDetails, setAccountDetails] = useState<AccountDetails | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [qrIsPdf, setQrIsPdf] = useState(false);
+  const [upiId, setUpiId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
@@ -182,6 +183,20 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
 
     fetchAccountDetails();
   }, [cartItems]);
+
+  useEffect(() => {
+    const fetchUpi = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/payments/upi`);
+        if (response.data?.upi) {
+          setUpiId(String(response.data.upi));
+        }
+      } catch (error) {
+        console.error('Error fetching UPI:', error);
+      }
+    };
+    fetchUpi();
+  }, []);
 
   useEffect(() => {
     if (accountDetails && accountDetails.qrCodePdf) {
@@ -302,10 +317,10 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
   };
 
   const payAmount = couponDiscount > 0 ? discountedTotal : totalAmount;
-  const upiId = 'apaashin@okicici';
+  const effectiveUpiId = upiId || accountDetails?.upiId || '';
   const upiNote = user?.id ? `SAMHITA-${user.id}` : 'SAMHITA';
   const upiParams = new URLSearchParams({
-    pa: upiId,
+    pa: effectiveUpiId,
     pn: 'SAMHITA',
     am: payAmount.toString(),
     cu: 'INR',
@@ -408,8 +423,8 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 <p><strong>Account Number:</strong> {accountDetails.accountNumber}</p>
                 <p><strong>IFSC Code:</strong> {accountDetails.ifscCode}</p>
                 */}
-                {accountDetails.upiId && (
-                  <p><strong>UPI ID:</strong> {accountDetails.upiId}</p>
+                {effectiveUpiId && (
+                  <p><strong>UPI ID:</strong> {effectiveUpiId}</p>
                 )}
               </div>
               <div className="mt-4 flex justify-center">

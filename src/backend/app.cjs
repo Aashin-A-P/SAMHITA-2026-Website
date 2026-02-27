@@ -321,6 +321,7 @@ async function createTablesIfNotExists() {
     await addColumnIfNotExists('registrations', 'round1', 'INT DEFAULT 0');
     await addColumnIfNotExists('registrations', 'round2', 'INT DEFAULT 0');
     await addColumnIfNotExists('registrations', 'round3', 'INT DEFAULT 0');
+    await addColumnIfNotExists('registrations', 'transactionUpi', 'VARCHAR(255) NULL');
 
     // Backfill userId using email for existing rows
     await db.execute(`
@@ -424,6 +425,42 @@ async function createTablesIfNotExists() {
         FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE CASCADE
       );
     `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS upi_accounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        upi VARCHAR(255) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_upi (upi)
+      );
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS upi_rotation_state (
+        id INT PRIMARY KEY,
+        current_index INT NOT NULL DEFAULT 1,
+        current_count INT NOT NULL DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    const upiAccounts = [
+      'msgopi2642004-2@okaxis',
+      'rp1227377@okaxis',
+      'karthikeyanshanmugam1208-1@okicici',
+      'harikrishnansub6-1@okicici',
+      'vignasaktheeswaranvishal@oksbi',
+      'tvelu2004@okaxis'
+    ];
+
+    for (const upi of upiAccounts) {
+      await db.execute('INSERT IGNORE INTO upi_accounts (upi) VALUES (?)', [upi]);
+    }
+
+    const [upiStateRows] = await db.execute('SELECT id FROM upi_rotation_state WHERE id = 1');
+    if (upiStateRows.length === 0) {
+      await db.execute('INSERT INTO upi_rotation_state (id, current_index, current_count) VALUES (1, 1, 0)');
+    }
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS special_pass_registrations (
@@ -649,6 +686,7 @@ async function startServer() {
   apiRouter.use('/attendance', require('./attendance.cjs')(db));
   apiRouter.use('/users', require('./users.cjs')(db));
   apiRouter.use('/pass-teams', require('./pass_teams.cjs')(db));
+  apiRouter.use('/payments', require('./payments.cjs')(db));
 
   app.use('/api', apiRouter);
 

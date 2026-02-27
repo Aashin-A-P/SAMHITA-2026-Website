@@ -4,6 +4,7 @@ const router = express.Router();
 module.exports = function (db, uploadTransactionScreenshot) {
   const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
   const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
+  const MAX_UPI_COUNT = 19;
   const getLocalDateKey = (value) => {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
@@ -101,6 +102,41 @@ module.exports = function (db, uploadTransactionScreenshot) {
       [userId, passId, transactionId]
     );
     return rows.map((r) => r.eventId);
+  }
+
+  async function getNextUpiAndIncrement(executor) {
+    const [accounts] = await executor.execute('SELECT id, upi FROM upi_accounts ORDER BY id ASC');
+    if (!accounts.length) {
+      throw new Error('No UPI accounts configured.');
+    }
+
+    const [[state]] = await executor.execute(
+      'SELECT current_index, current_count FROM upi_rotation_state WHERE id = 1 FOR UPDATE'
+    );
+    let currentIndex = Math.max(1, Number(state?.current_index) || 1);
+    let currentCount = Math.max(0, Number(state?.current_count) || 0);
+
+    if (currentIndex > accounts.length) {
+      currentIndex = 1;
+      currentCount = 0;
+    }
+
+    const account = accounts[(currentIndex - 1) % accounts.length];
+    const nextCount = currentCount + 1;
+    let nextIndex = currentIndex;
+    let nextStoredCount = nextCount;
+    if (nextCount >= MAX_UPI_COUNT) {
+      nextIndex = currentIndex + 1;
+      if (nextIndex > accounts.length) nextIndex = 1;
+      nextStoredCount = 0;
+    }
+
+    await executor.execute(
+      'UPDATE upi_rotation_state SET current_index = ?, current_count = ? WHERE id = 1',
+      [nextIndex, nextStoredCount]
+    );
+
+    return account.upi;
   }
 
   // Helper function to "explode" a verified pass into individual event registrations
@@ -383,6 +419,8 @@ module.exports = function (db, uploadTransactionScreenshot) {
             .json({ message: 'Transaction ID already used for another registration.' });
         }
 
+        const assignedUpi = await getNextUpiAndIncrement(connection);
+
         // --- Get User Details ---
         const [[user]] = await connection.execute(
           'SELECT fullName, email, college FROM users WHERE id = ?',
@@ -504,25 +542,26 @@ module.exports = function (db, uploadTransactionScreenshot) {
             }
 
             const isPayer = memberId === userId;
-            await connection.execute(
-              `INSERT INTO registrations 
-                   (symposium, passId, userId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [
-                symposium,
-                passId,
-                memberId,
-                member.fullName,
-                member.email,
-                member.mobile || mobileNumber || null,
-                transactionId,
-                transactionUsername || user.fullName,
-                transactionTime,
-                transactionDate,
-                isPayer ? discountedPassCost : 0,
-                transactionScreenshot,
-              ]
-            );
+          await connection.execute(
+            `INSERT INTO registrations 
+                   (symposium, passId, userId, userName, userEmail, mobileNumber, transactionId, transactionUsername, transactionTime, transactionDate, transactionAmount, transactionScreenshot, transactionUpi) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              symposium,
+              passId,
+              memberId,
+              member.fullName,
+              member.email,
+              member.mobile || mobileNumber || null,
+              transactionId,
+              transactionUsername || user.fullName,
+              transactionTime,
+              transactionDate,
+              isPayer ? discountedPassCost : 0,
+              transactionScreenshot,
+              assignedUpi,
+            ]
+          );
           }
         }
 

@@ -417,6 +417,7 @@ CREATE TABLE `registrations` (
   `transactionDate` varchar(255) DEFAULT NULL,
   `transactionAmount` decimal(10,2) DEFAULT NULL,
   `transactionScreenshot` mediumblob,
+  `transactionUpi` varchar(255) DEFAULT NULL,
   `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `round1` int DEFAULT NULL,
   `round2` int DEFAULT NULL,
@@ -533,6 +534,38 @@ CREATE TABLE `special_pass_registrations` (
   CONSTRAINT `special_pass_registrations_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `special_pass_registrations_ibfk_2` FOREIGN KEY (`passId`) REFERENCES `passes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `special_pass_registrations_ibfk_3` FOREIGN KEY (`eventId`) REFERENCES `events` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `upi_accounts`
+--
+
+DROP TABLE IF EXISTS `upi_accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `upi_accounts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `upi` varchar(255) NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_upi` (`upi`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `upi_rotation_state`
+--
+
+DROP TABLE IF EXISTS `upi_rotation_state`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `upi_rotation_state` (
+  `id` int NOT NULL,
+  `current_index` int NOT NULL DEFAULT '1',
+  `current_count` int NOT NULL DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
