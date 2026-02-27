@@ -24,7 +24,18 @@ const AccommodationPage: React.FC = () => {
              3. [&_h2]:text-white: Forces headers to be white.
           */}
           <div className="text-center">
-            <p className="text-gold-300 text-xl font-semibold">Accommodation will be opened shortly.</p>
+            <p className="text-gold-300 text-xl font-semibold">Accommodation Registration</p>
+            <p className="text-gray-300 mt-2">Fill out the accommodation form using the button below.</p>
+            <div className="mt-6 flex justify-center">
+              <a
+                href="https://forms.gle/jeuhWE5cdWF7SYJf7"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-sm font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+              >
+                Open Accommodation Form
+              </a>
+            </div>
           </div>
         </div>
       </main>
