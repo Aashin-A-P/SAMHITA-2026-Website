@@ -533,6 +533,7 @@ export default function HomePage() {
     LittleFinger,
     JorahMormont,
   ];
+  const hackathonLink = 'https://unstop.com/o/zhCJDXY?lb=JP8hAZda&utm_medium=Share&utm_source=online_coding_challenge&utm_campaign=Ragavan_RV';
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -571,6 +572,7 @@ export default function HomePage() {
     passName.toLowerCase().includes('nontech');
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
   const isWorkshopPassName = (passName: string) => passName.toLowerCase().includes('workshop pass');
+  const isHackathonPassName = (passName: string) => passName.toLowerCase().includes('hackathon');
   const isSpecialPassName = (passName: string) => {
     const n = passName.toLowerCase();
     return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
@@ -1708,6 +1710,16 @@ export default function HomePage() {
                         })()
                       : `\u20B9${selectedPass.cost}`}
                 </p>
+                {isHackathonPassName(selectedPass.name) &&
+                  purchasedPassIds.includes(Number(selectedPass.id)) && (
+                  <button
+                    type="button"
+                    onClick={() => window.open(hackathonLink, '_blank')}
+                    className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+                  >
+                    Register on Unstop
+                  </button>
+                )}
                 {isWorkshopPassName(selectedPass.name) && (
                   <div className="space-y-2">
                     <p className="text-gold-300 font-semibold">Select workshops (Round 1 dates must be unique):</p>
