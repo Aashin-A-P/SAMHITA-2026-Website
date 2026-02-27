@@ -196,6 +196,9 @@ module.exports = function (db, uploadEventPoster, transporter) {
          WHERE vr.verified = true
               AND LOWER(p.name) NOT LIKE '%workshop pass%'
               AND LOWER(p.name) NOT LIKE '%special event pass%'
+              AND LOWER(p.name) NOT LIKE '%special pass%'
+              AND LOWER(p.name) NOT LIKE '%special event%'
+              AND LOWER(p.name) NOT LIKE '%elite pass%'
               AND (
                 p.id = pe_event.passId OR
                 (LOWER(p.name) LIKE '%global%' AND pe_event.passId IN (
@@ -227,7 +230,12 @@ module.exports = function (db, uploadEventPoster, transporter) {
              AND spr.passId = vr.passId
              AND spr.eventId = ?
             WHERE vr.verified = true
-              AND LOWER(p.name) LIKE '%special event pass%'
+              AND (
+                LOWER(p.name) LIKE '%special event pass%'
+                OR LOWER(p.name) LIKE '%special pass%'
+                OR LOWER(p.name) LIKE '%special event%'
+                OR LOWER(p.name) LIKE '%elite pass%'
+              )
          ) vr_all ON u.id = vr_all.userId
          LEFT JOIN registrations r_event ON u.email = r_event.userEmail AND r_event.eventId = ? AND r_event.symposium = ?
          LEFT JOIN registrations r_pass ON u.email = r_pass.userEmail AND r_pass.passId IS NOT NULL AND r_pass.symposium = ?

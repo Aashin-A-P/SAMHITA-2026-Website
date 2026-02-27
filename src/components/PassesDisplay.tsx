@@ -26,14 +26,19 @@ const PassesDisplay: React.FC = () => {
     const [workshopSelectionError, setWorkshopSelectionError] = useState<string | null>(null);
     const [selectedSpecialEventIds, setSelectedSpecialEventIds] = useState<number[]>([]);
     const [specialSelectionError, setSpecialSelectionError] = useState<string | null>(null);
+    const [registeredWorkshopByPass, setRegisteredWorkshopByPass] = useState<Record<number, number[]>>({});
+    const [registeredSpecialByPass, setRegisteredSpecialByPass] = useState<Record<number, number[]>>({});
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [verifiedPassIds, setVerifiedPassIds] = useState<number[]>([]);
     const { user, isLoggedIn } = useAuth();
     const navigate = useNavigate();
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
-    const isWorkshopPassName = (name: string) => name.trim().toLowerCase() === 'workshop pass';
-    const isSpecialPassName = (name: string) => name.toLowerCase().includes('special event pass');
+    const isWorkshopPassName = (name: string) => name.toLowerCase().includes('workshop pass');
+    const isSpecialPassName = (name: string) => {
+        const n = name.toLowerCase();
+        return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+    };
     const getRound1DateKey = (event: any) => {
         const round = (event.rounds || []).find((r: any) => r.roundNumber === 1) || event.rounds?.[0];
         if (!round?.roundDateTime) return null;
@@ -113,6 +118,25 @@ const PassesDisplay: React.FC = () => {
         fetchPasses();
     }, []);
 
+    const fetchPassEventSelections = useCallback(async () => {
+        if (!user) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/registrations/pass-event-selections/${user.id}`);
+            if (!response.ok) {
+                setRegisteredWorkshopByPass({});
+                setRegisteredSpecialByPass({});
+                return;
+            }
+            const data = await response.json();
+            setRegisteredWorkshopByPass(data?.workshop || {});
+            setRegisteredSpecialByPass(data?.special || {});
+        } catch (error) {
+            console.error('Failed to fetch pass event selections:', error);
+            setRegisteredWorkshopByPass({});
+            setRegisteredSpecialByPass({});
+        }
+    }, [user]);
+
     useEffect(() => {
         const fetchEvents = async () => {
             try {
@@ -141,8 +165,21 @@ const PassesDisplay: React.FC = () => {
         if (isLoggedIn) {
             fetchCartItems();
             fetchVerifiedPasses();
+            fetchPassEventSelections();
         }
-    }, [isLoggedIn, fetchCartItems, fetchVerifiedPasses]);
+    }, [isLoggedIn, fetchCartItems, fetchVerifiedPasses, fetchPassEventSelections]);
+
+    useEffect(() => {
+        const handleRegistrationComplete = () => {
+            if (isLoggedIn) {
+                fetchCartItems();
+                fetchVerifiedPasses();
+                fetchPassEventSelections();
+            }
+        };
+        window.addEventListener('registrationComplete', handleRegistrationComplete);
+        return () => window.removeEventListener('registrationComplete', handleRegistrationComplete);
+    }, [isLoggedIn, fetchCartItems, fetchVerifiedPasses, fetchPassEventSelections]);
 
     const handleAddToCart = async (pass: Pass) => {
         if (!isLoggedIn) {
@@ -303,6 +340,13 @@ const PassesDisplay: React.FC = () => {
                                         {getEventsForPass(selectedPass).map((event: any) => {
                                             const eventId = Number(event.id);
                                             const dateKey = getRound1DateKey(event);
+                                            const alreadyRegisteredIds = registeredWorkshopByPass[Number(selectedPass.id)] || [];
+                                            const alreadyRegisteredDates = new Set(
+                                                getEventsForPass(selectedPass)
+                                                    .filter((e: any) => alreadyRegisteredIds.includes(Number(e.id)))
+                                                    .map((e: any) => getRound1DateKey(e))
+                                                    .filter(Boolean)
+                                            );
                                             const selectedDates = new Set(
                                                 getEventsForPass(selectedPass)
                                                     .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
@@ -310,7 +354,9 @@ const PassesDisplay: React.FC = () => {
                                                     .filter(Boolean)
                                             );
                                             const isSelected = selectedWorkshopEventIds.includes(eventId);
-                                            const isBlocked = !isSelected && dateKey && selectedDates.has(dateKey);
+                                            const isAlreadyRegistered = alreadyRegisteredIds.includes(eventId);
+                                            const isBlockedByDate = !isSelected && dateKey && (selectedDates.has(dateKey) || alreadyRegisteredDates.has(dateKey));
+                                            const isBlocked = isAlreadyRegistered || isBlockedByDate;
                                             return (
                                                 <label
                                                     key={`workshop-${eventId}`}
@@ -336,6 +382,9 @@ const PassesDisplay: React.FC = () => {
                                                         <div className="font-semibold">{event.eventName}</div>
                                                         <div className="text-gray-400">Date: {formatRound1Date(event)}</div>
                                                         <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                                                        {isAlreadyRegistered && (
+                                                            <div className="text-xs text-green-400 mt-1">Already registered</div>
+                                                        )}
                                                     </div>
                                                 </label>
                                             );
@@ -356,7 +405,9 @@ const PassesDisplay: React.FC = () => {
                                         {getEventsForPass(selectedPass).map((event: any) => {
                                             const eventId = Number(event.id);
                                             const isSelected = selectedSpecialEventIds.includes(eventId);
-                                            const isBlocked = !isSelected && selectedSpecialEventIds.length >= 2;
+                                            const alreadyRegisteredIds = registeredSpecialByPass[Number(selectedPass.id)] || [];
+                                            const isAlreadyRegistered = alreadyRegisteredIds.includes(eventId);
+                                            const isBlocked = isAlreadyRegistered || (!isSelected && selectedSpecialEventIds.length >= 2);
                                             return (
                                                 <label
                                                     key={`special-${eventId}`}
@@ -381,6 +432,9 @@ const PassesDisplay: React.FC = () => {
                                                     <div className="text-sm">
                                                         <div className="font-semibold">{event.eventName}</div>
                                                         <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                                                        {isAlreadyRegistered && (
+                                                            <div className="text-xs text-green-400 mt-1">Already registered</div>
+                                                        )}
                                                     </div>
                                                 </label>
                                             );

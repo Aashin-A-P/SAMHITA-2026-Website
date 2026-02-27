@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db) {
-  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
-  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
+  const isWorkshopPassName = (name) => String(name || '').toLowerCase().includes('workshop pass');
+  const isSpecialPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+  };
   const getLocalDateKey = (value) => {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
@@ -100,18 +103,22 @@ module.exports = function (db) {
       }
       const isWorkshopPass = isWorkshopPassName(pass.name);
       const isSpecialPass = isSpecialPassName(pass.name);
+      let workshopEventIds = null;
+      let specialEventIds = null;
 
       if (isWorkshopPass) {
         const selectionCheck = await validateWorkshopSelections(passId, eventIds);
         if (!selectionCheck.ok) {
           return res.status(400).json({ message: selectionCheck.message });
         }
+        workshopEventIds = selectionCheck.eventIds;
       }
       if (isSpecialPass) {
         const selectionCheck = await validateSpecialSelections(passId, eventIds);
         if (!selectionCheck.ok) {
           return res.status(400).json({ message: selectionCheck.message });
         }
+        specialEventIds = selectionCheck.eventIds;
       }
 
       // Get user email
@@ -121,14 +128,37 @@ module.exports = function (db) {
       }
       const userEmail = users[0].email;
 
-      // Check if already registered
-      const [existingRegistration] = await db.execute(
-        'SELECT id FROM registrations WHERE userEmail = ? AND passId = ?',
-        [userEmail, passId]
-      );
-
-      if (existingRegistration.length > 0) {
-        return res.status(409).json({ message: 'You have already purchased this pass.' });
+      if (isWorkshopPass) {
+        const [existingWorkshopRows] = await db.execute(
+          'SELECT eventId FROM workshop_pass_registrations WHERE userId = ? AND passId = ?',
+          [userId, passId]
+        );
+        const existingWorkshopIds = new Set(existingWorkshopRows.map((row) => Number(row.eventId)));
+        const newWorkshopIds = (workshopEventIds || []).filter((id) => !existingWorkshopIds.has(Number(id)));
+        if (newWorkshopIds.length === 0) {
+          return res.status(409).json({ message: 'You have already registered for the selected workshops.' });
+        }
+        workshopEventIds = newWorkshopIds;
+      } else if (isSpecialPass) {
+        const [existingSpecialRows] = await db.execute(
+          'SELECT eventId FROM special_pass_registrations WHERE userId = ? AND passId = ?',
+          [userId, passId]
+        );
+        const existingSpecialIds = new Set(existingSpecialRows.map((row) => Number(row.eventId)));
+        const newSpecialIds = (specialEventIds || []).filter((id) => !existingSpecialIds.has(Number(id)));
+        if (newSpecialIds.length === 0) {
+          return res.status(409).json({ message: 'You have already registered for the selected events.' });
+        }
+        specialEventIds = newSpecialIds;
+      } else {
+        // Check if already registered for non-selectable passes
+        const [existingRegistration] = await db.execute(
+          'SELECT id FROM registrations WHERE userEmail = ? AND passId = ?',
+          [userEmail, passId]
+        );
+        if (existingRegistration.length > 0) {
+          return res.status(409).json({ message: 'You have already purchased this pass.' });
+        }
       }
 
       // Check if the item is already in the cart for this user
@@ -147,10 +177,9 @@ module.exports = function (db) {
       );
 
       if (isWorkshopPass) {
-        const uniqueEventIds = [...new Set(eventIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
-        if (uniqueEventIds.length > 0) {
-          const values = uniqueEventIds.map(() => '(?, ?)').join(', ');
-          const params = uniqueEventIds.flatMap((id) => [insertResult.insertId, id]);
+        if (workshopEventIds && workshopEventIds.length > 0) {
+          const values = workshopEventIds.map(() => '(?, ?)').join(', ');
+          const params = workshopEventIds.flatMap((id) => [insertResult.insertId, id]);
           await db.execute(
             `INSERT INTO pass_cart_workshops (cartId, eventId) VALUES ${values}`,
             params
@@ -158,10 +187,9 @@ module.exports = function (db) {
         }
       }
       if (isSpecialPass) {
-        const uniqueEventIds = [...new Set(eventIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
-        if (uniqueEventIds.length > 0) {
-          const values = uniqueEventIds.map(() => '(?, ?)').join(', ');
-          const params = uniqueEventIds.flatMap((id) => [insertResult.insertId, id]);
+        if (specialEventIds && specialEventIds.length > 0) {
+          const values = specialEventIds.map(() => '(?, ?)').join(', ');
+          const params = specialEventIds.flatMap((id) => [insertResult.insertId, id]);
           await db.execute(
             `INSERT INTO pass_cart_special_events (cartId, eventId) VALUES ${values}`,
             params
@@ -211,9 +239,24 @@ module.exports = function (db) {
              WHERE pcs.cartId = ?`,
             [item.id]
           );
+          const [existingSpecialRows] = await db.execute(
+            `SELECT e.registrationFees
+             FROM special_pass_registrations spr
+             JOIN events e ON e.id = spr.eventId
+             WHERE spr.userId = ? AND spr.passId = ?`,
+            [userId, item.passId]
+          );
+          const existingSpecialFeesTotal = existingSpecialRows.reduce(
+            (sum, row) => sum + (Number(row.registrationFees) || 0),
+            0
+          );
           let specialCost = Number(item.cost) || 0;
           if (specialEvents.length === 1) {
-            specialCost = Number(specialEvents[0].registrationFees) || 0;
+            if (existingSpecialFeesTotal > 0) {
+              specialCost = Math.max((Number(item.cost) || 0) - existingSpecialFeesTotal, 0);
+            } else {
+              specialCost = Number(specialEvents[0].registrationFees) || 0;
+            }
           } else if (specialEvents.length >= 2) {
             specialCost = Number(item.cost) || 0;
           }

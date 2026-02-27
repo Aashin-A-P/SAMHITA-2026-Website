@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db) {
-  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
-  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
+  const isWorkshopPassName = (name) => String(name || '').toLowerCase().includes('workshop pass');
+  const isSpecialPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+  };
 
   // Add item to cart
   router.post('/', async (req, res) => {
@@ -100,10 +103,18 @@ module.exports = function (db) {
 
       // Fetch pass cart items and filter out registered ones
       const [passCartItems] = await db.execute(
-        'SELECT id as cartId, passId FROM pass_cart WHERE userId = ?',
+        `SELECT pc.id as cartId, pc.passId, p.name as passName
+         FROM pass_cart pc
+         JOIN passes p ON p.id = pc.passId
+         WHERE pc.userId = ?`,
         [userId]
       );
-      const filteredPassCartItems = passCartItems.filter(item => !registeredPassIds.includes(item.passId));
+      const filteredPassCartItems = passCartItems.filter(item => {
+        if (isWorkshopPassName(item.passName) || isSpecialPassName(item.passName)) {
+          return true;
+        }
+        return !registeredPassIds.includes(item.passId);
+      });
 
       const passesWithDetails = await Promise.all(
         filteredPassCartItems.map(async (item) => {
@@ -139,9 +150,24 @@ module.exports = function (db) {
                  WHERE pcs.cartId = ?`,
                 [item.cartId]
               );
+              const [existingSpecialRows] = await db.execute(
+                `SELECT e.registrationFees
+                 FROM special_pass_registrations spr
+                 JOIN events e ON e.id = spr.eventId
+                 WHERE spr.userId = ? AND spr.passId = ?`,
+                [userId, item.passId]
+              );
+              const existingSpecialFeesTotal = existingSpecialRows.reduce(
+                (sum, row) => sum + (Number(row.registrationFees) || 0),
+                0
+              );
               let specialCost = Number(pass.cost) || 0;
               if (specialEvents.length === 1) {
-                specialCost = Number(specialEvents[0].registrationFees) || 0;
+                if (existingSpecialFeesTotal > 0) {
+                  specialCost = Math.max((Number(pass.cost) || 0) - existingSpecialFeesTotal, 0);
+                } else {
+                  specialCost = Number(specialEvents[0].registrationFees) || 0;
+                }
               } else if (specialEvents.length >= 2) {
                 specialCost = Number(pass.cost) || 0;
               }

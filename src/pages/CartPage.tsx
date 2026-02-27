@@ -59,14 +59,6 @@ const CartPage: React.FC = () => {
 
   const getSpecialPassCost = (item: CartItem) => {
     if (item.type !== 'pass' || !item.passDetails) return 0;
-    if (!isSpecialPassName(item.passDetails.name)) return item.passDetails.cost;
-    const specialEvents = item.specialEvents || [];
-    if (specialEvents.length === 1) {
-      return Number(specialEvents[0].registrationFees) || 0;
-    }
-    if (specialEvents.length >= 2) {
-      return Number(item.passDetails.cost) || 0;
-    }
     return Number(item.passDetails.cost) || 0;
   };
 

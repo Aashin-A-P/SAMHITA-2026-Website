@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db, uploadTransactionScreenshot) {
-  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
-  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
+  const isWorkshopPassName = (name) => String(name || '').toLowerCase().includes('workshop pass');
+  const isSpecialPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+  };
   const MAX_UPI_COUNT = 19;
   const getLocalDateKey = (value) => {
     const d = new Date(value);
@@ -274,7 +277,22 @@ module.exports = function (db, uploadTransactionScreenshot) {
         LEFT JOIN users u ON r.userEmail = u.email
         LEFT JOIN events e ON r.eventId = e.id
         LEFT JOIN passes p ON r.passId = p.id
-        LEFT JOIN verified_registrations vr ON u.id = vr.userId AND ((r.eventId IS NOT NULL AND r.eventId = vr.eventId) OR (r.passId IS NOT NULL AND r.passId = vr.passId))
+        LEFT JOIN verified_registrations vr ON u.id = vr.userId AND (
+          (r.eventId IS NOT NULL AND r.eventId = vr.eventId)
+          OR
+          (
+            r.passId IS NOT NULL AND r.eventId IS NULL AND vr.passId = r.passId AND vr.eventId IS NULL AND (
+              (
+                (LOWER(p.name) LIKE '%workshop pass%' OR LOWER(p.name) LIKE '%special event pass%' OR LOWER(p.name) LIKE '%special pass%' OR LOWER(p.name) LIKE '%special event%' OR LOWER(p.name) LIKE '%elite pass%')
+                AND vr.transactionId = r.transactionId
+              )
+              OR
+              (
+                NOT (LOWER(p.name) LIKE '%workshop pass%' OR LOWER(p.name) LIKE '%special event pass%' OR LOWER(p.name) LIKE '%special pass%' OR LOWER(p.name) LIKE '%special event%' OR LOWER(p.name) LIKE '%elite pass%')
+              )
+            )
+          )
+        )
         LEFT JOIN accommodation_bookings ab ON u.id = ab.userId AND r.symposium = 'Accommodation'
         WHERE (r.transactionId IS NULL OR r.transactionId != 'PASS_ENTRY')
         GROUP BY r.transactionId, u.id, r.symposium, r.eventId, r.passId, r.userName, r.userEmail, 
@@ -486,12 +504,41 @@ module.exports = function (db, uploadTransactionScreenshot) {
               await connection.rollback();
               return res.status(400).json({ message: selectionCheck.message });
             }
+            const [existingSpecialRows] = await connection.execute(
+              `SELECT eventId FROM special_pass_registrations WHERE userId = ? AND passId = ?`,
+              [userId, passId]
+            );
+            const existingSpecialIds = new Set(existingSpecialRows.map((row) => Number(row.eventId)));
+            if (selectionCheck.eventIds.some((id) => existingSpecialIds.has(Number(id)))) {
+              await connection.rollback();
+              return res.status(409).json({ message: 'You have already registered for one of the selected events.' });
+            }
+            const totalEventsAfter = existingSpecialIds.size + selectionCheck.eventIds.length;
+            if (totalEventsAfter > 2) {
+              await connection.rollback();
+              return res.status(400).json({ message: 'You can register for up to two special events in total.' });
+            }
+
+            let existingSpecialFeesTotal = 0;
+            if (existingSpecialIds.size > 0) {
+              const placeholders = Array.from(existingSpecialIds).map(() => '?').join(',');
+              const [existingFeeRows] = await connection.execute(
+                `SELECT registrationFees FROM events WHERE id IN (${placeholders})`,
+                Array.from(existingSpecialIds)
+              );
+              existingSpecialFeesTotal = existingFeeRows.reduce((sum, row) => sum + (Number(row.registrationFees) || 0), 0);
+            }
+
             if (selectionCheck.eventIds.length === 1) {
               const [[row]] = await connection.execute(
                 `SELECT registrationFees FROM events WHERE id = ?`,
                 [selectionCheck.eventIds[0]]
               );
-              computedPassCost = Number(row?.registrationFees) || 0;
+              if (existingSpecialIds.size > 0) {
+                computedPassCost = Math.max((Number(pass.cost) || 0) - existingSpecialFeesTotal, 0);
+              } else {
+                computedPassCost = Number(row?.registrationFees) || 0;
+              }
             } else if (selectionCheck.eventIds.length >= 2) {
               computedPassCost = Number(pass.cost) || 0;
             }
@@ -536,7 +583,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
               'SELECT id FROM registrations WHERE userEmail = ? AND passId = ?',
               [member.email, passId]
             );
-            if (existing.length > 0) {
+            if (existing.length > 0 && !isWorkshopPassName(pass.name) && !isSpecialPassName(pass.name)) {
               console.warn(`Already registered for pass ${pass.name} (user ${memberId}). Skipping.`);
               continue;
             }
@@ -696,8 +743,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
       const [registrations] = await db.execute(
         `SELECT r.id, r.transactionId, r.transactionUsername, r.transactionTime, r.transactionDate, r.transactionAmount, 
                 u.id as userId, u.fullName as userName, u.email, u.college, u.mobile AS mobileNumber 
-         FROM registrations r 
-         JOIN users u ON r.userEmail = u.email 
+         FROM registrations r
+         JOIN users u ON r.userEmail = u.email
+         LEFT JOIN passes p ON r.passId = p.id
          WHERE r.eventId = ?`,
         [eventId]
       );
@@ -830,11 +878,23 @@ module.exports = function (db, uploadTransactionScreenshot) {
                 MAX(vr.verified) as verified
          FROM registrations r
          JOIN users u ON r.userEmail = u.email
-         LEFT JOIN verified_registrations vr ON u.id = vr.userId 
+         LEFT JOIN passes p ON r.passId = p.id
+         LEFT JOIN verified_registrations vr ON u.id = vr.userId
            AND (
-             (r.eventId IS NOT NULL AND r.eventId = vr.eventId) 
-             OR 
-             (r.passId IS NOT NULL AND r.eventId IS NULL AND vr.passId = r.passId AND vr.eventId IS NULL)
+             (r.eventId IS NOT NULL AND r.eventId = vr.eventId)
+             OR
+             (
+               r.passId IS NOT NULL AND r.eventId IS NULL AND vr.passId = r.passId AND vr.eventId IS NULL AND (
+                 (
+                   (LOWER(p.name) LIKE '%workshop pass%' OR LOWER(p.name) LIKE '%special event pass%' OR LOWER(p.name) LIKE '%special pass%' OR LOWER(p.name) LIKE '%special event%' OR LOWER(p.name) LIKE '%elite pass%')
+                   AND vr.transactionId = r.transactionId
+                 )
+                 OR
+                 (
+                   NOT (LOWER(p.name) LIKE '%workshop pass%' OR LOWER(p.name) LIKE '%special event pass%' OR LOWER(p.name) LIKE '%special pass%' OR LOWER(p.name) LIKE '%special event%' OR LOWER(p.name) LIKE '%elite pass%')
+                 )
+               )
+             )
            )
          WHERE u.id = ?
          GROUP BY r.id, r.eventId, r.passId, r.userEmail, r.round1, r.round2, r.round3, r.symposium, r.transactionId`,
@@ -868,17 +928,18 @@ module.exports = function (db, uploadTransactionScreenshot) {
             `SELECT * FROM passes WHERE id = ?`,
             [reg.passId]
           );
-          if (pass) {
-            if (isWorkshopPassName(pass.name) && reg.transactionId) {
-              const [rows] = await db.execute(
-                `SELECT e.registrationFees
-                 FROM workshop_pass_registrations wpr
+            if (pass) {
+              const basePassCost = Number(pass.cost) || 0;
+              if (isWorkshopPassName(pass.name) && reg.transactionId) {
+                const [rows] = await db.execute(
+                  `SELECT e.registrationFees
+                   FROM workshop_pass_registrations wpr
                  JOIN events e ON e.id = wpr.eventId
                  WHERE wpr.userId = ? AND wpr.passId = ? AND wpr.transactionId = ?`,
                 [userId, reg.passId, reg.transactionId]
               );
               const workshopTotal = rows.reduce((sum, r) => sum + (Number(r.registrationFees) || 0), 0);
-              registrationsWithDetails.push({ ...reg, pass: { ...pass, cost: workshopTotal } });
+              registrationsWithDetails.push({ ...reg, pass: { ...pass, cost: workshopTotal, baseCost: basePassCost } });
             } else if (isSpecialPassName(pass.name) && reg.transactionId) {
               const [rows] = await db.execute(
                 `SELECT e.registrationFees
@@ -893,9 +954,9 @@ module.exports = function (db, uploadTransactionScreenshot) {
               } else if (rows.length >= 2) {
                 specialTotal = Number(pass.cost) || 0;
               }
-              registrationsWithDetails.push({ ...reg, pass: { ...pass, cost: specialTotal } });
+              registrationsWithDetails.push({ ...reg, pass: { ...pass, cost: specialTotal, baseCost: basePassCost } });
             } else {
-              registrationsWithDetails.push({ ...reg, pass });
+              registrationsWithDetails.push({ ...reg, pass: { ...pass, baseCost: basePassCost } });
             }
             if (Number(reg.verified) === 1) {
               passRegistrations.push({
@@ -1172,6 +1233,50 @@ module.exports = function (db, uploadTransactionScreenshot) {
     } catch (error) {
       console.error('Error fetching user pass registrations:', error);
       res.status(500).json({ message: 'Failed to fetch user pass registrations.' });
+    }
+  });
+
+  // Get selected events for workshop/special passes for a user
+  router.get('/pass-event-selections/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+      const [workshopRows] = await db.execute(
+        `SELECT passId, eventId FROM workshop_pass_registrations WHERE userId = ?`,
+        [userId]
+      );
+      const [specialRows] = await db.execute(
+        `SELECT passId, eventId FROM special_pass_registrations WHERE userId = ?`,
+        [userId]
+      );
+
+      const workshop = {};
+      for (const row of workshopRows) {
+        const passId = Number(row.passId);
+        const eventId = Number(row.eventId);
+        if (!workshop[passId]) workshop[passId] = new Set();
+        workshop[passId].add(eventId);
+      }
+      const special = {};
+      for (const row of specialRows) {
+        const passId = Number(row.passId);
+        const eventId = Number(row.eventId);
+        if (!special[passId]) special[passId] = new Set();
+        special[passId].add(eventId);
+      }
+
+      const workshopOut = {};
+      for (const key of Object.keys(workshop)) {
+        workshopOut[key] = Array.from(workshop[key]);
+      }
+      const specialOut = {};
+      for (const key of Object.keys(special)) {
+        specialOut[key] = Array.from(special[key]);
+      }
+
+      res.status(200).json({ workshop: workshopOut, special: specialOut });
+    } catch (error) {
+      console.error('Failed to fetch pass event selections:', error);
+      res.status(500).json({ message: 'Failed to fetch pass event selections.' });
     }
   });
 

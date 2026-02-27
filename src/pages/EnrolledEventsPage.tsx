@@ -38,6 +38,7 @@ interface Pass {
   name: string;
   cost: number;
   description: string;
+  baseCost?: number;
 }
 
 interface Registration {
@@ -353,7 +354,47 @@ const EnrolledEventsPage: React.FC = () => {
                   {registrations.filter((registration) => registration.itemType === 'pass' && registration.pass).length === 0 ? (
                     <p className="text-gray-400">No passes found.</p>
                   ) : (
-                    registrations.map((registration) => {
+                    (() => {
+                      const isWorkshopPassName = (name?: string) =>
+                        String(name || '').toLowerCase().includes('workshop pass');
+                      const isSpecialPassName = (name?: string) => {
+                        const n = String(name || '').toLowerCase();
+                        return (
+                          n.includes('special event pass') ||
+                          n.includes('special pass') ||
+                          n.includes('special event') ||
+                          n.includes('elite pass')
+                        );
+                      };
+
+                      const passMap = new Map<number, { reg: Registration; totalCost: number; count: number }>();
+                      registrations.forEach((registration) => {
+                        if (registration.itemType === 'pass' && registration.pass && typeof registration.passId === 'number') {
+                          const existing = passMap.get(registration.passId);
+                          const cost = Number(registration.pass?.cost) || 0;
+                          if (!existing) {
+                            passMap.set(registration.passId, { reg: registration, totalCost: cost, count: 1 });
+                          } else {
+                            existing.totalCost += cost;
+                            existing.count += 1;
+                            if (Number(existing.reg.id) < Number(registration.id)) {
+                              existing.reg = registration;
+                            }
+                          }
+                        }
+                      });
+
+                      return Array.from(passMap.values()).map(({ reg, totalCost, count }) => {
+                        const passName = reg.pass?.name || '';
+                        const displayCost = isWorkshopPassName(passName)
+                          ? totalCost
+                          : isSpecialPassName(passName) && count > 1
+                            ? Number(reg.pass?.baseCost ?? reg.pass?.cost ?? totalCost)
+                            : Number(reg.pass?.cost) || 0;
+                        const registration = {
+                          ...reg,
+                          pass: reg.pass ? { ...reg.pass, cost: displayCost } : reg.pass,
+                        };
                       if (registration.itemType === 'pass' && registration.pass) {
                         return (
                           <div key={`pass-${registration.id}`} className="relative group overflow-hidden rounded-xl shadow-lg backdrop-blur-md w-full sm:w-96 transition-all duration-300 border-green-500/50 bg-green-900/20">
@@ -383,7 +424,8 @@ const EnrolledEventsPage: React.FC = () => {
                         );
                       }
                       return null;
-                    })
+                    });
+                    })()
                   )}
                 </div>
               </section>

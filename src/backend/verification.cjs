@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = function (db) {
-  const isWorkshopPassName = (name) => String(name || '').trim().toLowerCase() === 'workshop pass';
-  const isSpecialPassName = (name) => String(name || '').toLowerCase().includes('special event pass');
+  const isWorkshopPassName = (name) => String(name || '').toLowerCase().includes('workshop pass');
+  const isSpecialPassName = (name) => {
+    const n = String(name || '').toLowerCase();
+    return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+  };
 
   async function getWorkshopSelections(executor, userId, passId, transactionId) {
     const [rows] = await executor.execute(
@@ -130,7 +133,19 @@ module.exports = function (db) {
       if (eventId) {
         await db.execute('DELETE FROM verified_registrations WHERE userId = ? AND eventId = ?', [userId, eventId]);
       } else if (passId) {
-        await db.execute('DELETE FROM verified_registrations WHERE userId = ? AND passId = ?', [userId, passId]);
+        const [[pass]] = await db.execute('SELECT name FROM passes WHERE id = ?', [passId]);
+        const isMultiTxnPass = isWorkshopPassName(pass?.name) || isSpecialPassName(pass?.name);
+        if (isMultiTxnPass && transactionId) {
+          await db.execute(
+            'DELETE FROM verified_registrations WHERE userId = ? AND passId = ? AND eventId IS NULL AND transactionId = ?',
+            [userId, passId, transactionId]
+          );
+        } else {
+          await db.execute(
+            'DELETE FROM verified_registrations WHERE userId = ? AND passId = ? AND eventId IS NULL',
+            [userId, passId]
+          );
+        }
       }
 
       // 2. INSERT new authoritative record (ONLY IF VERIFIED)
@@ -261,7 +276,19 @@ module.exports = function (db) {
           if (eventId) {
             await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND eventId = ?', [regUserId, eventId]);
           } else if (passId) {
-            await connection.execute('DELETE FROM verified_registrations WHERE userId = ? AND passId = ?', [regUserId, passId]);
+            const [[pass]] = await connection.execute('SELECT name FROM passes WHERE id = ?', [passId]);
+            const isMultiTxnPass = isWorkshopPassName(pass?.name) || isSpecialPassName(pass?.name);
+            if (isMultiTxnPass) {
+              await connection.execute(
+                'DELETE FROM verified_registrations WHERE userId = ? AND passId = ? AND eventId IS NULL AND transactionId = ?',
+                [regUserId, passId, transactionId]
+              );
+            } else {
+              await connection.execute(
+                'DELETE FROM verified_registrations WHERE userId = ? AND passId = ? AND eventId IS NULL',
+                [regUserId, passId]
+              );
+            }
           }
 
           // Insert new verified record

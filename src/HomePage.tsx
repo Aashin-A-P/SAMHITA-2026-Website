@@ -174,6 +174,8 @@ export default function HomePage() {
   const [isPassesLoading, setIsPassesLoading] = useState(true);
   const [passCartItems, setPassCartItems] = useState<{ id: number; passId: number }[]>([]);
   const [purchasedPassIds, setPurchasedPassIds] = useState<number[]>([]);
+  const [registeredWorkshopByPass, setRegisteredWorkshopByPass] = useState<Record<number, number[]>>({});
+  const [registeredSpecialByPass, setRegisteredSpecialByPass] = useState<Record<number, number[]>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success');
   const toastTimeoutRef = useRef<number | null>(null);
@@ -368,14 +370,47 @@ export default function HomePage() {
     }
   };
 
+  const fetchPassEventSelections = async (userId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/registrations/pass-event-selections/${userId}`);
+      if (!response.ok) {
+        setRegisteredWorkshopByPass({});
+        setRegisteredSpecialByPass({});
+        return;
+      }
+      const data = await response.json();
+      setRegisteredWorkshopByPass(data?.workshop || {});
+      setRegisteredSpecialByPass(data?.special || {});
+    } catch (error) {
+      console.error('Failed to load pass event selections:', error);
+      setRegisteredWorkshopByPass({});
+      setRegisteredSpecialByPass({});
+    }
+  };
+
   useEffect(() => {
     if (!user?.id) {
       setPassCartItems([]);
       setPurchasedPassIds([]);
+      setRegisteredWorkshopByPass({});
+      setRegisteredSpecialByPass({});
       return;
     }
     fetchPassCart(user.id);
     fetchPurchasedPasses(user.id);
+    fetchPassEventSelections(user.id);
+  }, [user]);
+
+  useEffect(() => {
+    const handleRegistrationComplete = () => {
+      if (user?.id) {
+        fetchPassEventSelections(user.id);
+        fetchPurchasedPasses(user.id);
+        fetchPassCart(user.id);
+      }
+    };
+    window.addEventListener('registrationComplete', handleRegistrationComplete);
+    return () => window.removeEventListener('registrationComplete', handleRegistrationComplete);
   }, [user]);
 
   useEffect(() => {
@@ -535,8 +570,11 @@ export default function HomePage() {
     passName.toLowerCase().includes('non tech') ||
     passName.toLowerCase().includes('nontech');
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
-  const isWorkshopPassName = (passName: string) => passName.trim().toLowerCase() === 'workshop pass';
-  const isSpecialPassName = (passName: string) => passName.toLowerCase().includes('special event pass');
+  const isWorkshopPassName = (passName: string) => passName.toLowerCase().includes('workshop pass');
+  const isSpecialPassName = (passName: string) => {
+    const n = passName.toLowerCase();
+    return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
+  };
   const isMitEligiblePass = (passName: string) => {
     const name = passName.toLowerCase();
     const isTech = name.includes('tech pass') && !name.includes('non-tech') && !name.includes('non tech') && !name.includes('nontech');
@@ -1401,7 +1439,8 @@ export default function HomePage() {
                             )}
                           </div>
                           {(() => {
-                            const isPurchased = purchasedPassIds.includes(Number(pass.id));
+                            const isRepeatablePass = isWorkshopPassName(pass.name) || isSpecialPassName(pass.name);
+                            const isPurchased = !isRepeatablePass && purchasedPassIds.includes(Number(pass.id));
                             const cartItem = passCartItems.find((item) => item.passId === Number(pass.id));
                             const isMit = user && isMITStudentHelper(user.college);
                             const mitEligible = isMit && isMitEligiblePass(pass.name);
@@ -1662,6 +1701,13 @@ export default function HomePage() {
                       {getEventsForPass(selectedPass).map((event: any) => {
                         const eventId = Number(event.id);
                         const dateKey = getRound1DateKey(event);
+                        const alreadyRegisteredIds = registeredWorkshopByPass[Number(selectedPass.id)] || [];
+                        const alreadyRegisteredDates = new Set(
+                          getEventsForPass(selectedPass)
+                            .filter((e: any) => alreadyRegisteredIds.includes(Number(e.id)))
+                            .map((e: any) => getRound1DateKey(e))
+                            .filter(Boolean)
+                        );
                         const selectedDates = new Set(
                           getEventsForPass(selectedPass)
                             .filter((e: any) => selectedWorkshopEventIds.includes(Number(e.id)))
@@ -1669,7 +1715,9 @@ export default function HomePage() {
                             .filter(Boolean)
                         );
                         const isSelected = selectedWorkshopEventIds.includes(eventId);
-                        const isBlocked = !isSelected && dateKey && selectedDates.has(dateKey);
+                        const isAlreadyRegistered = alreadyRegisteredIds.includes(eventId);
+                        const isBlockedByDate = !isSelected && dateKey && (selectedDates.has(dateKey) || alreadyRegisteredDates.has(dateKey));
+                        const isBlocked = isAlreadyRegistered || isBlockedByDate;
                         return (
                           <label
                             key={`workshop-${eventId}`}
@@ -1695,6 +1743,9 @@ export default function HomePage() {
                               <div className="font-semibold">{event.eventName}</div>
                               <div className="text-gray-400">Date: {formatRound1Date(event)}</div>
                               <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                              {isAlreadyRegistered && (
+                                <div className="text-xs text-green-400 mt-1">Already registered</div>
+                              )}
                             </div>
                           </label>
                         );
@@ -1715,7 +1766,9 @@ export default function HomePage() {
                       {getEventsForPass(selectedPass).map((event: any) => {
                         const eventId = Number(event.id);
                         const isSelected = selectedSpecialEventIds.includes(eventId);
-                        const isBlocked = !isSelected && selectedSpecialEventIds.length >= 2;
+                        const alreadyRegisteredIds = registeredSpecialByPass[Number(selectedPass.id)] || [];
+                        const isAlreadyRegistered = alreadyRegisteredIds.includes(eventId);
+                        const isBlocked = isAlreadyRegistered || (!isSelected && selectedSpecialEventIds.length >= 2);
                         return (
                           <label
                             key={`special-${eventId}`}
@@ -1740,6 +1793,9 @@ export default function HomePage() {
                             <div className="text-sm">
                               <div className="font-semibold">{event.eventName}</div>
                               <div className="text-gold-300">{'\u20B9'}{event.registrationFees}</div>
+                              {isAlreadyRegistered && (
+                                <div className="text-xs text-green-400 mt-1">Already registered</div>
+                              )}
                             </div>
                           </label>
                         );
@@ -1769,7 +1825,8 @@ export default function HomePage() {
                 )}
                 <div className="flex justify-end gap-3 pt-2">
                   {(() => {
-                    const isPurchased = purchasedPassIds.includes(Number(selectedPass.id));
+                    const isRepeatablePass = isWorkshopPassName(selectedPass.name) || isSpecialPassName(selectedPass.name);
+                    const isPurchased = !isRepeatablePass && purchasedPassIds.includes(Number(selectedPass.id));
                     const cartItem = passCartItems.find((item) => item.passId === Number(selectedPass.id));
                     const inCart = Boolean(cartItem);
                     const isMit = user && isMITStudentHelper(user.college);
