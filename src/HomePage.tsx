@@ -28,14 +28,9 @@ import Sir from './Photos/Sir.jpg';
 import Mam from './Photos/Mam.jpeg';
 import Kamalesh from './Photos/Kamalesh.jpg';
 import Sindhu from './Photos/Sindhu.jpg';
-import Zoho from './Photos/Zoho.png';
-import Spiro from './Photos/Spiro.jpeg';
-import Poorvika from './Photos/Poorvika.png';
-import Acer from './Photos/Acer.png';
-import Cognizant from './Photos/Cognizant.png';
-import Ibm from './Photos/Ibm.png';
 import Indian from './Photos/Indian.png';
-import Lic from './Photos/Lic.png';
+import Ippex from './Photos/ippex.png';
+import Paulsons from './Photos/Paulsons.jpeg';
 import Ananya from './Photos/Ananya.jpg';
 import abinesh from './Photos/abinesh.jpeg';
 import vijayashree from './Photos/vijayashree.jpeg';
@@ -114,14 +109,9 @@ const faculty = [
 ];
 
 const sponsors = [
-  { name: 'Zoho', logoUrl: Zoho },
-  { name: 'Spiro', logoUrl: Spiro },
-  { name: 'Poorvika', logoUrl: Poorvika },
-  { name: 'Acer', logoUrl: Acer },
-  { name: 'Cognizant', logoUrl: Cognizant },
-  { name: 'IBM', logoUrl: Ibm },
   { name: 'Indian', logoUrl: Indian },
-  { name: 'LIC', logoUrl: Lic}
+  { name: 'Ippex', logoUrl: Ippex },
+  { name: 'Paulsons', logoUrl: Paulsons },
 ];
 
 const contactLeads = [
@@ -1597,18 +1587,16 @@ export default function HomePage() {
 
             <section id="sponsors" className="py-12">
               <h2 className="text-3xl font-bold font-display text-center mb-12 text-gold-gradient">The Esteemed Banners of Support</h2>
-              <div className="relative w-full overflow-hidden">
-                <div className="flex animate-marquee">
-                  {[...sponsors, ...sponsors].map((sponsor, index) => (
-                    <div key={index} className="flex-shrink-0 w-48 mx-6 flex items-center justify-center">
-                      <img 
-                        src={sponsor.logoUrl} 
-                        alt={sponsor.name} 
-                        className="h-12 object-contain transition-all duration-300"
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="flex flex-wrap justify-center items-center gap-10 max-w-4xl mx-auto">
+                {sponsors.map((sponsor) => (
+                  <div key={sponsor.name} className="w-56 flex items-center justify-center">
+                    <img
+                      src={sponsor.logoUrl}
+                      alt={sponsor.name}
+                      className="w-56 h-20 object-contain"
+                    />
+                  </div>
+                ))}
               </div>
             </section>
 
