@@ -323,16 +323,20 @@ module.exports = function (db) {
     }
   });
 
-  // Check if email is registered and has a verified Tech Pass
+  // Check if email or samhitaId is registered and has a verified Tech/Global Pass
   router.post('/check-ticket', async (req, res) => {
-    const { email } = req.body;
+    const { email, samhitaId } = req.body;
+    const safeEmail = typeof email === 'string' ? email.trim() : '';
+    const safeSamhitaId = typeof samhitaId === 'string' ? samhitaId.trim() : '';
 
-    if (!email) {
-      return res.status(400).json({ status: 'invalid', message: 'Email is required.' });
+    if (!safeEmail && !safeSamhitaId) {
+      return res.status(400).json({ status: 'invalid', message: 'Email or Samhita ID is required.' });
     }
 
     try {
-      const [[user]] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+      const [[user]] = safeEmail
+        ? await db.execute('SELECT id, fullName FROM users WHERE email = ?', [safeEmail])
+        : await db.execute('SELECT id, fullName FROM users WHERE id = ?', [safeSamhitaId]);
       if (!user) {
         return res.status(200).json({ status: 'invalid' });
       }
@@ -354,7 +358,7 @@ module.exports = function (db) {
       );
 
       if (rows.length > 0) {
-        return res.status(200).json({ status: 'okay' });
+        return res.status(200).json({ status: 'okay', name: user.fullName, samhitaId: user.id });
       }
       return res.status(200).json({ status: 'invalid' });
     } catch (error) {
