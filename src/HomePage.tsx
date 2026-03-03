@@ -517,8 +517,8 @@ export default function HomePage() {
     DaenerysTargaryen,
   ];
   const workshopCoverImages = [
-    OberynMartell,
     NightKing,
+    OberynMartell,
     TheHound,
     LittleFinger,
     JorahMormont,

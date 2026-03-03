@@ -253,11 +253,24 @@ const OrganizerAttendancePage: React.FC = () => {
   }, [registrations, presentSet]);
 
   const filteredRegistrations = useMemo(() => {
-    const digits = searchNumber.replace(/\D/g, '').slice(0, 4);
-    if (!digits) return registrations;
-    const padded = digits.padStart(4, '0');
-    const targetId = `S${padded}`;
-    return registrations.filter(r => r.userId === targetId);
+    const term = searchNumber.trim().toLowerCase();
+    if (!term) return registrations;
+
+    const digits = term.replace(/\D/g, '');
+
+    return registrations.filter((r) => {
+      const normalizedId = String(r.userId || '').toLowerCase();
+      const normalizedEmail = String(r.email || '').toLowerCase();
+      const normalizedName = String(r.name || '').toLowerCase();
+      const idDigits = normalizedId.replace(/\D/g, '');
+
+      return (
+        normalizedId.includes(term) ||
+        normalizedEmail.includes(term) ||
+        normalizedName.includes(term) ||
+        (digits.length > 0 && idDigits.includes(digits))
+      );
+    });
   }, [registrations, searchNumber]);
 
   if (isLoading) {
@@ -307,14 +320,12 @@ const OrganizerAttendancePage: React.FC = () => {
             {selectedEventId && (
               <div className="mb-4">
                 <label htmlFor="attendance-search" className="block text-sm text-gold-300 mb-2">
-                  Search by ID number (e.g., 1 for S0001)
+                  Search by Samhita ID, email, or name
                 </label>
                 <input
                   id="attendance-search"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="Enter number only"
+                  placeholder="Enter Samhita ID, email, or name"
                   value={searchNumber}
                   onChange={(e) => setSearchNumber(e.target.value)}
                   className="w-full p-3 rounded-md bg-black/60 border border-gold-500/40 text-white"

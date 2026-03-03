@@ -92,11 +92,22 @@ const AdminUserRegistrationPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const filteredUsers = users.filter(user => {
-    const digits = searchUserTerm.replace(/\D/g, "").slice(0, 4);
-    if (!digits) return false;
+  const filteredUsers = users.filter((user) => {
+    const term = searchUserTerm.trim().toLowerCase();
+    if (!term) return false;
+
+    const normalizedId = user.id.toLowerCase();
+    const normalizedEmail = user.email.toLowerCase();
+    const normalizedName = user.fullName.toLowerCase();
+    const digits = term.replace(/\D/g, "");
     const numericPart = user.id.replace(/\D/g, "");
-    return numericPart.includes(digits);
+
+    return (
+      normalizedId.includes(term) ||
+      normalizedEmail.includes(term) ||
+      normalizedName.includes(term) ||
+      (digits.length > 0 && numericPart.includes(digits))
+    );
   });
 
   const fetchRegisteredPasses = async (userId: string) => {
@@ -242,7 +253,7 @@ const AdminUserRegistrationPage: React.FC = () => {
                 type="text"
                 id="user-search"
                 autoComplete="off"
-                placeholder="Type number only (e.g., 1 for S0001)"
+                placeholder="Search by Samhita ID, email, or name"
                 value={searchUserTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => searchUserTerm.length > 0 && setShowResults(true)}
