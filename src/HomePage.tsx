@@ -1471,43 +1471,92 @@ export default function HomePage() {
                               </button>
                             );
 
+                            const renderHackathonRegisterButton = () => (
+                              isHackathonPassName(pass.name) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(hackathonLink, '_blank')}
+                                  className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
+                                >
+                                  Register in Unstop
+                                </button>
+                              ) : null
+                            );
+
                             if (isPurchased) {
                               return (
-                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
-                                  {renderDetailsButton('flex-1 h-10')}
-                                  <button
-                                    type="button"
-                                    disabled
-                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 cursor-not-allowed flex-1 h-10"
-                                  >
-                                    Purchased
-                                  </button>
+                                <div className="mt-auto px-3 pb-3 pt-2 space-y-2">
+                                  {renderHackathonRegisterButton()}
+                                  <div className="h-[56px] flex items-stretch gap-3">
+                                    {renderDetailsButton('flex-1 h-10')}
+                                    <button
+                                      type="button"
+                                      disabled
+                                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 cursor-not-allowed flex-1 h-10"
+                                    >
+                                      Purchased
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             }
 
                             if (cartItem) {
                               return (
-                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
-                                  {renderDetailsButton('flex-1 h-10')}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemovePassFromCart(cartItem.id, pass.name)}
-                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-gray-100 hover:bg-gray-500 transition flex-1 h-10"
-                                  >
-                                    Remove from Cart
-                                  </button>
+                                <div className="mt-auto px-3 pb-3 pt-2 space-y-2">
+                                  {renderHackathonRegisterButton()}
+                                  <div className="h-[56px] flex items-stretch gap-3">
+                                    {renderDetailsButton('flex-1 h-10')}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemovePassFromCart(cartItem.id, pass.name)}
+                                      className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold bg-gray-600 text-gray-100 hover:bg-gray-500 transition flex-1 h-10"
+                                    >
+                                      Remove from Cart
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             }
 
                             if (mitEligible) {
                               return (
-                                <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
+                                <div className="mt-auto px-3 pb-3 pt-2 space-y-2">
+                                  {renderHackathonRegisterButton()}
+                                  <div className="h-[56px] flex items-stretch gap-3">
+                                    {renderDetailsButton('flex-1 h-10')}
+                                    <button
+                                      type="button"
+                                      onClick={() => registerMitPass(pass.id, pass.name)}
+                                      disabled={disableForGlobal}
+                                      className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
+                                        disableForGlobal
+                                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                          : 'gold-button hover:scale-105 transition-transform'
+                                      }`}
+                                    >
+                                      Register
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="mt-auto px-3 pb-3 pt-2 space-y-2">
+                                {renderHackathonRegisterButton()}
+                                <div className="h-[56px] flex items-stretch gap-3">
                                   {renderDetailsButton('flex-1 h-10')}
                                   <button
                                     type="button"
-                                    onClick={() => registerMitPass(pass.id, pass.name)}
+                                    onClick={() => {
+                                      if (isWorkshopPassName(pass.name) || isSpecialPassName(pass.name)) {
+                                        setSelectedPass(pass);
+                                        setIsPassModalOpen(true);
+                                        return;
+                                      }
+                                      handleAddPassToCart(pass.id, pass.name);
+                                    }}
                                     disabled={disableForGlobal}
                                     className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
                                       disableForGlobal
@@ -1515,34 +1564,9 @@ export default function HomePage() {
                                         : 'gold-button hover:scale-105 transition-transform'
                                     }`}
                                   >
-                                    Register
+                                    Add to Cart
                                   </button>
                                 </div>
-                              );
-                            }
-
-                            return (
-                              <div className="mt-auto h-[56px] flex items-stretch gap-3 px-3 pb-3 pt-2">
-                                {renderDetailsButton('flex-1 h-10')}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (isWorkshopPassName(pass.name) || isSpecialPassName(pass.name)) {
-                                      setSelectedPass(pass);
-                                      setIsPassModalOpen(true);
-                                      return;
-                                    }
-                                    handleAddPassToCart(pass.id, pass.name);
-                                  }}
-                                  disabled={disableForGlobal}
-                                  className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold flex-1 h-10 ${
-                                    disableForGlobal
-                                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                      : 'gold-button hover:scale-105 transition-transform'
-                                  }`}
-                                >
-                                  Add to Cart
-                                </button>
                               </div>
                             );
                           })()}
@@ -1697,14 +1721,13 @@ export default function HomePage() {
                         })()
                       : `\u20B9${selectedPass.cost}`}
                 </p>
-                {isHackathonPassName(selectedPass.name) &&
-                  purchasedPassIds.includes(Number(selectedPass.id)) && (
+                {isHackathonPassName(selectedPass.name) && (
                   <button
                     type="button"
                     onClick={() => window.open(hackathonLink, '_blank')}
                     className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
                   >
-                    Register on Unstop
+                    Register in Unstop
                   </button>
                 )}
                 {isWorkshopPassName(selectedPass.name) && (
