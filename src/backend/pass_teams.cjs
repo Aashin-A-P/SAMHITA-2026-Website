@@ -134,8 +134,15 @@ module.exports = function (db) {
          LEFT JOIN users u2 ON u2.id = pt.member2Id
          LEFT JOIN users u3 ON u3.id = pt.member3Id
          LEFT JOIN users u4 ON u4.id = pt.member4Id
-         WHERE pt.passId = ?`,
-        [passId]
+         WHERE pt.passId = ?
+           AND EXISTS (
+             SELECT 1
+             FROM verified_registrations vr
+             WHERE vr.userId = pt.createdBy
+               AND vr.eventId = ?
+               AND vr.verified = true
+           )`,
+        [passId, eventId]
       );
       res.json(teams);
     } catch (error) {

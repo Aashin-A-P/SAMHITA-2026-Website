@@ -303,9 +303,21 @@ const ViewEventRegistrationsPage: React.FC = () => {
     }
   };
 
+  const dedupeByKey = <T,>(items: T[], getKey: (item: T) => string) => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = getKey(item);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const uniqueRegistrations = dedupeByKey(registrations, (r) => r.userId || r.email || r.mobileNumber);
+
   const filteredRegistrations = showPresentOnly
-    ? registrations.filter(isPresent)
-    : registrations;
+    ? uniqueRegistrations.filter(isPresent)
+    : uniqueRegistrations;
 
   const teamRows = teams.flatMap((team) =>
     getTeamMembers(team).map((member) => ({
@@ -318,9 +330,11 @@ const ViewEventRegistrationsPage: React.FC = () => {
     }))
   );
 
+  const uniqueTeamRows = dedupeByKey(teamRows, (row) => row.userId || row.email || row.mobile);
+
   const filteredTeamRows = showPresentOnly
-    ? teamRows.filter((row) => isUserPresent(row.userId, row.email))
-    : teamRows;
+    ? uniqueTeamRows.filter((row) => isUserPresent(row.userId, row.email))
+    : uniqueTeamRows;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 pt-20">

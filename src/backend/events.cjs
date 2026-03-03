@@ -166,6 +166,43 @@ module.exports = function (db, uploadEventPoster, transporter) {
     const symposium = 'SAMHITA';
 
     try {
+      const [[eventRow]] = await db.execute(
+        'SELECT eventName FROM events WHERE id = ?',
+        [eventId]
+      );
+      const eventNameLower = String(eventRow?.eventName || '').toLowerCase();
+      const isTeamEvent =
+        eventNameLower.includes('hackathon') ||
+        (eventNameLower.includes('paper') && eventNameLower.includes('presentation'));
+
+      if (isTeamEvent) {
+        const [registrations] = await db.execute(
+          `SELECT 
+              u.id as userId, 
+              u.fullName as name, 
+              u.email, 
+              u.mobile, 
+              u.department, 
+              u.yearofPassing, 
+              u.college,
+              MAX(COALESCE(r_event.id, r_pass.id)) as id,
+              u.email as userEmail,
+              ? as eventId,
+              MAX(COALESCE(r_event.round1, r_pass.round1, 0)) as round1,
+              MAX(COALESCE(r_event.round2, r_pass.round2, 0)) as round2,
+              MAX(COALESCE(r_event.round3, r_pass.round3, 0)) as round3,
+              MAX(COALESCE(r_event.symposium, r_pass.symposium)) as symposium
+           FROM users u
+           JOIN verified_registrations vr ON vr.userId = u.id AND vr.eventId = ? AND vr.verified = true
+           LEFT JOIN registrations r_event ON u.email = r_event.userEmail AND r_event.eventId = ? AND r_event.symposium = ?
+           LEFT JOIN registrations r_pass ON u.email = r_pass.userEmail AND r_pass.passId IS NOT NULL AND r_pass.symposium = ?
+           WHERE (r_event.id IS NOT NULL OR r_pass.id IS NOT NULL)
+           GROUP BY u.id, u.fullName, u.email, u.mobile, u.department, u.yearofPassing, u.college`,
+          [eventId, eventId, eventId, symposium, symposium]
+        );
+        return res.json(registrations);
+      }
+
       const [registrations] = await db.execute(
         `SELECT 
             u.id as userId, 

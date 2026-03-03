@@ -67,6 +67,16 @@ const OrganizerAttendancePage: React.FC = () => {
     setModal({ isOpen: true, title, message });
   };
 
+  const dedupeRegistrations = (items: Registration[]) => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = item.userId || item.email;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -173,7 +183,7 @@ const OrganizerAttendancePage: React.FC = () => {
           setTeams([]);
         }
 
-        setRegistrations(mergedRegs);
+        setRegistrations(dedupeRegistrations(mergedRegs));
         const presentIds = Array.isArray(attendanceData)
           ? attendanceData.map((row: any) => row.userId)
           : [];
