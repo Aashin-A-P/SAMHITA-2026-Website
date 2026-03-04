@@ -535,7 +535,7 @@ const WorkshopRegistrationForm: React.FC<WorkshopRegistrationFormProps> = ({
                 onChange={(e) => setTransactionId(e.target.value)}
                 className="w-full min-w-0 max-w-full px-4 py-3 bg-gray-700/60 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all duration-300"
                 required
-                placeholder="Enter UPI / Bank Transaction ID"
+                placeholder="Enter Transaction ID"
               />
             </div>
             <div className="mb-6">
