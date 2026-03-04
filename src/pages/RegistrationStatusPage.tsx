@@ -20,6 +20,7 @@ interface Registration {
   transactionTime: string;
   transactionDate: string;
   transactionAmount: number;
+  transactionUpi?: string | null;
   transactionScreenshot: { type: string; data: number[] };
   verified: boolean | null | number;
   workshops?: {
@@ -166,15 +167,61 @@ const RegistrationStatusPage: React.FC = () => {
     return reg.symposium === filter;
   });
 
+  const escapeCsv = (value: string | number | null | undefined) => {
+    const text = String(value ?? '');
+    if (/[",\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+  };
+
+  const handleCreateExcel = () => {
+    const rows = filteredRegistrations
+      .filter((reg) =>
+        reg.transactionId &&
+        reg.transactionId !== 'PASS_ENTRY' &&
+        Number(reg.transactionAmount) > 0
+      )
+      .map((reg) => [
+        reg.userName || '',
+        reg.transactionId || '',
+        reg.transactionAmount ?? '',
+        reg.transactionUpi || 'N/A',
+      ]);
+
+    const header = ['User Name', 'Transaction ID', 'Amount', 'UPI ID'];
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const datePart = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `registration-payments-${datePart}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container mx-auto p-4 text-black">
       <h1 className="text-2xl font-bold mb-4">Registration Status</h1>
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <label htmlFor="symposium-filter" className="mr-2">Filter by Symposium:</label>
         <select id="symposium-filter" value={filter} onChange={handleFilterChange} className="p-2 rounded border">
           <option value="All">All</option>
           <option value="Carteblanche">SAMHITA</option>
         </select>
+        <button
+          onClick={handleCreateExcel}
+          className="bg-emerald-600 text-white px-3 py-2 rounded hover:bg-emerald-700"
+          type="button"
+        >
+          Create Excel File
+        </button>
       </div>
 
       {error && <div className="text-red-500 mb-4">{error}</div>}

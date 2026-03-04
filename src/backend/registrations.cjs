@@ -267,6 +267,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
             r.transactionTime,
             r.transactionDate,
             r.transactionAmount,
+            r.transactionUpi,
             r.transactionScreenshot,
             CASE
                 WHEN r.symposium = 'Accommodation' THEN (CASE WHEN ab.status = 'confirmed' THEN 1 WHEN ab.status = 'rejected' THEN 0 ELSE NULL END)
@@ -306,7 +307,7 @@ module.exports = function (db, uploadTransactionScreenshot) {
         WHERE (r.transactionId IS NULL OR r.transactionId != 'PASS_ENTRY')
         GROUP BY r.transactionId, u.id, r.symposium, r.eventId, r.passId, r.userName, r.userEmail, 
                  r.mobileNumber, r.transactionUsername, r.transactionTime, r.transactionDate, 
-                 r.transactionAmount, r.transactionScreenshot, u.college, e.eventName, 
+                 r.transactionAmount, r.transactionUpi, r.transactionScreenshot, u.college, e.eventName, 
                  p.name, vr.verified, ab.status
         ORDER BY MAX(r.createdAt) DESC
       `);
