@@ -1428,9 +1428,13 @@ export default function HomePage() {
                         .map((pass) => (
                         <div
                           key={pass.id}
-                          className="bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-auto min-h-[560px] sm:min-h-0 sm:h-[480px] flex flex-col overflow-hidden"
+                          className={`bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-auto ${
+                            isHackathonPassName(pass.name)
+                              ? 'min-h-[560px] sm:min-h-0 sm:h-auto'
+                              : 'min-h-[560px] sm:min-h-0 sm:h-[480px]'
+                          } flex flex-col overflow-hidden`}
                         >
-                          <div className="w-full flex-1 min-h-[360px] sm:flex-none sm:h-[420px]">
+                          <div className={`w-full flex-1 min-h-[360px] sm:flex-none ${isHackathonPassName(pass.name) ? 'sm:h-[380px]' : 'sm:h-[420px]'}`}>
                             {pass.posterImage ? (
                               <img
                                 src={`data:image/jpeg;base64,${pass.posterImage}`}
