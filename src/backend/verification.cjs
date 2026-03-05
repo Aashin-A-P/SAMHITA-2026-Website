@@ -187,24 +187,29 @@ module.exports = function (db) {
         return res.status(400).json({ message: 'Invalid amount.' });
       }
 
-      // 1. Find ALL registrations by transactionId (optionally filter by amount)
-      const [registrations] = numericAmount !== null
-        ? await connection.execute(
-            'SELECT * FROM registrations WHERE transactionId = ? AND transactionAmount IS NOT NULL AND ROUND(transactionAmount, 2) = ROUND(?, 2)',
-            [transactionId, numericAmount]
-          )
-        : await connection.execute(
-            'SELECT * FROM registrations WHERE transactionId = ?',
-            [transactionId]
-          );
+      // 1. Find all rows by transactionId. If amount is provided, use it only as a validation check.
+      const [allRegistrations] = await connection.execute(
+        'SELECT * FROM registrations WHERE transactionId = ?',
+        [transactionId]
+      );
 
-      if (registrations.length === 0) {
+      if (allRegistrations.length === 0) {
         await connection.rollback();
-        if (numericAmount !== null) {
-          return res.status(404).json({ message: 'Transaction ID found, but amount does not match.' });
-        }
         return res.status(404).json({ message: 'Registration with this Transaction ID not found.' });
       }
+
+      if (numericAmount !== null) {
+        const [amountMatchedRows] = await connection.execute(
+          'SELECT id FROM registrations WHERE transactionId = ? AND transactionAmount IS NOT NULL AND ROUND(transactionAmount, 2) = ROUND(?, 2) LIMIT 1',
+          [transactionId, numericAmount]
+        );
+        if (amountMatchedRows.length === 0) {
+          await connection.rollback();
+          return res.status(404).json({ message: 'Transaction ID found, but amount does not match.' });
+        }
+      }
+
+      const registrations = allRegistrations;
 
       // 2. Build a map of userEmail -> userId for all registrations in this transaction
       const uniqueEmails = Array.from(new Set(registrations.map(r => r.userEmail).filter(Boolean)));
