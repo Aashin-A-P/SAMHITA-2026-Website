@@ -34,9 +34,7 @@ const PassesDisplay: React.FC = () => {
     const navigate = useNavigate();
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
-    const hackathonLink = 'https://unstop.com/o/zhCJDXY?lb=JP8hAZda&utm_medium=Share&utm_source=online_coding_challenge&utm_campaign=Ragavan_RV';
     const isWorkshopPassName = (name: string) => name.toLowerCase().includes('workshop pass');
-    const isHackathonPassName = (name: string) => name.toLowerCase().includes('hackathon');
     const isSpecialPassName = (name: string) => {
         const n = name.toLowerCase();
         return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');

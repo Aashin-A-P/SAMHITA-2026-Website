@@ -53,10 +53,9 @@ interface Registration {
   pass?: Pass;
 }
 
-const EnrolledEventsPage: React.FC = () => {
+  const EnrolledEventsPage: React.FC = () => {
   const whatsappLink = 'https://chat.whatsapp.com/CldhOSViVk9EzvmLYAm3H2?mode=gi_t';
   const toseLink = 'https://tosedition5.web.app';
-  const hackathonLink = 'https://unstop.com/o/zhCJDXY?lb=JP8hAZda&utm_medium=Share&utm_source=online_coding_challenge&utm_campaign=Ragavan_RV';
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isLoggedIn, loading: authLoading } = useAuth();
@@ -94,8 +93,6 @@ const EnrolledEventsPage: React.FC = () => {
     const n = String(name || '').toLowerCase();
     return n.includes('non-tech pass') || n.includes('non tech pass') || n.includes('nontech pass');
   };
-  const isHackathonPassName = (name?: string) =>
-    String(name || '').toLowerCase().includes('hackathon');
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -437,15 +434,6 @@ const EnrolledEventsPage: React.FC = () => {
                                     <span className="text-yellow-400 font-semibold">Not Active</span>
                                   )}
                                 </p>
-                                {isHackathonPassName(registration.pass.name) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => window.open(hackathonLink, '_blank')}
-                                    className="mt-3 w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
-                                  >
-                                    Register on Unstop
-                                  </button>
-                                )}
                               </div>
                             </div>
                           </div>

@@ -523,7 +523,6 @@ export default function HomePage() {
     LittleFinger,
     JorahMormont,
   ];
-  const hackathonLink = 'https://unstop.com/o/zhCJDXY?lb=JP8hAZda&utm_medium=Share&utm_source=online_coding_challenge&utm_campaign=Ragavan_RV';
 
   const handleSwitchToSignUp = () => {
     setIsLoginModalOpen(false);
@@ -562,7 +561,6 @@ export default function HomePage() {
     passName.toLowerCase().includes('nontech');
   const isGlobalPassName = (passName: string) => passName.toLowerCase().includes('global');
   const isWorkshopPassName = (passName: string) => passName.toLowerCase().includes('workshop pass');
-  const isHackathonPassName = (passName: string) => passName.toLowerCase().includes('hackathon');
   const isSpecialPassName = (passName: string) => {
     const n = passName.toLowerCase();
     return n.includes('special event pass') || n.includes('special pass') || n.includes('special event') || n.includes('elite pass');
@@ -1428,13 +1426,9 @@ export default function HomePage() {
                         .map((pass) => (
                         <div
                           key={pass.id}
-                          className={`bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-auto ${
-                            isHackathonPassName(pass.name)
-                              ? 'min-h-[560px] sm:min-h-0 sm:h-auto'
-                              : 'min-h-[560px] sm:min-h-0 sm:h-[480px]'
-                          } flex flex-col overflow-hidden`}
+                          className="bg-black/70 backdrop-blur-md border border-gold-500/30 rounded-lg transform transition-transform hover:-translate-y-2 gold-glow w-[280px] h-auto min-h-[560px] sm:min-h-0 sm:h-[480px] flex flex-col overflow-hidden"
                         >
-                          <div className={`w-full flex-1 min-h-[360px] sm:flex-none ${isHackathonPassName(pass.name) ? 'sm:h-[380px]' : 'sm:h-[420px]'}`}>
+                          <div className="w-full flex-1 min-h-[360px] sm:flex-none sm:h-[420px]">
                             {pass.posterImage ? (
                               <img
                                 src={`data:image/jpeg;base64,${pass.posterImage}`}
@@ -1475,22 +1469,9 @@ export default function HomePage() {
                               </button>
                             );
 
-                            const renderHackathonRegisterButton = () => (
-                              isHackathonPassName(pass.name) ? (
-                                <button
-                                  type="button"
-                                  onClick={() => window.open(hackathonLink, '_blank')}
-                                  className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
-                                >
-                                  Register in Unstop
-                                </button>
-                              ) : null
-                            );
-
                             if (isPurchased) {
                               return (
-                                <div className="px-3 pb-3 pt-2 space-y-2">
-                                  {renderHackathonRegisterButton()}
+                                <div className="px-3 pb-3 pt-2">
                                   <div className="flex items-stretch gap-3">
                                     {renderDetailsButton('flex-1 h-10')}
                                     <button
@@ -1507,8 +1488,7 @@ export default function HomePage() {
 
                             if (cartItem) {
                               return (
-                                <div className="px-3 pb-3 pt-2 space-y-2">
-                                  {renderHackathonRegisterButton()}
+                                <div className="px-3 pb-3 pt-2">
                                   <div className="flex items-stretch gap-3">
                                     {renderDetailsButton('flex-1 h-10')}
                                     <button
@@ -1525,8 +1505,7 @@ export default function HomePage() {
 
                             if (mitEligible) {
                               return (
-                                <div className="px-3 pb-3 pt-2 space-y-2">
-                                  {renderHackathonRegisterButton()}
+                                <div className="px-3 pb-3 pt-2">
                                   <div className="flex items-stretch gap-3">
                                     {renderDetailsButton('flex-1 h-10')}
                                     <button
@@ -1547,8 +1526,7 @@ export default function HomePage() {
                             }
 
                             return (
-                              <div className="px-3 pb-3 pt-2 space-y-2">
-                                {renderHackathonRegisterButton()}
+                              <div className="px-3 pb-3 pt-2">
                                 <div className="flex items-stretch gap-3">
                                   {renderDetailsButton('flex-1 h-10')}
                                   <button
@@ -1725,15 +1703,6 @@ export default function HomePage() {
                         })()
                       : `\u20B9${selectedPass.cost}`}
                 </p>
-                {isHackathonPassName(selectedPass.name) && (
-                  <button
-                    type="button"
-                    onClick={() => window.open(hackathonLink, '_blank')}
-                    className="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-500/40 hover:bg-gold-500/30 transition"
-                  >
-                    Register in Unstop
-                  </button>
-                )}
                 {isWorkshopPassName(selectedPass.name) && (
                   <div className="space-y-2">
                     <p className="text-gold-300 font-semibold">Select workshops (Round 1 dates must be unique):</p>
