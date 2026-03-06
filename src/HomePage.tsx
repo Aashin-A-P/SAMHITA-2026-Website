@@ -582,7 +582,7 @@ export default function HomePage() {
 
   const getTeamConfig = (passName: string) => {
     if (isPaperPresentationPass(passName)) {
-      return { min: 2, max: 3, title: 'Paper Presentation Team Details' };
+      return { min: 1, max: 3, title: 'Paper Presentation Team Details' };
     }
     if (isHackathonPass(passName)) {
       return { min: 2, max: 4, title: 'Hackathon Team Details' };
