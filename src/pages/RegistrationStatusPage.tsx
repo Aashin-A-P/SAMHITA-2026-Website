@@ -13,6 +13,7 @@ interface Registration {
   itemName: string;
   itemType: 'event' | 'pass' | 'accommodation';
   userName: string;
+  college?: string | null;
   userEmail: string;
   mobileNumber: string;
   transactionId: string;
@@ -178,18 +179,20 @@ const RegistrationStatusPage: React.FC = () => {
   const handleCreateExcel = () => {
     const rows = filteredRegistrations
       .filter((reg) =>
+        reg.itemType === 'pass' &&
         reg.transactionId &&
         reg.transactionId !== 'PASS_ENTRY' &&
         Number(reg.transactionAmount) > 0
       )
       .map((reg) => [
         reg.userName || '',
-        reg.transactionId || '',
+        reg.college || 'N/A',
+        reg.itemName || '',
         reg.transactionAmount ?? '',
         reg.transactionUpi || 'N/A',
       ]);
 
-    const header = ['User Name', 'Transaction ID', 'Amount', 'UPI ID'];
+    const header = ['User Name', 'College', 'Pass Paid For', 'Amount', 'UPI ID'];
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
       .join('\n');
