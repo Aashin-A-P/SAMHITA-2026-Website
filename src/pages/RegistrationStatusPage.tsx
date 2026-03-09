@@ -176,6 +176,11 @@ const RegistrationStatusPage: React.FC = () => {
     return text;
   };
 
+  const asExcelText = (value: string | number | null | undefined) => {
+    const text = String(value ?? '');
+    return `="${text.replace(/"/g, '""')}"`;
+  };
+
   const handleCreateExcel = () => {
     const rows = filteredRegistrations
       .filter((reg) =>
@@ -188,11 +193,12 @@ const RegistrationStatusPage: React.FC = () => {
         reg.userName || '',
         reg.college || 'N/A',
         reg.itemName || '',
+        asExcelText(reg.transactionId || ''),
         reg.transactionAmount ?? '',
         reg.transactionUpi || 'N/A',
       ]);
 
-    const header = ['User Name', 'College', 'Pass Paid For', 'Amount', 'UPI ID'];
+    const header = ['User Name', 'College', 'Pass Paid For', 'Transaction ID', 'Amount', 'UPI ID'];
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
       .join('\n');
