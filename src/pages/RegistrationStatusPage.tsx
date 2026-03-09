@@ -181,24 +181,16 @@ const RegistrationStatusPage: React.FC = () => {
     return `="${text.replace(/"/g, '""')}"`;
   };
 
-  const handleCreateExcel = () => {
-    const rows = filteredRegistrations
-      .filter((reg) =>
-        reg.itemType === 'pass' &&
-        reg.transactionId &&
-        reg.transactionId !== 'PASS_ENTRY' &&
-        Number(reg.transactionAmount) > 0
-      )
-      .map((reg) => [
-        reg.userName || '',
-        reg.college || 'N/A',
-        reg.itemName || '',
-        asExcelText(reg.transactionId || ''),
-        reg.transactionAmount ?? '',
-        reg.transactionUpi || 'N/A',
-      ]);
+  const buildExportRow = (reg: Registration) => ([
+    reg.userName || '',
+    reg.college || 'N/A',
+    reg.itemName || '',
+    asExcelText(reg.transactionId || ''),
+    reg.transactionAmount ?? '',
+    reg.transactionUpi || 'N/A',
+  ]);
 
-    const header = ['User Name', 'College', 'Pass Paid For', 'Transaction ID', 'Amount', 'UPI ID'];
+  const downloadCsv = (header: string[], rows: Array<Array<string | number>>, filePrefix: string) => {
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
       .join('\n');
@@ -208,11 +200,46 @@ const RegistrationStatusPage: React.FC = () => {
     const link = document.createElement('a');
     const datePart = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `registration-payments-${datePart}.csv`;
+    link.download = `${filePrefix}-${datePart}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCreateExcel = () => {
+    const rows = filteredRegistrations
+      .filter((reg) =>
+        reg.itemType === 'pass' &&
+        reg.transactionId &&
+        reg.transactionId !== 'PASS_ENTRY' &&
+        Number(reg.transactionAmount) > 0
+      )
+      .map(buildExportRow);
+
+    const header = ['User Name', 'College', 'Pass Paid For', 'Transaction ID', 'Amount', 'UPI ID'];
+    downloadCsv(header, rows, 'registration-payments');
+  };
+
+  const handleCreateAdminRegExcel = () => {
+    const rows = filteredRegistrations
+      .filter((reg) => {
+        const normalizedPassName = String(reg.itemName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normalizedCollege = String(reg.college || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const isMitStudent =
+          normalizedCollege.includes('madrasinstituteoftechnology') || normalizedCollege === 'mit';
+        const isGlobalPass = normalizedPassName.includes('global');
+        return (
+          reg.itemType === 'pass' &&
+          reg.transactionId === 'ADMIN_REG' &&
+          Number(reg.transactionAmount) === 0 &&
+          !(isMitStudent && isGlobalPass)
+        );
+      })
+      .map(buildExportRow);
+
+    const header = ['User Name', 'College', 'Pass Paid For', 'Transaction ID', 'Amount', 'UPI ID'];
+    downloadCsv(header, rows, 'admin-reg-registrations');
   };
 
   return (
@@ -230,6 +257,13 @@ const RegistrationStatusPage: React.FC = () => {
           type="button"
         >
           Create Excel File
+        </button>
+        <button
+          onClick={handleCreateAdminRegExcel}
+          className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
+          type="button"
+        >
+          Create ADMIN_REG Excel
         </button>
       </div>
 
