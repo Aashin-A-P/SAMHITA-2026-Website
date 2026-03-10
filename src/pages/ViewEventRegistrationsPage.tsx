@@ -219,6 +219,58 @@ const ViewEventRegistrationsPage: React.FC = () => {
     doc.save(`event_${eventDetails.eventName}_registrations.pdf`);
   };
 
+  const escapeCsv = (value: string | number | null | undefined) => {
+    const text = String(value ?? '');
+    if (/[",\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+  };
+
+  const isMitCollege = (college?: string) => {
+    const normalized = String(college || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return normalized.includes('madrasinstituteoftechnology') || normalized === 'mit';
+  };
+
+  const downloadRegistrationsCsv = (presentOnly: boolean, mitOnly = false) => {
+    const eventName = eventDetails?.eventName || 'Unknown Event';
+    const baseRows = teams.length > 0
+      ? uniqueTeamRows.map((row) => ({
+          name: row.name || 'N/A',
+          college: row.college || 'N/A',
+          present: isUserPresent(row.userId, row.email),
+        }))
+      : uniqueRegistrations.map((reg) => ({
+          name: reg.userName || 'N/A',
+          college: reg.college || 'N/A',
+          present: isPresent(reg),
+        }));
+
+    const rows = (presentOnly ? baseRows.filter((r) => r.present) : baseRows)
+      .filter((r) => (mitOnly ? isMitCollege(r.college) : true))
+      .map((r) => [r.name, r.college, eventName]);
+
+    const header = ['Name', 'College Name', 'Event Name'];
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => escapeCsv(cell)).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const datePart = new Date().toISOString().slice(0, 10);
+    const fileSuffix = [
+      mitOnly ? 'mit' : 'all',
+      presentOnly ? 'present-only' : 'registered',
+    ].join('-');
+    link.href = url;
+    link.download = `event-registrations-${fileSuffix}-${datePart}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) {
     return <Loader />;
   }
@@ -352,7 +404,7 @@ const ViewEventRegistrationsPage: React.FC = () => {
             </h2>
           </div>
         )}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4 gap-2 flex-wrap">
           <label className="mr-4 text-sm text-gray-300 flex items-center gap-2">
             <input
               type="checkbox"
@@ -362,6 +414,30 @@ const ViewEventRegistrationsPage: React.FC = () => {
             />
             Show Present Only
           </label>
+          <button
+            onClick={() => downloadRegistrationsCsv(false)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Export All Registered
+          </button>
+          <button
+            onClick={() => downloadRegistrationsCsv(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Export Present Only
+          </button>
+          <button
+            onClick={() => downloadRegistrationsCsv(false, true)}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Export MIT Registered
+          </button>
+          <button
+            onClick={() => downloadRegistrationsCsv(true, true)}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Export MIT Present
+          </button>
           <button
             onClick={downloadPdf}
             className="bg-samhita-600 hover:bg-samhita-700 text-white font-bold py-2 px-4 rounded"
